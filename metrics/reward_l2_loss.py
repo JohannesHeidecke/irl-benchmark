@@ -5,7 +5,7 @@ class RewardL2Loss(object):
     def __init__(self, true_reward: RewardFunction):
         self.true_reward = true_reward
 
-    def evaluate(self, estim_reward: RewardFunction, use_sampling=False) -> float:
+    def evaluate(self, estim_reward: RewardFunction, use_sampling=False) -> floats:
         
         # find best transformation from estim_reward to true_reward:
         # fitted_estim_reward = ...

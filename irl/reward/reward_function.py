@@ -47,6 +47,15 @@ class AbstractRewardFunction(object):
         '''
         raise NotImplementedError()
 
+    def parameters(self):
+        ''' Returns the parameters of the reward function (type might differe between subclasses)
+        '''
+        raise NotImplementedError()
+
+    def update_coefficients(self, parameters):
+        ''' Update the parameters of the reward function '''
+        raise NotImplementedError()
+
 class TabularRewardFunction(AbstractRewardFunction):
     ''' A tabular reward function where rewards for each possible input are stored in a table.
     Only suitable for relatively small environments '''
@@ -115,6 +124,15 @@ class TabularRewardFunction(AbstractRewardFunction):
         return index
 
     def reward(self, domain_batch):
-        ''' Return the corresponding rewards of a domain_batch '''
+        ''' Return the corresponding rewards of a domain_batch. '''
         indices = self.domain_to_index(domain_batch)
         return self.table_values[indices]
+
+    def parameters(self):
+        ''' Returns the values of the reward table. '''
+        return self.table_values
+
+    def update_parameters(self, parameters):
+        ''' Update the current reward table. 
+        parameters: list'''
+        self.table_values = parameters
