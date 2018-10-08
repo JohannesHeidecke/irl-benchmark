@@ -88,6 +88,6 @@ class TabularQ(RLAlgorithm):
         """" Loads in instance of self and copies attributes. """
         with open(path, 'rb') as f:
             parsed = pickle.load(f)
-        for k, v in parsed.__dict__:
+        for k, v in parsed.__dict__.items():
             setattr(self, k, v)
 
