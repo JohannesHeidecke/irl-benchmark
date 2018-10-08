@@ -25,9 +25,15 @@ class FeatureWrapper(gym.Wrapper):
 
     def features(self, current_state, action, next_state):
         raise NotImplementedError()
+
+    def feature_shape(self):
+        raise NotImplementedError()
     
 
 class FrozenFeatureWrapper(FeatureWrapper):
 
     def features(self, current_state, action, next_state):
         return to_one_hot(next_state, self.env.observation_space.n)
+
+    def feature_shape(self):
+        return (self.env.observation_space.n,)

@@ -4,7 +4,7 @@ class BaseIRLAlgorithm(object):
         self.env = env
         self.expert_trajs = expert_trajs
 
-    def train(self, time_limit):
+    def train(self, time_limit=300):
         raise NotImplementedError()
 
     def reward_function(self):
