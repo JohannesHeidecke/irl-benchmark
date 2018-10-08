@@ -4,11 +4,12 @@ import pickle
 import unittest
 import shutil
 
-from irl.collect import collect_trajs
-from irl.feature.feature_wrapper import FrozenFeatureWrapper
-from irl.reward.reward_function import FeatureBasedRewardFunction
-from irl.reward.reward_wrapper import RewardWrapper
-from rl.algorithms.base_algorithm import RandomAgent
+from irl_benchmark.irl.collect import collect_trajs
+from irl_benchmark.irl.feature.feature_wrapper import FrozenFeatureWrapper
+from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
+from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
+from irl_benchmark.rl.algorithms.base_algorithm import RandomAgent
+
 
 class CollectTestCase(unittest.TestCase):
 
@@ -30,7 +31,8 @@ class CollectTestCase(unittest.TestCase):
     def test_agents_collect_feature_reward(self):
         env = gym.make('FrozenLake-v0')
         feature_wrapper = FrozenFeatureWrapper(env)
-        reward_function = FeatureBasedRewardFunction(env, np.random.normal(size=16))
+        reward_function = FeatureBasedRewardFunction(
+            env, np.random.normal(size=16))
         env = RewardWrapper(feature_wrapper, reward_function)
         agent = RandomAgent(env)
         trajs = collect_trajs(env, agent, 10, 100, store_to='tests/tempdata/')
