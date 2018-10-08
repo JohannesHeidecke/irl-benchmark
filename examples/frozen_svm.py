@@ -3,7 +3,7 @@ import numpy as np
 
 from irl.algorithms.appr.svm import SVMIRL
 from irl.feature.feature_wrapper import FrozenFeatureWrapper
-from irl.collect.collect_data import collect_trajs
+from irl.collect import collect_trajs
 from irl.reward.reward_function import FeatureBasedRewardFunction
 from irl.reward.reward_wrapper import RewardWrapper
 from rl.tabular_q import TabularQ

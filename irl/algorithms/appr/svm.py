@@ -3,7 +3,7 @@ import numpy as np
 import time
 
 from irl.algorithms.base_algorithm import BaseIRLAlgorithm
-from irl.collect.collect_data import collect_trajs
+from irl.collect import collect_trajs
 from irl.reward.reward_function import FeatureBasedRewardFunction
 from rl.algorithm import RandomAgent
 from rl.tabular_q import TabularQ
@@ -79,8 +79,9 @@ class SVMIRL(BaseIRLAlgorithm):
 
             if not self.proj:
                 w = w.value
-            reward_function = FeatureBasedRewardFunction(self.env, w)
-            self.env.update_reward_function(reward_function)
+
+            self.reward_function = FeatureBasedRewardFunction(self.env, w)
+            self.env.update_reward_function(self.reward_function)
 
             t = np.linalg.norm(w)
             print('Distance: ' + str(t))
@@ -90,6 +91,9 @@ class SVMIRL(BaseIRLAlgorithm):
 
             agent = TabularQ(self.env)
             agent.train(rl_time_per_iteration)
+
+    def get_reward_function(self):
+        return self.reward_function
 
     def mu(self, trajs):
         '''Calculate empirical feature counts of input trajectories.'''
