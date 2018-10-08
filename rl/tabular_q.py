@@ -5,7 +5,7 @@ EPS = 1e-100
 
 class TabularQ:
 
-    def __init__(self, env, alpha=0.8, gamma=0.95, start_eps=0.9, end_eps=0.05, eps_decay=1e-5):
+    def __init__(self, env, alpha=0.8, gamma=0.95, start_eps=0.9, end_eps=0.01, eps_decay=1e-4):
         self.alpha = alpha
         self.gamma = gamma
 
