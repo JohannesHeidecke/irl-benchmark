@@ -14,11 +14,13 @@ class ApprIRL(BaseIRLAlgorithm):
         self.gamma = gamma
         self.proj = proj  # Projection alg if true, else max-margin.
 
-        self.expert_mu = self.mu(expert_trajs)
-        self.mus = [self.expert_mu]
+        self.expert_feature_count = self.feature_count(expert_trajs)
+        self.feature_counts = [self.expert_feature_count]
         self.labels = [1.0]
 
-    def train(self, time_limit=300, rl_time_per_iteration=30, eps=0):
+        self.distances = []
+
+    def train(self, time_limit=300, rl_time_per_iteration=30, eps=0, verbose=False):
         '''Accumulate feature counts and estimate reward function.
 
         Args:
@@ -29,62 +31,75 @@ class ApprIRL(BaseIRLAlgorithm):
         '''
         t0 = time.time()
 
+        if verbose:
+            alg_mode = 'projection' if self.proj else 'SVM'
+            print('Running Apprenticeship IRL in mode: ' + alg_mode)
+            print(time_limit)
+            print(rl_time_per_iteration)
+
         # start with random agent:
         agent = RandomAgent(self.env)
 
         iteration_counter = 0
         while time.time() < t0 + time_limit:
             iteration_counter += 1
-            print('ITERATION ' + str(iteration_counter))
+            if verbose:
+                print('ITERATION ' + str(iteration_counter))
             trajs = collect_trajs(self.env, agent, no_episodes=100,
                                   max_steps_per_episode=100)
 
-            current_mu = self.mu(trajs)
-            self.mus.append(current_mu)
+            current_feature_count = self.feature_count(trajs)
+            self.feature_counts.append(current_feature_count)
             self.labels.append(-1.0)
 
-            mus = np.array(self.mus)
+            feature_counts = np.array(self.feature_counts)
             labels = np.array(self.labels)
 
             if self.proj:
+                # using projection version of the algorithm
                 if iteration_counter == 1:
-                    mu_bar = mus[1]
+                    feature_count_bar = feature_counts[1]
                 else:
-                    line = mus[-1] - mu_bar
-                    mu_bar += np.dot(line,
-                                     mus[0]-mu_bar) / np.dot(line, line) * line
-                w = mus[0] - mu_bar
+                    line = feature_counts[-1] - feature_count_bar
+                    feature_count_bar += np.dot(line, feature_counts[0] - feature_count_bar) / np.dot(line, line) * line
+                reward_coefficients = feature_counts[0] - feature_count_bar
+                distance = np.linalg.norm(reward_coefficients)
+                            
             else:
-                w = cvx.Variable(mus.shape[1])
+                # using SVM version of the algorithm
+                w = cvx.Variable(feature_counts.shape[1])
                 b = cvx.Variable()
 
                 objective = cvx.Minimize(cvx.norm(w, 2))
-                constraints = [cvx.multiply(labels, (mus * w + b)) >= 1]
+                constraints = [cvx.multiply(labels, (feature_counts * w + b)) >= 1]
 
                 problem = cvx.Problem(objective, constraints)
                 problem.solve()
 
-                yResult = mus.dot(w.value) + b.value
+                yResult = feature_counts.dot(w.value) + b.value
                 supportVectorRows = np.where(np.isclose(np.abs(yResult), 1))[0]
 
-                print('Problem status: ' + str(problem.status))
-                print('Reward coefficients: ' + str(w.value))
-                print('Reward bias: ' + str(b.value))
-                print('The support vectors are mus number ' +
-                      str(supportVectorRows))
-                print('(index 0 is expert demonstration, ' +
-                      '1 random demonstration, higher: intermediate mus)')
+                reward_coefficients = w.value
+                distance = 2/problem.value
 
-            if not self.proj:
-                w = w.value
+                if verbose:
+                    print('The support vectors are from iterations number ' +
+                          str(supportVectorRows))
+            if verbose:
+                print('Reward coefficients: ' + str(reward_coefficients))
+                print('Distance: ' +str(distance))
 
-            self.reward_function = FeatureBasedRewardFunction(self.env, w)
+            self.distances.append(distance)
+
+            self.reward_function = FeatureBasedRewardFunction(self.env, reward_coefficients)
             self.env.update_reward_function(self.reward_function)
 
-            t = np.linalg.norm(w)
-            print('Distance: ' + str(t))
-            if t <= eps:
-                print("Feature counts matched within " + str(eps) + ".")
+            if distance <= eps:
+                if verbose:
+                    print("Feature counts matched within " + str(eps) + ".")
+                break
+
+            if time.time() + rl_time_per_iteration >= t0 + time_limit:
                 break
 
             agent = TabularQ(self.env)
@@ -93,7 +108,7 @@ class ApprIRL(BaseIRLAlgorithm):
     def get_reward_function(self):
         return self.reward_function
 
-    def mu(self, trajs):
+    def feature_count(self, trajs):
         '''Calculate empirical feature counts of input trajectories.'''
         feature_sum = np.zeros(self.env.env.feature_shape())
         for traj in trajs:
@@ -101,5 +116,5 @@ class ApprIRL(BaseIRLAlgorithm):
             feature_sum += np.sum(
                 gammas.reshape(-1, 1) * np.array(traj['features']), axis=0
             )
-        mu = feature_sum / len(trajs)
-        return mu
+        feature_count = feature_sum / len(trajs)
+        return feature_count
