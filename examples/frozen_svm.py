@@ -31,4 +31,4 @@ env = RewardWrapper(env, reward_function)
 
 svm_irl = SVMIRL(env, expert_trajs)
 
-svm_irl.train()
+svm_irl.train(600)
