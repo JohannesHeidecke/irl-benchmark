@@ -2,7 +2,7 @@ import numpy as np
 from collections import defaultdict
 from time import time
 import pickle
-from rl.algorithm import RLAlgorithm
+from irl_benchmark.rl.algorithm import RLAlgorithm
 
 
 class TabularQ(RLAlgorithm):

@@ -1,6 +1,6 @@
-from rl.tabular_q import TabularQ
 import gym
 import numpy as np
+from irl_benchmark.rl.tabular_q import TabularQ
 
 
 def test_tabular_q_agent():
