@@ -1,6 +1,8 @@
 import pickle
 import os
 
+from irl.feature.feature_wrapper import FeatureWrapper
+
 def collect_trajs(env, agent, no_episodes, max_steps_per_episode, store_to=None):
 
     trajectories = []
@@ -26,7 +28,7 @@ def collect_trajs(env, agent, no_episodes, max_steps_per_episode, store_to=None)
             if 'true_reward' in info.keys():
                 true_rewards.append(info['true_reward'])
             if 'features' in info.keys():
-                true_rewards.append(info['features'])
+                features.append(info['features'])
             state = next_state
 
         trajectory = {
