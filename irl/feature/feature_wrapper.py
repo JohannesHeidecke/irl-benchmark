@@ -1,6 +1,8 @@
 import gym
 import numpy as np
 
+from utils import to_one_hot
+
 class FeatureWrapper(gym.Wrapper):
     
     def __init__(self, env):
@@ -28,6 +30,4 @@ class FeatureWrapper(gym.Wrapper):
 class FrozenFeatureWrapper(FeatureWrapper):
 
     def features(self, current_state, action, next_state):
-        features = np.zeros(16)
-        features[next_state] = 1.0
-        return features
+        return to_one_hot(next_state, self.env.observation_space.n)

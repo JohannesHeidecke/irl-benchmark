@@ -135,5 +135,5 @@ class FeatureBasedRewardFunction(AbstractRewardFunction):
     def reward(self, domain_batch):
         ''' Return corresponding rewards for a domain batch (see domain() / domain_sample())
         '''
-        reward = np.dot(self.parameters, domain_batch)
+        reward = np.dot(self.parameters.reshape(1, -1), domain_batch.reshape(len(self.parameters), -1))
         return reward
