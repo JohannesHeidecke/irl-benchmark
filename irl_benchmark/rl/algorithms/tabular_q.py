@@ -2,7 +2,8 @@ import numpy as np
 from collections import defaultdict
 from time import time
 import pickle
-from rl.algorithms import RLAlgorithm
+
+from irl_benchmark.rl.algorithms import RLAlgorithm
 
 
 class TabularQ(RLAlgorithm):
@@ -90,4 +91,3 @@ class TabularQ(RLAlgorithm):
             parsed = pickle.load(f)
         for k, v in parsed.__dict__.items():
             setattr(self, k, v)
-

@@ -2,7 +2,8 @@ import gym
 import numpy as np
 import unittest
 
-from rl.algorithms.tabular_q import TabularQ
+from irl_benchmark.rl.algorithms.tabular_q import TabularQ
+
 
 class TabQTestCase(unittest.TestCase):
 
