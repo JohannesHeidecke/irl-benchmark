@@ -3,7 +3,7 @@ import numpy as np
 import time
 
 from irl.algorithms.base_algorithm import BaseIRLAlgorithm
-from irl.collect.collect_data import collect_trajs
+from irl.collect import collect_trajs
 from irl.reward.reward_function import FeatureBasedRewardFunction
 from rl.algorithm import RandomAgent
 from rl.tabular_q import TabularQ
@@ -59,13 +59,14 @@ class SVMIRL(BaseIRLAlgorithm):
             print('The support vectors are mus number ' + str(supportVectorRows))
             print('(index 0 is expert demonstration, 1 random demonstration, higher: intermediate mus)')
 
-            reward_function = FeatureBasedRewardFunction(self.env, w.value)
+            self.reward_function = FeatureBasedRewardFunction(self.env, w.value)
             self.env.update_reward_function(reward_function)
 
             agent = TabularQ(self.env)
             agent.train(rl_time_per_iteration)
 
-
+    def get_reward_function(self):
+        return self.reward_function
 
     def mu(self, trajs):
         feature_sum = np.zeros(self.env.env.feature_shape())  
