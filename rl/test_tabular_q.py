@@ -16,7 +16,7 @@ def test_tabular_q_agent():
         done = False
 
         while not done:
-            a = agent.act(s)
+            a = agent.pick_action(s)
             sp, r, done, info = env.step(a)
             agent.update(s, a, r, sp)
             s = sp
