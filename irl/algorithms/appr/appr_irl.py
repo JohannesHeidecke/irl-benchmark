@@ -5,14 +5,12 @@ import time
 from irl.algorithms.base_algorithm import BaseIRLAlgorithm
 from irl.collect import collect_trajs
 from irl.reward.reward_function import FeatureBasedRewardFunction
-from rl.algorithm import RandomAgent
-from rl.tabular_q import TabularQ
+from rl.algorithms import RandomAgent, TabularQ
 
-
-class SVMIRL(BaseIRLAlgorithm):
+class ApprIRL(BaseIRLAlgorithm):
 
     def __init__(self, env, expert_trajs, gamma=0.99, proj=False):
-        super(SVMIRL, self).__init__(env, expert_trajs)
+        super(ApprIRL, self).__init__(env, expert_trajs)
         self.gamma = gamma
         self.proj = proj  # Projection alg if true, else max-margin.
 
