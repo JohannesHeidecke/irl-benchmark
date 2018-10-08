@@ -13,6 +13,7 @@ State = namedtuple('State', ('state'))
 StateAction = namedtuple('StateAction', ('state', 'action'))
 StateActionState = namedtuple('StateActionState', ('state', 'action', 'next_state'))
 
+
 class AbstractRewardFunction(object):
     ''' The (abstract) superclass for reward functions
     '''
@@ -21,8 +22,8 @@ class AbstractRewardFunction(object):
                  action_in_domain=False, next_state_in_domain=False):
         '''
         env: a gym environment
-        action_in_domain: domain of reward function contains actions - R(s, a) or R(s, a, s)
-        next_state_in_domain: domain of reward function contains next state - R(s, a, s)
+        action_in_domain: domain of reward function contains actions - R(s, a) or R(s, a, s')
+        next_state_in_domain: domain of reward function contains next state - R(s, a, s')
         '''
         self.env = env
         self.action_in_domain = action_in_domain
@@ -47,20 +48,16 @@ class AbstractRewardFunction(object):
         '''
         raise NotImplementedError()
 
-    def parameters(self):
-        ''' Returns the parameters of the reward function (type might differe between subclasses)
-        '''
-        raise NotImplementedError()
-
-    def update_coefficients(self, parameters):
+    def update_parameters(self, parameters):
         ''' Update the parameters of the reward function '''
-        raise NotImplementedError()
+        self.parameters = parameters
+
 
 class TabularRewardFunction(AbstractRewardFunction):
     ''' A tabular reward function where rewards for each possible input are stored in a table.
     Only suitable for relatively small environments '''
     
-    def __init__(self, env, table_values=None,\
+    def __init__(self, env, parameters=None,\
                  action_in_domain=False, next_state_in_domain=False):
         super(TabularRewardFunction, self).__init__(env, action_in_domain, next_state_in_domain)
         
@@ -76,17 +73,17 @@ class TabularRewardFunction(AbstractRewardFunction):
 
         # if environment is certain discrete gym environment, 
         # we can automatically extract reward table:
-        if table_values is None and isinstance(env, TimeLimit) \
+        if parameters is 'extract_automatically' and isinstance(env, TimeLimit) \
                     and issubclass(type(env.env), DiscreteEnv):
             assert self.action_in_domain and not self.next_state_in_domain
-            table_values = []
+            parameters = []
             domain = self.domain()
             for index in range(self.domain_size):
                 outcomes = self.env.env.P[domain.state[index]][domain.action[index]]
-                table_values.append(np.sum([outcomes[j][0] * outcomes[j][2] for j in range(len(outcomes))]))
+                parameters.append(np.sum([outcomes[j][0] * outcomes[j][2] for j in range(len(outcomes))]))
 
-        assert len(table_values) == self.domain_size
-        self.table_values = np.array(table_values)
+        assert len(parameters) == self.domain_size
+        self.parameters = np.array(parameters)
 
     def domain(self):
         ''' Return the domain of the reward function. Returns a namedtuple, either State, StateAction, or StateActionState '''
@@ -126,13 +123,17 @@ class TabularRewardFunction(AbstractRewardFunction):
     def reward(self, domain_batch):
         ''' Return the corresponding rewards of a domain_batch. '''
         indices = self.domain_to_index(domain_batch)
-        return self.table_values[indices]
+        return self.parameters[indices]
 
-    def parameters(self):
-        ''' Returns the values of the reward table. '''
-        return self.table_values
 
-    def update_parameters(self, parameters):
-        ''' Update the current reward table. 
-        parameters: list'''
-        self.table_values = parameters
+class FeatureBasedRewardFunction(AbstractRewardFunction):
+
+    def __init__(self, env, parameters):
+        super(FeatureBasedRewardFunction, self).__init__(env, parameters)
+        self.parameters = parameters
+
+    def reward(self, domain_batch):
+        ''' Return corresponding rewards for a domain batch (see domain() / domain_sample())
+        '''
+        reward = np.dot(self.parameters, domain_batch)
+        return reward
