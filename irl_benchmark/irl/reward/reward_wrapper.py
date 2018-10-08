@@ -1,6 +1,6 @@
 import gym
 
-from irl_benchmark.irl_benchmark.irl.reward.reward_function import State, StateAction, StateActionState, FeatureBasedRewardFunction
+from irl_benchmark.irl.reward.reward_function import State, StateAction, StateActionState, FeatureBasedRewardFunction
 
 
 class RewardWrapper(gym.Wrapper):
