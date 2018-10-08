@@ -76,3 +76,6 @@ docs/_build/
 # PyBuilder
 target/
 .pytest_cache
+
+# Data dump
+data/*

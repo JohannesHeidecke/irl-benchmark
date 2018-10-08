@@ -30,6 +30,7 @@ class AbstractRewardFunction(object):
         if next_state_in_domain:
             assert action_in_domain
         self.next_state_in_domain = next_state_in_domain
+        self.parameters = None
 
     def domain(self):
         ''' Return the domain of the reward function as a namedtuple, either State, StateAction, or StateActionState.
@@ -127,10 +128,12 @@ class TabularRewardFunction(AbstractRewardFunction):
 
 
 class FeatureBasedRewardFunction(AbstractRewardFunction):
+    ''' A reward function which is linear in some provided features 
+    '''
 
     def __init__(self, env, parameters):
         super(FeatureBasedRewardFunction, self).__init__(env, parameters)
-        self.parameters = parameters
+        self.parameters = np.array(parameters)
 
     def reward(self, domain_batch):
         ''' Return corresponding rewards for a domain batch (see domain() / domain_sample())
