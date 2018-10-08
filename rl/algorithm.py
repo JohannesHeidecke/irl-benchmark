@@ -19,8 +19,6 @@ class RLAlgorithm(object):
     def pick_action(self, state):
         pass
 
-    def policy(self):
-        pass
 
 
 class SLMAlgorithm(RLAlgorithm):

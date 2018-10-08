@@ -48,7 +48,7 @@ class TabularQ(RLAlgorithm):
         """ Returns the annealed value of exploration amount. """
         return max(self.eps_end, self.eps_start - self.n_updates*self.eps_decay)
 
-    def act(self, s):
+    def pick_action(self, s):
         if np.random.rand() < self.get_eps():
             return np.random.randint(0, self.n_actions)
         return np.argmax(self.Q[s])
@@ -69,7 +69,7 @@ class TabularQ(RLAlgorithm):
             done = False
 
             while not done:
-                a = self.act(s)
+                a = self.pick_action(s)
                 sp, r, done, info = self.env.step(a)
                 self.update(s, a, r, sp)
                 s = sp
@@ -85,14 +85,9 @@ class TabularQ(RLAlgorithm):
             pickle.dump(self, f)
 
     def load(self, path):
-        """" Loads in instance of self and copies attributes"""
+        """" Loads in instance of self and copies attributes. """
         with open(path, 'rb') as f:
             parsed = pickle.load(f)
         for k, v in parsed.__dict__:
             setattr(self, k, v)
 
-    def pick_action(self, state):
-        return self.act(state)
-
-    def policy(self):
-        return self.act
