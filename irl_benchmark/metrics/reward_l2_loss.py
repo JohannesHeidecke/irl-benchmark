@@ -1,4 +1,5 @@
-from irl.reward_function import RewardFunction
+from irl_benchmark.irl.reward_function import RewardFunction
+
 
 class RewardL2Loss(object):
 
@@ -6,7 +7,7 @@ class RewardL2Loss(object):
         self.true_reward = true_reward
 
     def evaluate(self, estim_reward: RewardFunction, use_sampling=False) -> floats:
-        
+
         # find best transformation from estim_reward to true_reward:
         # fitted_estim_reward = ...
 

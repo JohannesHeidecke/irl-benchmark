@@ -1,7 +1,8 @@
 import pickle
 import os
 
-from irl.feature.feature_wrapper import FeatureWrapper
+from irl_benchmark.irl.feature.feature_wrapper import FeatureWrapper
+
 
 def collect_trajs(env, agent, no_episodes, max_steps_per_episode, store_to=None):
 
@@ -32,7 +33,7 @@ def collect_trajs(env, agent, no_episodes, max_steps_per_episode, store_to=None)
             state = next_state
 
         trajectory = {
-            'states': states, 
+            'states': states,
             'actions': actions,
             'rewards': rewards,
             'true_rewards': true_rewards,
@@ -45,9 +46,5 @@ def collect_trajs(env, agent, no_episodes, max_steps_per_episode, store_to=None)
             os.makedirs(store_to)
         with open(store_to + 'trajs.pkl', 'wb+') as f:
             pickle.dump(trajectories, f)
-    
+
     return trajectories
-    
-
-
-
