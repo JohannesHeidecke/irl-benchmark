@@ -31,10 +31,6 @@ class SLMAlgorithm(RLAlgorithm):
         # finish this
 
 
-class TabularQLearning(RLAlgorithm):
-    pass
-
-
 class RandomAgent(RLAlgorithm):
 
     def pick_action(self, state):

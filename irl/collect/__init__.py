@@ -43,7 +43,8 @@ def collect_trajs(env, agent, no_episodes, max_steps_per_episode, store_to=None)
     if store_to is not None:
         if not os.path.exists(store_to):
             os.makedirs(store_to)
-        pickle.dump(trajectories, open(store_to + 'trajs.pkl', 'wb+'))
+        with open(store_to + 'trajs.pkl', 'wb+') as f:
+            pickle.dump(trajectories, f)
     
     return trajectories
     
