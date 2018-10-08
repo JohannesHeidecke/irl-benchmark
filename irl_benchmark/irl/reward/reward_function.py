@@ -135,6 +135,7 @@ class FeatureBasedRewardFunction(AbstractRewardFunction):
         super(FeatureBasedRewardFunction, self).__init__(env, parameters)
         self.parameters = np.array(parameters)
 
+
     def reward(self, domain_batch):
         ''' Return corresponding rewards for a domain batch (see domain() / domain_sample())
         '''

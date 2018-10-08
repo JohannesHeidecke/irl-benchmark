@@ -1,7 +1,7 @@
 import gym
 import numpy as np
 
-from utils import to_one_hot
+from irl_benchmark.utils import to_one_hot
 
 class FeatureWrapper(gym.Wrapper):
     
