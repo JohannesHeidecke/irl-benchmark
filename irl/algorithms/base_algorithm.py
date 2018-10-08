@@ -1,9 +1,10 @@
 class BaseIRLAlgorithm(object):
 
-    def __init__(self, env):
+    def __init__(self, env, expert_trajs):
         self.env = env
+        self.expert_trajs = expert_trajs
 
-    def train(self):
+    def train(self, time_limit):
         raise NotImplementedError()
 
     def reward_function(self):
