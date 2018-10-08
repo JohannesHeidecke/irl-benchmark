@@ -13,6 +13,7 @@ def collect_trajs(env, agent, no_episodes, max_steps_per_episode, store_to=None)
         actions = []
         rewards = []
         true_rewards = []
+        features = []
 
         step_counter = 0
         while not done and step_counter < max_steps_per_episode:
@@ -24,13 +25,16 @@ def collect_trajs(env, agent, no_episodes, max_steps_per_episode, store_to=None)
             rewards.append(reward)
             if 'true_reward' in info.keys():
                 true_rewards.append(info['true_reward'])
+            if 'features' in info.keys():
+                true_rewards.append(info['features'])
             state = next_state
 
         trajectory = {
             'states': states, 
             'actions': actions,
             'rewards': rewards,
-            'true_rewards': true_rewards
+            'true_rewards': true_rewards,
+            'features': features
         }
         trajectories.append(trajectory)
 
