@@ -49,7 +49,8 @@ class Session:
 
 
 # To use SLM-Lab's existing spec. Alternatively, you can write one yourself too
-spec = spec_util.get(spec_file='frozen.json', spec_name='ddqn_epsilon_greedy_frozen')
+spec = spec_util.get(spec_file='frozen.json',
+                     spec_name='ddqn_epsilon_greedy_frozen')
 
 # spec['env'][0]['name'] = 'LunarLander-v2'
 # spec['env'][0]['name'] = 'FrozenLake-v0'
@@ -73,4 +74,4 @@ spec['env'][0]['max_episode'] = 1000
 sess = Session(spec, info_space)
 data = sess.run()
 
-print('Data is available at ' +str(util.smart_path(os.environ["PREPATH"])))
+print('Data is available at ' + str(util.smart_path(os.environ["PREPATH"])))
