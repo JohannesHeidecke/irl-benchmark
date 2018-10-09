@@ -30,7 +30,7 @@ def unwrap_env(env, until_class=None):
 
 
 def get_transition_matrix(env):
-    """Tries to get transition matrix from environment"""
+    """Gets transition matrix from discrete environment"""
     env = unwrap_env(env, DiscreteEnv)
 
     n_states = env.observation_space.n
@@ -49,3 +49,25 @@ def get_transition_matrix(env):
                 table[s, a, sp] += proba
 
     return table
+
+
+def get_reward_matrix(env):
+    """Gets reward array from discrete environment"""
+    env = unwrap_env(env, DiscreteEnv)
+
+    n_states = env.observation_space.n
+    n_actions = env.action_space.n
+
+    rewards = np.zeros([n_states, n_actions])
+
+    # Iterate over "from" states:
+    for s, P_given_state in env.P.items():
+
+        # Iterate over actions:
+        for a, transitions in P_given_state.items():
+
+            # Iterate over "to" states:
+            for proba, sp, r, done in transitions:
+                rewards[s, a] += r * proba
+
+    return rewards
