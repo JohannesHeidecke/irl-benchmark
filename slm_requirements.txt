@@ -1,6 +1,5 @@
 cython==0.28.5
 h5py==2.8.0
-ipykernel==4.7.0
 numpy>=1.14.3
 pandas>=0.22.0
 pillow>=5.0.0
