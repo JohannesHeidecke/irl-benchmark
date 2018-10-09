@@ -65,7 +65,7 @@ class SLMAlgorithm(RLAlgorithm):
         os.environ['PREPATH'] = slm_util.get_prepath(self.spec, self.info_space)
 
     def train(self, time_limit):
-        # create a session to train for time_limit seconds
+        '''Create a SLM-lab session to train for time_limit seconds.'''
         os.environ['lab_mode'] = 'training'
         session = Session(self.spec, self.info_space)
         session.update_env(self.env)

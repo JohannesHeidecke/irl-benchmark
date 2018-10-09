@@ -8,7 +8,7 @@ from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
 from irl_benchmark.rl.algorithms import RandomAgent, TabularQ
 
 def true_reward_per_traj(trajs):
-    ''' Returns average true reward per trajectory '''
+    '''Return (undiscounted) average true reward per trajectory.'''
     true_reward_sum = 0
     for traj in trajs:
         true_reward_sum += np.sum(traj['true_rewards'])

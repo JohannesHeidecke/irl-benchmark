@@ -14,10 +14,9 @@ store_to = 'data/frozen/expert/'
 no_episodes = 1000
 max_steps_per_episode = 100
 
-# Define the RL algorithm that is used both for the expert and
-# in the IRL loop:
 def rl_alg_factory(env):
-    return TabularQ(env)
+    '''Return an RL algorithm which is used both for the expert and
+    in the IRL loop.'''
 
 # Apprenticeship IRL assumes that rewards are linear in features.
 # However, FrozenLake doesn't provide features. It is sufficiently small

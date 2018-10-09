@@ -20,9 +20,9 @@ store_to = 'data/pendulum/expert/'
 no_episodes = 1000
 max_steps_per_episode = 200
 
-# Define the RL algorithm that is used both for the expert and
-# in the IRL loop:
 def rl_alg_factory(env):
+    '''Return an RL algorithm which is used both for the expert and
+    in the IRL loop.'''
     return PPO(env)
 
 # Pendulum has features that can easily be extracted from the previous state, 
@@ -49,6 +49,6 @@ with open(store_to + 'trajs.pkl', 'rb') as f:
 reward_function = FeatureBasedRewardFunction(env, np.random.normal(size=3))
 env = RewardWrapper(env, reward_function)
 
-# Run projection algorithm for up to 5 minutes.
+# Run apprenticeship IRL algorithm.
 appr_irl = ApprIRL(env, expert_trajs, rl_alg_factory, proj=False)
 appr_irl.train(time_limit=60, rl_time_per_iteration=10, eps=0, no_trajs=100, max_steps_per_episode=200, verbose=True)

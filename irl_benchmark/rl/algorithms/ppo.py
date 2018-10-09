@@ -1,4 +1,5 @@
 from gym.spaces import Box
+import numpy as np
 
 from irl_benchmark.rl.algorithms import SLMAlgorithm
 
@@ -13,6 +14,7 @@ class PPO(SLMAlgorithm):
 
     def pick_action(self, state):
         action = self.agent.algorithm.act(state)
-        if isinstance(self.env.action_space, Box):
+        if isinstance(self.env.action_space, Box) and np.isscalar(action):
+            # Box action spaces require even single actions to be a list:
             action = [action]
         return action
