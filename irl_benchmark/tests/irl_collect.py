@@ -5,7 +5,7 @@ import unittest
 import shutil
 
 from irl_benchmark.irl.collect import collect_trajs
-from irl_benchmark.irl.feature.feature_wrapper import FrozenFeatureWrapper
+from irl_benchmark.irl.feature.feature_wrapper import FrozenLakeFeatureWrapper
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.rl.algorithms.base_algorithm import RandomAgent
@@ -30,7 +30,7 @@ class CollectTestCase(unittest.TestCase):
 
     def test_agents_collect_feature_reward(self):
         env = gym.make('FrozenLake-v0')
-        feature_wrapper = FrozenFeatureWrapper(env)
+        feature_wrapper = FrozenLakeFeatureWrapper(env)
         reward_function = FeatureBasedRewardFunction(
             env, np.random.normal(size=16))
         env = RewardWrapper(feature_wrapper, reward_function)
