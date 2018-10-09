@@ -62,7 +62,7 @@ class ApprIRL(BaseIRLAlgorithm):
 
             current_feature_count = self.feature_count(trajs)
             self.feature_counts.append(current_feature_count)
-            self.labels.append(-1.0)p
+            self.labels.append(-1.0)
 
             feature_counts = np.array(self.feature_counts)
             labels = np.array(self.labels)
