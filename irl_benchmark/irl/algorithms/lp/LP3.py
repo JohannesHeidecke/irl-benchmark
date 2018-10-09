@@ -3,7 +3,7 @@ from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
 
 class LP3(BaseIRLAlgorithm):
 
-    def __init__(self, env, expert_trajs, violated_constraint_weight=2):
+    def __init__(self, env, expert_trajs, rl_alg_factory, violated_constraint_weight=2):
         '''3rd linear programming (LP) alg from Ng & Russell (2000).
 
         Args:
@@ -15,4 +15,8 @@ class LP3(BaseIRLAlgorithm):
             (p. 6) say the results aren't extremely sensitive to the value of
             this weight, and that they've heuristically chosen 2 as its value
         '''
-        super(LP3, self).__init__(env)
+        super(LP3, self).__init__(
+            env=env,
+            expert_trajs=expert_trajs,
+            rl_alg_factory=rl_alg_factory,
+        )

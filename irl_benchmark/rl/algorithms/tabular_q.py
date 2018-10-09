@@ -7,8 +7,10 @@ from irl_benchmark.rl.algorithms import RLAlgorithm
 
 
 class TabularQ(RLAlgorithm):
-    """ 
+    """
     Tabular Q algorithm.
+
+    Only works for discrete observation/action spaces.
     """
 
     def __init__(
@@ -49,10 +51,16 @@ class TabularQ(RLAlgorithm):
         """ Returns the annealed value of exploration amount. """
         return max(self.eps_end, self.eps_start - self.n_updates*self.eps_decay)
 
-    def pick_action(self, s):
-        if np.random.rand() < self.get_eps():
+    def pick_action(self, s, training=False):
+        if training and np.random.rand() < self.get_eps():
             return np.random.randint(0, self.n_actions)
         return np.argmax(self.Q[s])
+
+    def policy(self, s):
+        a = self.pick_action(s)
+        p = np.zeros(self.n_actions)
+        p[a] = 1.0
+        return p
 
     def update(self, s, a, r, sp):
         Q = self.Q[s][a]
@@ -70,7 +78,7 @@ class TabularQ(RLAlgorithm):
             done = False
 
             while not done:
-                a = self.pick_action(s)
+                a = self.pick_action(s, training=True)
                 sp, r, done, info = self.env.step(a)
                 self.update(s, a, r, sp)
                 s = sp

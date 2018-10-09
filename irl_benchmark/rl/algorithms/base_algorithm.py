@@ -16,9 +16,12 @@ class RLAlgorithm(object):
     def load(self, path):
         pass
 
-    def pick_action(self, state):
+    def pick_action(self, state, training=False):
         pass
 
+    def policy(self, state):
+        """ Return an optimal policy distribution """
+        pass
 
 
 class SLMAlgorithm(RLAlgorithm):

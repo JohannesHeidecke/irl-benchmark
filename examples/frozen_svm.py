@@ -37,6 +37,9 @@ with open(store_to + 'trajs.pkl', 'rb') as f:
 reward_function = FeatureBasedRewardFunction(env, np.random.normal(size=16))
 env = RewardWrapper(env, reward_function)
 
+def rl_alg_factory(env):
+    return TabularQ(env)
+
 # Run projection algorithm for up to 5 minutes.
-appr_irl = ApprIRL(env, expert_trajs, proj=True)
+appr_irl = ApprIRL(env, expert_trajs, rl_alg_factory, proj=True)
 appr_irl.train(600, verbose=True)
