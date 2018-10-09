@@ -1,8 +1,8 @@
 import gym
 import numpy as np
 
-from slm_lab.experiment.monitor import InfoSpace
-from slm_lab.spec import spec_util
+#from slm_lab.experiment.monitor import InfoSpace
+#from slm_lab.spec import spec_util
 
 
 class RLAlgorithm(object):

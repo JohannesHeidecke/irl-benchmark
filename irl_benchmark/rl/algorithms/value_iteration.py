@@ -67,6 +67,7 @@ class ValueIteration(RLAlgorithm):
         self.V = values
         self.pi = policy
 
+
     def policy(self, s):
         return self.pi[s]
 

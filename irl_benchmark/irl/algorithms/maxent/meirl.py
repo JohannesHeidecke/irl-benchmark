@@ -1,4 +1,5 @@
 from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
+from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
 from irl_benchmark.rl.algorithms.value_iteration import ValueIteration
 
 import numpy as np
@@ -11,7 +12,7 @@ class MaxEnt(BaseIRLAlgorithm):
     or Maximum Causal Entropy IRL (Ziebart et al., 2010).
     """
 
-    def __init__(self, env, transition_dynamics, expert_trajs, rl_alg_factory, gamma=.99, lr=0.02, ):
+    def __init__(self, env, transition_dynamics, expert_trajs, rl_alg_factory, gamma=.99, lr=0.02):
         super(MaxEnt, self).__init__(env, expert_trajs, rl_alg_factory= rl_alg_factory)
         self.gamma = gamma
         self.transition_dynamics = transition_dynamics
@@ -51,15 +52,13 @@ class MaxEnt(BaseIRLAlgorithm):
                 mu[s, t] = tot
         return np.sum(mu, 1)
 
-    def train(self, feat_map, time_limit=300, n_iters=300):
+    def train(self, feat_map, time_limit=300, n_iters=30):
 
         """
         Maximum Entropy Inverse Reinforcement Learning (Maxent IRL)
         inputs:
-          feat_map    NxN matrix - the features for each state
-          P_a         NxN_ACTIONSxN matrix - P_a[s0, a, s1] is the transition prob of
-                                             landing at state s1 when taking action
-                                             a at state s0
+          feat_map    NxD matrix - the features for each state
+
           gamma       float - RL discount factor
           trajs       a list of demonstrations
           lr          float - learning rate
@@ -69,6 +68,9 @@ class MaxEnt(BaseIRLAlgorithm):
         """
         # init parameters
         theta = np.random.uniform(size=(feat_map.shape[1],))
+        reward_function_estimate = FeatureBasedRewardFunction(self.env, theta)
+
+        self.env.update_reward_function(reward_function_estimate)
 
         # calc feature expectations
         feat_exp = np.zeros([feat_map.shape[1]])
@@ -77,7 +79,7 @@ class MaxEnt(BaseIRLAlgorithm):
                 feat_exp += feat_map[state]
         feat_exp = feat_exp / len(self.expert_trajs)
 
-        agent = ValueIteration(self.env, self.transition_dynamics)
+        agent = self.rl_alg_factory(self.env)
 
         # training
         for iteration in range(n_iters):
@@ -88,18 +90,21 @@ class MaxEnt(BaseIRLAlgorithm):
             # compute reward function
             rewards = np.dot(feat_map, theta)
 
+
             # compute policy
-            _, policy = agent.value_iteration(rewards, deterministic=False)
+            agent.train(time_limit= 200)
+
+            policy = agent.pi
 
             # compute state visitation frequencies
             svf = self.expected_svf(policy)
 
             # compute gradients
-            grad = feat_exp - feat_map.T.dot(svf)
+            grad = -(feat_exp - feat_map.T.dot(svf))
 
             # update params
             theta += self.lr * grad
 
-        rewards = np.dot(feat_map, theta)
+            #rewards = np.dot(feat_map, theta)
         # return sigmoid(normalize(rewards))
         return rewards
