@@ -6,8 +6,14 @@ from irl_benchmark.rl.algorithms.tabular_q import TabularQ
 
 
 class TabQTestCase(unittest.TestCase):
+    '''Test Tabular Q-Learning on FrozenLake.'''
 
     def test_frozen_finds_good_solution(self, duration=2):
+        '''Check if goal was reached in at least 40% of 100 episodes.
+
+        NOTE: For the default value of duration only checks if agent
+        runs at all, not whether results fulfill above conditions.
+        '''
         env = gym.make('FrozenLake-v0')
         agent = TabularQ(env)
         agent.train(duration)
@@ -22,6 +28,8 @@ class TabQTestCase(unittest.TestCase):
                 episode_reward += reward
             episode_rewards.append(episode_reward)
 
+        # Evaluate conditions on results only if duration was manually
+        # set to be large.
         if duration < 5:
             return
 

@@ -7,23 +7,35 @@ from irl_benchmark.rl.algorithms import RLAlgorithm
 
 
 class TabularQ(RLAlgorithm):
-    """
-    Tabular Q algorithm.
+    '''Tabular Q-learning.
 
     Only works for discrete observation/action spaces.
-    """
-
+    '''
     def __init__(
-        self,
-        env,
-        gamma=0.95,
-        alpha_start=0.8,
-        alpha_end=0.1,
-        alpha_decay=1e-4,
-        eps_start=0.9,
-        eps_end=0.01,
-        eps_decay=1e-4,
+            self,
+            env,
+            gamma=0.95,
+            alpha_start=0.8,
+            alpha_end=0.1,
+            alpha_decay=1e-4,
+            eps_start=0.9,
+            eps_end=0.01,
+            eps_decay=1e-4,
     ):
+        '''Set environment, discount rate, learning rate, and exploration rate.
+
+        Learning and exploration rate decay linearly.
+
+        Args:
+          env: environment
+          gamma: `float`, discount rate
+          alpha_start: `float`, initial learning rate
+          alpha_end: `float`, asymptotic learning rate
+          alpha_decay: `float`, per-step decrease of learning rate
+          eps_start: `float`, initial exploration rate
+          eps_end: `float`, asymptotic exploration rate
+          eps_decay: `float`, per-step decrease of exploration rate
+        '''
         self.env = env
         self.gamma = gamma
 
@@ -38,20 +50,24 @@ class TabularQ(RLAlgorithm):
         self.n_actions = env.action_space.n
 
         self.Q = defaultdict(self.init_q)
-        self.n_updates = 0
+        self.n_updates = 0  # No of decreases of learning and exploration rate.
 
     def init_q(self):
+        '''Initialize Q-values for one state to zero.'''
         return np.zeros(self.n_actions)
 
     def get_alpha(self):
-        """ Returns the annealed value of learning rate. """
-        return max(self.alpha_end, self.alpha_start - self.n_updates*self.alpha_decay)
+        '''Return the annealed value of learning rate.'''
+        return max(self.alpha_end,
+                   self.alpha_start - self.n_updates * self.alpha_decay)
 
     def get_eps(self):
-        """ Returns the annealed value of exploration amount. """
-        return max(self.eps_end, self.eps_start - self.n_updates*self.eps_decay)
+        '''Return the annealed value of exploration amount.'''
+        return max(self.eps_end,
+                   self.eps_start - self.n_updates * self.eps_decay)
 
     def pick_action(self, s, training=False):
+        '''If training return random action w/ prob eps, else act greedily.'''
         if training and np.random.rand() < self.get_eps():
             return np.random.randint(0, self.n_actions)
         return np.argmax(self.Q[s])
@@ -63,12 +79,25 @@ class TabularQ(RLAlgorithm):
         return p
 
     def update(self, s, a, r, sp):
+        '''Update Q-values based on one transition.
+
+        Args:
+          s: `int`, previous state
+          a: `int`, action taken in previous state
+          r: `float`, reward received for transition
+          sp: `int`, next state
+
+        Return nothing.
+        '''
         Q = self.Q[s][a]
         Qp = np.max(self.Q[sp])
-        self.Q[s][a] += self.get_alpha()*(r + self.gamma*Qp - Q)
+        self.Q[s][a] += self.get_alpha() * (r + self.gamma * Qp - Q)
         self.n_updates += 1
 
     def train(self, time_limit):
+        '''Train agent for at most time_limit seconds.
+
+        Return undiscounted sum of rewards.'''
         t0 = time()
 
         sum_rewards = []
@@ -90,11 +119,12 @@ class TabularQ(RLAlgorithm):
         return sum_rewards
 
     def save(self, path):
+        '''Save agent parameters to path.'''
         with open(path, 'wb') as f:
             pickle.dump(self, f)
 
     def load(self, path):
-        """" Loads in instance of self and copies attributes. """
+        '''Load in instance of self and copy attributes.'''
         with open(path, 'rb') as f:
             parsed = pickle.load(f)
         for k, v in parsed.__dict__.items():
