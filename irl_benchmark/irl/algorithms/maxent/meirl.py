@@ -54,13 +54,19 @@ class MaxEnt(BaseIRLAlgorithm):
                 mu[s, t] = tot
         return np.sum(mu, 1)
 
-    def train(self, feat_map, time_limit=300, n_iters=30):
 
+    def train(self, feat_map, time_limit=300, n_iters=300):
         """
         Maximum Entropy Inverse Reinforcement Learning (Maxent IRL)
         inputs:
           feat_map    NxD matrix - the features for each state
+<<<<<<< 358c5d578a6920c084ec5d41bb709bce24018cd0
 
+=======
+          P_a         NxN_ACTIONSxN matrix - P_a[s0, a, s1] is the transition prob of
+                                             landing at state s1 when taking action
+                                             a at state s0
+>>>>>>> Some more modifications to me_irl.
           gamma       float - RL discount factor
           trajs       a list of demonstrations
           lr          float - learning rate
@@ -83,6 +89,8 @@ class MaxEnt(BaseIRLAlgorithm):
         #print(feat_exp)
 
         agent = self.rl_alg_factory(self.env)
+
+        agent = ValueIteration(self.env, self.transition_dynamics)
 
         # training
         for iteration in range(n_iters):
