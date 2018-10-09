@@ -1,8 +1,12 @@
 import gym
 import numpy as np
+import os
 
 from slm_lab.experiment.monitor import InfoSpace
 from slm_lab.spec import spec_util
+from slm_lab.lib import util as slm_util
+
+from irl_benchmark.rl.slm_session import Session
 
 
 class RLAlgorithm(object):
@@ -43,13 +47,24 @@ class SLMAlgorithm(RLAlgorithm):
     https://github.com/kengz/SLM-Lab
     '''
 
-    def __init(self, env, spec_file, spec_name):
+    def __init__(self, env, spec_file, spec_name):
         '''Set environment and get spec JSON file from spec_file.'''
-        spec = spec_util.get(
-            spec_file='frozen.json', spec_name='ddqn_epsilon_greedy_frozen')
-        info_space = InfoSpace()
-        # TODO: enable RewardWrapper envs in slm lab!!
-        # finish this
+
+        self.spec = spec_util.get(spec_file=spec_file, spec_name=spec_name)
+        self.info_space = InfoSpace()
+        self.agent = None
+        
+        os.environ['PREPATH'] = slm_util.get_prepath(self.spec, self.info_space)
+
+    def train(self, time_limit):
+        os.environ['lab_mode'] = 'training'
+        # TODO: there should be a time limit here, not episode limit!
+        self.spec['env'][0]['max_episode'] = 10
+
+        session = Session(self.spec, self.info_space)
+        _, agent = session.run()
+        self.agent = agent
+
 
 
 class RandomAgent(RLAlgorithm):
