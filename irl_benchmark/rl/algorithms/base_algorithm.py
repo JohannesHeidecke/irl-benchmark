@@ -66,7 +66,6 @@ class SLMAlgorithm(RLAlgorithm):
         self.agent = agent
 
 
-
 class RandomAgent(RLAlgorithm):
     '''Agent picking actions uniformly at random, for test purposes.
 
