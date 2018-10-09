@@ -2,7 +2,7 @@ import numpy as np
 
 import gym
 
-from irl_benchmark.irl.algorithms.maxent.meirl import MaxEnt
+from irl_benchmark.irl.algorithms.maxent.me_irl import MaxEnt
 from irl_benchmark.irl.collect import collect_trajs
 from irl_benchmark.irl.feature.feature_wrapper import FrozenLakeFeatureWrapper
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
@@ -36,8 +36,8 @@ def rl_alg_factory(env):
     return ValueIteration(env)
 
 
-meirl = MaxEnt(env, transition_dynamics=transition_dynamics, rl_alg_factory=rl_alg_factory, expert_trajs=expert_trajs)
-rewards = meirl.train(feat_map)
+meirl = MaxEnt(env,  expert_trajs=expert_trajs, transition_dynamics=transition_dynamics, rl_alg_factory=rl_alg_factory)
+rewards = meirl.train(feat_map, verbose=True)
 
 rewards = (rewards - np.min(rewards))/(np.max(rewards) - np.min(rewards))
 
