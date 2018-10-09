@@ -1,7 +1,4 @@
-
-
 import numpy as np
-
 
 from irl_benchmark.rl.algorithms import RLAlgorithm
 

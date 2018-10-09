@@ -2,8 +2,7 @@ import gym
 from gym.envs.classic_control.pendulum import angle_normalize
 import numpy as np
 
-
-from irl_benchmark.utils import to_one_hot
+from irl_benchmark.utils.utils import to_one_hot
 
 
 class FeatureWrapper(gym.Wrapper):
@@ -62,11 +61,10 @@ class FrozenLakeFeatureWrapper(FeatureWrapper):
 
     def feature_shape(self):
         '''Return dimension of the one-hot vectors used as features.'''
-        return (self.env.observation_space.n,)
+        return (self.env.observation_space.n, )
 
 
 class PendulumFeatureWrapper(FeatureWrapper):
-
     def features(self, current_state, action, next_state):
         th, thdot = current_state
         action = np.clip(action, -self.env.max_torque, self.env.max_torque)[0]
@@ -74,4 +72,4 @@ class PendulumFeatureWrapper(FeatureWrapper):
 
     def feature_shape(self):
         '''Return one-hot encoding of next_state.'''
-        return (3,)
+        return (3, )
