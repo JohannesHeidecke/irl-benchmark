@@ -1,8 +1,13 @@
 import gym
+import logging
 import numpy as np
+import os
 
 from slm_lab.experiment.monitor import InfoSpace
 from slm_lab.spec import spec_util
+from slm_lab.lib import util as slm_util
+
+from irl_benchmark.rl.slm_session import Session
 
 
 class RLAlgorithm(object):
@@ -43,13 +48,30 @@ class SLMAlgorithm(RLAlgorithm):
     https://github.com/kengz/SLM-Lab
     '''
 
-    def __init(self, env, spec_file, spec_name):
+    def __init__(self, env, spec_file, spec_name):
         '''Set environment and get spec JSON file from spec_file.'''
-        spec = spec_util.get(
-            spec_file='frozen.json', spec_name='ddqn_epsilon_greedy_frozen')
-        info_space = InfoSpace()
-        # TODO: enable RewardWrapper envs in slm lab!!
-        # finish this
+
+        self.env = env
+        self.spec = spec_util.get(spec_file=spec_file, spec_name=spec_name)
+        # make sure the spec only contains one agent and one environment:
+        assert len(self.spec['agent']) == 1
+        assert len(self.spec['env']) == 1
+        # make sure the specification is for the right environment id:
+        self.spec['env'][0]['name'] = env.spec.id
+        self.info_space = InfoSpace()
+        # self.agent will only be filled after training.
+        self.agent = None
+        
+        os.environ['PREPATH'] = slm_util.get_prepath(self.spec, self.info_space)
+
+    def train(self, time_limit):
+        '''Create a SLM-lab session to train for time_limit seconds.'''
+        os.environ['lab_mode'] = 'training'
+        session = Session(self.spec, self.info_space)
+        session.update_env(self.env)
+        _, agent = session.run(time_limit)
+        # persist trained agent:
+        self.agent = agent
 
 
 class RandomAgent(RLAlgorithm):
@@ -59,5 +81,4 @@ class RandomAgent(RLAlgorithm):
     '''
 
     def pick_action(self, state):
-        assert isinstance(self.env.action_space, gym.spaces.Discrete)
-        return np.random.choice(self.env.action_space.n)
+        return self.env.action_space.sample()

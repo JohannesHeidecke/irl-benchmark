@@ -1,5 +1,5 @@
 import gym
-from gym.envs.classic_control.pendulum import angle_normalize
+from gym.envs.classic_control.pendulum import PendulumEnv, angle_normalize
 import numpy as np
 
 from irl_benchmark.utils.utils import to_one_hot
@@ -66,8 +66,8 @@ class FrozenLakeFeatureWrapper(FeatureWrapper):
 
 class PendulumFeatureWrapper(FeatureWrapper):
     def features(self, current_state, action, next_state):
-        th, thdot = current_state
-        action = np.clip(action, -self.env.max_torque, self.env.max_torque)[0]
+        th, thdot = unwrap_env(self.env.env, PendulumEnv).state
+        action = np.clip(action, -self.env.env.max_torque, self.env.env.max_torque)[0]
         return np.array([angle_normalize(th)**2, thdot**2, action**2])
 
     def feature_shape(self):
