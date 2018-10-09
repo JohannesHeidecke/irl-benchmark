@@ -14,7 +14,6 @@ def true_reward_per_traj(trajs):
         true_reward_sum += np.sum(traj['true_rewards'])
     return true_reward_sum / len(trajs)
 
-
 class ApprIRL(BaseIRLAlgorithm):
     '''Apprenticeship learning (Abbeel & Ng, 2004).
 
@@ -22,7 +21,13 @@ class ApprIRL(BaseIRLAlgorithm):
     If proj=True is passed at initialization, the projection alg will be used.
     Else the max-margin algorithm will be used via the cvxpy SVM solver.
     '''
-    def __init__(self, env, expert_trajs, rl_alg_factory, gamma=0.99, proj=False):
+
+    def __init__(self,
+                 env,
+                 expert_trajs,
+                 rl_alg_factory,
+                 gamma=0.99,
+                 proj=False):
         super(ApprIRL, self).__init__(
             env=env,
             expert_trajs=expert_trajs,
