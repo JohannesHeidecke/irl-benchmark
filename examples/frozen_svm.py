@@ -2,12 +2,12 @@ import gym
 import numpy as np
 import pickle
 
-from irl.algorithms.appr.appr_irl import ApprIRL
-from irl.feature.feature_wrapper import FrozenFeatureWrapper
-from irl.collect import collect_trajs
-from irl.reward.reward_function import FeatureBasedRewardFunction
-from irl.reward.reward_wrapper import RewardWrapper
-from rl.algorithms import TabularQ
+from irl_benchmark.irl.algorithms.appr.appr_irl import ApprIRL
+from irl_benchmark.irl.feature.feature_wrapper import FrozenFeatureWrapper
+from irl_benchmark.irl.collect import collect_trajs
+from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
+from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
+from irl_benchmark.rl.algorithms import TabularQ
 
 # Define important script constants here:
 store_to = 'data/frozen/expert/'
