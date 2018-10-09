@@ -1,11 +1,28 @@
 import pickle
 import os
 
-from irl_benchmark.irl.feature.feature_wrapper import FeatureWrapper
+# Commented out because not currently used.
+# from irl_benchmark.irl.feature.feature_wrapper import FeatureWrapper
 
 
-def collect_trajs(env, agent, no_episodes, max_steps_per_episode, store_to=None):
+def collect_trajs(env,
+                  agent,
+                  no_episodes,
+                  max_steps_per_episode,
+                  store_to=None):
+    '''Return trajectories of agent in env.
 
+    Args:
+      env: environment
+      agent: RL algorithm
+      no_episodes: number of trajectories to be returned
+      max_steps_per_episodes: max. length of each trajectory
+      store_to: if not None, store returned trajectories in file
+
+    Returns:
+      trajectories: list of dictionaries with keys 'states', 'actions',
+        'rewards', 'true_rewards', 'features'
+    '''
     trajectories = []
 
     for episode in range(no_episodes):

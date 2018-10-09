@@ -9,7 +9,12 @@ from irl_benchmark.rl.algorithms import RandomAgent, TabularQ
 
 
 class ApprIRL(BaseIRLAlgorithm):
+    '''Apprenticeship learning (Abbeel & Ng, 2004).
 
+    Assumes reward linear in features.
+    If proj=True is passed at initialization, the projection alg will be used.
+    Else the max-margin algorithm will be used via the cvxpy SVM solver.
+    '''
     def __init__(self, env, expert_trajs, gamma=0.99, proj=False):
         super(ApprIRL, self).__init__(env, expert_trajs)
         self.gamma = gamma
@@ -21,12 +26,18 @@ class ApprIRL(BaseIRLAlgorithm):
 
         self.distances = []
 
-    def train(self, time_limit=300, rl_time_per_iteration=30, eps=0, verbose=False):
+    def train(self,
+              time_limit=300,
+              rl_time_per_iteration=30,
+              eps=0,
+              verbose=False):
         '''Accumulate feature counts and estimate reward function.
 
         Args:
           time_limit: total training time in seconds
-          rl_time_per_iteration: RL training time per step
+          rl_time_per_iteration: RL training time per step in seconds.
+          eps: terminate if distance to expert feature counts is below eps.
+          verbose: more verbose prints at runtime if true
 
         Returns nothing.
         '''
@@ -46,8 +57,8 @@ class ApprIRL(BaseIRLAlgorithm):
             iteration_counter += 1
             if verbose:
                 print('ITERATION ' + str(iteration_counter))
-            trajs = collect_trajs(self.env, agent, no_episodes=100,
-                                  max_steps_per_episode=100)
+            trajs = collect_trajs(
+                self.env, agent, no_episodes=100, max_steps_per_episode=100)
 
             current_feature_count = self.feature_count(trajs)
             self.feature_counts.append(current_feature_count)
@@ -63,18 +74,21 @@ class ApprIRL(BaseIRLAlgorithm):
                 else:
                     line = feature_counts[-1] - feature_count_bar
                     feature_count_bar += np.dot(
-                        line, feature_counts[0] - feature_count_bar) / np.dot(line, line) * line
+                        line, feature_counts[0] - feature_count_bar) / np.dot(
+                            line, line) * line
                 reward_coefficients = feature_counts[0] - feature_count_bar
                 distance = np.linalg.norm(reward_coefficients)
 
             else:
-                # using SVM version of the algorithm
+                # using SVM version of the algorithm ("max-margin" in
+                # the paper, not to be confused with max-margin planning)
                 w = cvx.Variable(feature_counts.shape[1])
                 b = cvx.Variable()
 
                 objective = cvx.Minimize(cvx.norm(w, 2))
-                constraints = [cvx.multiply(
-                    labels, (feature_counts * w + b)) >= 1]
+                constraints = [
+                    cvx.multiply(labels, (feature_counts * w + b)) >= 1
+                ]
 
                 problem = cvx.Problem(objective, constraints)
                 problem.solve()
@@ -83,7 +97,7 @@ class ApprIRL(BaseIRLAlgorithm):
                 supportVectorRows = np.where(np.isclose(np.abs(yResult), 1))[0]
 
                 reward_coefficients = w.value
-                distance = 2/problem.value
+                distance = 2 / problem.value
 
                 if verbose:
                     print('The support vectors are from iterations number ' +
@@ -110,15 +124,15 @@ class ApprIRL(BaseIRLAlgorithm):
             agent.train(rl_time_per_iteration)
 
     def get_reward_function(self):
+        '''Return attribute reward_function.'''
         return self.reward_function
 
     def feature_count(self, trajs):
-        '''Calculate empirical feature counts of input trajectories.'''
+        '''Return empirical feature counts of input trajectories.'''
         feature_sum = np.zeros(self.env.env.feature_shape())
         for traj in trajs:
-            gammas = self.gamma ** np.arange(len(traj['features']))
+            gammas = self.gamma**np.arange(len(traj['features']))
             feature_sum += np.sum(
-                gammas.reshape(-1, 1) * np.array(traj['features']), axis=0
-            )
+                gammas.reshape(-1, 1) * np.array(traj['features']), axis=0)
         feature_count = feature_sum / len(trajs)
         return feature_count
