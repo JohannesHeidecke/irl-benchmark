@@ -11,8 +11,8 @@ class MaxEnt(BaseIRLAlgorithm):
     or Maximum Causal Entropy IRL (Ziebart et al., 2010).
     """
 
-    def __init__(self, env, transition_dynamics, expert_trajs, gamma=.99, lr=0.02):
-        super(MaxEnt, self).__init__(env, expert_trajs)
+    def __init__(self, env, transition_dynamics, expert_trajs, rl_alg_factory, gamma=.99, lr=0.02, ):
+        super(MaxEnt, self).__init__(env, expert_trajs, rl_alg_factory= rl_alg_factory)
         self.gamma = gamma
         self.transition_dynamics = transition_dynamics
         self.n_states, self.n_actions, _ = np.shape(self.transition_dynamics)
@@ -56,7 +56,7 @@ class MaxEnt(BaseIRLAlgorithm):
         """
         Maximum Entropy Inverse Reinforcement Learning (Maxent IRL)
         inputs:
-          feat_map    NxD matrix - the features for each state
+          feat_map    NxN matrix - the features for each state
           P_a         NxN_ACTIONSxN matrix - P_a[s0, a, s1] is the transition prob of
                                              landing at state s1 when taking action
                                              a at state s0
@@ -89,7 +89,7 @@ class MaxEnt(BaseIRLAlgorithm):
             rewards = np.dot(feat_map, theta)
 
             # compute policy
-            _, policy = agent.value_iteration(self.transition_dynamics, rewards, deterministic=False)
+            _, policy = agent.value_iteration(rewards, deterministic=False)
 
             # compute state visitation frequencies
             svf = self.expected_svf(policy)
