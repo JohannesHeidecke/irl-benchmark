@@ -1,6 +1,6 @@
 class BaseIRLAlgorithm(object):
 
-    def __init__(self, env, expert_trajs):
+    def __init__(self, env, expert_trajs, rl_alg_factory):
         """The (abstract) base class for all IRL algorithms.
 
         Args:
@@ -9,6 +9,7 @@ class BaseIRLAlgorithm(object):
         """
         self.env = env
         self.expert_trajs = expert_trajs
+        self.rl_alg_factory = rl_alg_factory
 
     def train(self, time_limit=300):
         """Train up to time_limit seconds."""

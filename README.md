@@ -8,6 +8,21 @@ For our reinforcement learning module (used to train (near) optimal agents for e
 
 We currently use a fork of this framework, at some point we might make a pull request and use the original repository. To install please do the following steps:
 
+### Code review, git and github
+
+We use pull requests and code review.
+
+Recommended workflow:
+
+1. Make sure your local master branch is up to date with remote master. (git pull --rebase)
+2. Work on master directly (or check out a new branch to work on a feature (git checkout -b branchname))
+3. When you are done, commit your changes.
+4. Push your changes to remote branchname (git push origin branchname)
+5. Open a pull request on github.
+6. Make changes to your files based on reviews. Push these changes to the same branch, (git push origin branchname).
+7. When everything is working. squash your pull request and celebrate your code mergin into master!
+
+
 ## Installation
 Install package (from root folder):
 

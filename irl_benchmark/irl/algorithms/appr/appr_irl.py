@@ -8,6 +8,7 @@ from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
 from irl_benchmark.rl.algorithms import RandomAgent, TabularQ
 
 
+
 class ApprIRL(BaseIRLAlgorithm):
     '''Apprenticeship learning (Abbeel & Ng, 2004).
 
@@ -15,8 +16,12 @@ class ApprIRL(BaseIRLAlgorithm):
     If proj=True is passed at initialization, the projection alg will be used.
     Else the max-margin algorithm will be used via the cvxpy SVM solver.
     '''
-    def __init__(self, env, expert_trajs, gamma=0.99, proj=False):
-        super(ApprIRL, self).__init__(env, expert_trajs)
+    def __init__(self, env, expert_trajs, rl_alg_factory, gamma=0.99, proj=False):
+        super(ApprIRL, self).__init__(
+            env=env,
+            expert_trajs=expert_trajs,
+            rl_alg_factory=rl_alg_factory,
+        )
         self.gamma = gamma
         self.proj = proj  # Projection alg if true, else max-margin.
 
@@ -120,7 +125,7 @@ class ApprIRL(BaseIRLAlgorithm):
             if time.time() + rl_time_per_iteration >= t0 + time_limit:
                 break
 
-            agent = TabularQ(self.env)
+            agent = self.rl_alg_factory(self.env)
             agent.train(rl_time_per_iteration)
 
     def get_reward_function(self):
