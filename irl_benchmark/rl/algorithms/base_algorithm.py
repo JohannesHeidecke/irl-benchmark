@@ -10,6 +10,7 @@ from slm_lab.lib import util as slm_util
 from irl_benchmark.rl.slm_session import Session
 
 
+
 class RLAlgorithm(object):
     '''Base class for Reinforcement Learning agents.'''
 

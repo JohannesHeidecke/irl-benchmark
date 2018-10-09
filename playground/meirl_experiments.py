@@ -24,7 +24,6 @@ env = RewardWrapper(env, initial_reward_function_estimate)
 expert_agent = ValueIteration(env)
 print('Training expert agent...')
 expert_agent.train(30)
-print('Done training expert')
 expert_trajs = collect_trajs(env, expert_agent, no_episodes,
                              max_steps_per_episode, store_to)
 
