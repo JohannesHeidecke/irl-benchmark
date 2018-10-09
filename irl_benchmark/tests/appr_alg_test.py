@@ -42,7 +42,7 @@ def run_appr_irl(use_projection, duration):
     return appr_irl.distances
 
 
-def test_svm(self, duration=2):
+def test_svm(duration=2):
     '''Test if the max-margin implementation plausibly works.
 
     Checks if it runs for a credible number of steps, and if the latest
@@ -62,7 +62,7 @@ def test_svm(self, duration=2):
     assert distances[-1] < distances[0]
     assert distances[-1] < 5
 
-def test_proj(self, duration=2):
+def test_proj(duration=2):
     '''Test if the projection implementation plausibly works.
 
     Checks if it runs for a credible number of steps, and if the latest

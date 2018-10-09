@@ -12,7 +12,7 @@ from irl_benchmark.rl.algorithms.base_algorithm import RandomAgent
 
 '''Test if collect module correctly collects trajectories.'''
 
-def test_agents_collect(self):
+def test_agents_collect():
     '''Check types and components of returned trajectories.
 
     Uses a random agent on FrozenLake.'''
@@ -34,7 +34,7 @@ def test_agents_collect(self):
         assert len(traj['features']) == 0
     shutil.rmtree('tests/tempdata/')
 
-def test_agents_collect_feature_reward(self):
+def test_agents_collect_feature_reward():
     env = gym.make('FrozenLake-v0')
     feature_wrapper = FrozenLakeFeatureWrapper(env)
     reward_function = FeatureBasedRewardFunction(

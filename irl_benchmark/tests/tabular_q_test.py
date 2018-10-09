@@ -5,7 +5,7 @@ from irl_benchmark.rl.algorithms.tabular_q import TabularQ
 
 '''Test Tabular Q-Learning on FrozenLake.'''
 
-def test_frozen_finds_good_solution(self, duration=2):
+def test_frozen_finds_good_solution(duration=2):
     '''Check if goal was reached in at least 40% of 100 episodes.
 
     NOTE: For the default value of duration only checks if agent
@@ -24,6 +24,14 @@ def test_frozen_finds_good_solution(self, duration=2):
             state, reward, done, _ = env.step(agent.pick_action(state))
             episode_reward += reward
         episode_rewards.append(episode_reward)
+
+    # Test saving / loading:
+    fn = '/tmp/q_agent.pickle'
+    agent.save(fn)
+    agent2 = TabularQ(env)
+    agent2.load(fn)
+    for k, v in agent.Q.items():
+        assert (v == agent2.Q[k]).all()
 
     # Evaluate conditions on results only if duration was manually
     # set to be large.
