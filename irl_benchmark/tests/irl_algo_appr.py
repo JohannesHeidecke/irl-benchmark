@@ -1,6 +1,5 @@
 import gym
 import numpy as np
-import unittest
 
 from irl_benchmark.irl.algorithms.appr.appr_irl import ApprIRL
 from irl_benchmark.irl.feature.feature_wrapper import FrozenLakeFeatureWrapper
@@ -8,6 +7,8 @@ from irl_benchmark.irl.collect import collect_trajs
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.rl.algorithms import TabularQ
+
+'''Test both implementations of Apprenticeship IRL (Abeel & Ng, 2004).'''
 
 
 def run_appr_irl(use_projection, duration):
@@ -17,7 +18,7 @@ def run_appr_irl(use_projection, duration):
 
     Args:
       use_projection: `bool`, use projection alg if true, else use max-margin
-      duration: `float`, maximum total training time for IRL and initial expert 
+      duration: `float`, maximum total training time for IRL and initial expert
 
     Returns:
       appr_irl.distances: `list`, L2 distances betw expert feature counts and
@@ -41,45 +42,42 @@ def run_appr_irl(use_projection, duration):
     return appr_irl.distances
 
 
-class ApprIRLTestCase(unittest.TestCase):
-    '''Test both implementations of Apprenticeship IRL (Abeel & Ng, 2004).'''
+def test_svm(self, duration=2):
+    '''Test if the max-margin implementation plausibly works.
 
-    def test_svm(self, duration=2):
-        '''Test if the max-margin implementation plausibly works.
+    Checks if it runs for a credible number of steps, and if the latest
+    distance is credibly small, and strictly smaller than the first.
 
-        Checks if it runs for a credible number of steps, and if the latest
-        distance is credibly small, and strictly smaller than the first.
+    NOTE: With the default value of duration, this test only checks if
+    ApprIRL compiles at all, not if its results are credible.
+    '''
+    # In all cases check whether ApprIRL runs at all.
+    distances = run_appr_irl(False, duration)
 
-        NOTE: With the default value of duration, this test only checks if
-        ApprIRL compiles at all, not if its results are credible.
-        '''
-        # In all cases check whether ApprIRL runs at all.
-        distances = run_appr_irl(False, duration)
+    # Check results only if duration was manually set to be large.
+    if duration < 5:
+        return
+    assert len(distances) >= 3
+    assert len(distances) <= 10  # unrealistically high
+    assert distances[-1] < distances[0]
+    assert distances[-1] < 5
 
-        # Check results only if duration was manually set to be large.
-        if duration < 5:
-            return
-        assert len(distances) >= 3
-        assert len(distances) <= 10  # unrealistically high
-        assert distances[-1] < distances[0]
-        assert distances[-1] < 5
+def test_proj(self, duration=2):
+    '''Test if the projection implementation plausibly works.
 
-    def test_proj(self, duration=2):
-        '''Test if the projection implementation plausibly works.
+    Checks if it runs for a credible number of steps, and if the latest
+    distance is credibly small, and strictly smaller than the first.
 
-        Checks if it runs for a credible number of steps, and if the latest
-        distance is credibly small, and strictly smaller than the first.
+    NOTE: With the default value of duration, this test only checks if
+    ApprIRL compiles at all, not if its results are credible.
+    '''
+    # In all cases check whether ApprIRL runs at all.
+    distances = run_appr_irl(True, duration)
 
-        NOTE: With the default value of duration, this test only checks if
-        ApprIRL compiles at all, not if its results are credible.
-        '''
-        # In all cases check whether ApprIRL runs at all.
-        distances = run_appr_irl(True, duration)
-
-        # Check results only if duration was manually set to be large.
-        if duration < 5:
-            return
-        assert len(distances) >= 3
-        assert len(distances) <= 10  # unrealistically high
-        assert distances[-1] < distances[0]
-        assert distances[-1] < 5
+    # Check results only if duration was manually set to be large.
+    if duration < 5:
+        return
+    assert len(distances) >= 3
+    assert len(distances) <= 10  # unrealistically high
+    assert distances[-1] < distances[0]
+    assert distances[-1] < 5
