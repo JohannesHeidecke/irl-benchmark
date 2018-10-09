@@ -125,7 +125,8 @@ class TabularRewardFunction(AbstractRewardFunction):
         self.parameters = np.array(parameters)
 
     def domain(self):
-        ''' Return the domain of the reward function. Returns a namedtuple, either State, StateAction, or StateActionState '''
+        '''Return the domain of the reward function. Returns a namedtuple,
+        either State, StateAction, or StateActionState '''
         # domain always contains states:
         states = np.arange(self.env.observation_space.n)
         if self.action_in_domain:
