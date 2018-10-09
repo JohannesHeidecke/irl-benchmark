@@ -1,6 +1,6 @@
 '''Module containing reward functions to be used for IRL.'''
 
-from collections import namedtuple
+from typing import NamedTuple, Union
 from copy import copy
 
 from gym.envs.toy_text.discrete import DiscreteEnv
@@ -9,10 +9,20 @@ from gym.wrappers.time_limit import TimeLimit
 
 import numpy as np
 
-State = namedtuple('State', ('state'))
-StateAction = namedtuple('StateAction', ('state', 'action'))
-StateActionState = namedtuple('StateActionState',
-                              ('state', 'action', 'next_state'))
+
+class State(NamedTuple):
+    state: np.ndarray
+
+
+class StateAction(NamedTuple):
+    state: np.ndarray
+    action: np.ndarray
+
+
+class StateActionState(NamedTuple):
+    state: np.ndarray
+    action: np.ndarray
+    next_state: np.ndarray
 
 
 class AbstractRewardFunction(object):
@@ -34,7 +44,7 @@ class AbstractRewardFunction(object):
         self.next_state_in_domain = next_state_in_domain
         self.parameters = None
 
-    def domain(self):
+    def domain(self) -> Union[State, StateAction, StateActionState]:
         '''Return the domain of the reward function as a namedtuple.
 
         Returns either State, StateAction, or StateActionState.
@@ -43,7 +53,9 @@ class AbstractRewardFunction(object):
         '''
         raise NotImplementedError()
 
-    def domain_sample(self, batch_size):
+    def domain_sample(self,
+                      batch_size: int
+                      ) -> Union[State, StateAction, StateActionState]:
         '''Sample a batch from the domain of the reward function.
 
         Args:
@@ -53,7 +65,8 @@ class AbstractRewardFunction(object):
         '''
         raise NotImplementedError()
 
-    def reward(self, domain_batch):
+    def reward(self, domain_batch: Union[State, StateAction, StateActionState]
+               ) -> np.ndarray:
         '''Return corresponding rewards for a domain batch.
 
         See domain() / domain_sample().

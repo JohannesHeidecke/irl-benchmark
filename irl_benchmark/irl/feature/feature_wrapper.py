@@ -2,7 +2,7 @@ import gym
 from gym.envs.classic_control.pendulum import PendulumEnv, angle_normalize
 import numpy as np
 
-from irl_benchmark.utils.utils import to_one_hot
+from irl_benchmark.utils.utils import to_one_hot, unwrap_env
 
 
 class FeatureWrapper(gym.Wrapper):
