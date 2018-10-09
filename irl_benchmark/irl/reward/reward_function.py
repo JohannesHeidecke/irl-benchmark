@@ -69,6 +69,7 @@ class TabularRewardFunction(AbstractRewardFunction):
     '''Rewards for each possible input are stored in a table.
 
     Only suitable for relatively small environments.
+    The self.parameters in this case are the reward table's values.
     '''
     def __init__(self,
                  env,

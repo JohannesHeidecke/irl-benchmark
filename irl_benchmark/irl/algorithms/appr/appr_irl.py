@@ -7,6 +7,12 @@ from irl_benchmark.irl.collect import collect_trajs
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
 from irl_benchmark.rl.algorithms import RandomAgent, TabularQ
 
+def true_reward_per_traj(trajs):
+    '''Return (undiscounted) average true reward per trajectory.'''
+    true_reward_sum = 0
+    for traj in trajs:
+        true_reward_sum += np.sum(traj['true_rewards'])
+    return true_reward_sum / len(trajs)
 
 
 class ApprIRL(BaseIRLAlgorithm):
@@ -35,6 +41,8 @@ class ApprIRL(BaseIRLAlgorithm):
               time_limit=300,
               rl_time_per_iteration=30,
               eps=0,
+              no_trajs=100,
+              max_steps_per_episode=1000,
               verbose=False):
         '''Accumulate feature counts and estimate reward function.
 
@@ -51,8 +59,6 @@ class ApprIRL(BaseIRLAlgorithm):
         if verbose:
             alg_mode = 'projection' if self.proj else 'SVM'
             print('Running Apprenticeship IRL in mode: ' + alg_mode)
-            print(time_limit)
-            print(rl_time_per_iteration)
 
         # start with random agent:
         agent = RandomAgent(self.env)
@@ -63,8 +69,9 @@ class ApprIRL(BaseIRLAlgorithm):
             if verbose:
                 print('ITERATION ' + str(iteration_counter))
             trajs = collect_trajs(
-                self.env, agent, no_episodes=100, max_steps_per_episode=100)
-
+                self.env, agent, no_episodes=no_trajs, max_steps_per_episode=max_steps_per_episode)
+            if verbose:
+                print('Average true reward per episode: ' + str(true_reward_per_traj(trajs)))
             current_feature_count = self.feature_count(trajs)
             self.feature_counts.append(current_feature_count)
             self.labels.append(-1.0)

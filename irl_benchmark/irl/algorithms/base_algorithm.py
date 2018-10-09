@@ -11,8 +11,15 @@ class BaseIRLAlgorithm(object):
         self.expert_trajs = expert_trajs
         self.rl_alg_factory = rl_alg_factory
 
-    def train(self, time_limit=300):
-        """Train up to time_limit seconds."""
+    def train(self, time_limit=300, rl_time_per_iteration=30):
+        """Train up to time_limit seconds.
+
+        Args:
+          time_limit: total training time in seconds
+          rl_time_per_iteration: RL training time per step in seconds.
+
+        Returns nothing.
+        """
         raise NotImplementedError()
 
     def get_reward_function(self):

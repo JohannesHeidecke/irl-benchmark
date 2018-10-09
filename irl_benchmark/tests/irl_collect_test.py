@@ -56,3 +56,8 @@ def test_agents_collect_feature_reward():
         assert len(traj['features']) > 0
     shutil.rmtree('tests/tempdata/')
 
+def test_without_max_steps():
+    env = gym.make('LunarLander-v2')
+    agent = RandomAgent(env)
+    collect_trajs(env, agent, 10, None)
+
