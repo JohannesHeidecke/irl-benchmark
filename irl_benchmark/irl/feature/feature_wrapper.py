@@ -8,6 +8,7 @@ from irl_benchmark.utils import to_one_hot
 
 class FeatureWrapper(gym.Wrapper):
     '''Provide features in info dictionary.'''
+
     def __init__(self, env):
         super(FeatureWrapper, self).__init__(env)
 
@@ -49,18 +50,20 @@ class FeatureWrapper(gym.Wrapper):
         raise NotImplementedError()
 
 
-class FrozenFeatureWrapper(FeatureWrapper):
+class FrozenLakeFeatureWrapper(FeatureWrapper):
     '''Feature wrapper that was ad hoc written for the FrozenLake env.
     Would also work to get one-hot features for any other discrete env
     such that feature-based algorithms can be used in a tabular setting.
     '''
+
     def features(self, current_state, action, next_state):
         '''Return one-hot encoding of next_state.'''
-        return to_one_hot(next_state, self.env.observation_space.n)        
+        return to_one_hot(next_state, self.env.observation_space.n)
 
     def feature_shape(self):
         '''Return dimension of the one-hot vectors used as features.'''
         return (self.env.observation_space.n,)
+
 
 class PendulumFeatureWrapper(FeatureWrapper):
 

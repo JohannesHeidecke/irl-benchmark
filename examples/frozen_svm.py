@@ -3,7 +3,7 @@ import numpy as np
 import pickle
 
 from irl_benchmark.irl.algorithms.appr.appr_irl import ApprIRL
-from irl_benchmark.irl.feature.feature_wrapper import FrozenFeatureWrapper
+from irl_benchmark.irl.feature.feature_wrapper import FrozenLakeFeatureWrapper
 from irl_benchmark.irl.collect import collect_trajs
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
@@ -19,7 +19,7 @@ max_steps_per_episode = 100
 # to work with tabular methods. Therefore, we just use a wrapper that uses
 # a one-hot encoding of the state space as features.
 env = gym.make('FrozenLake-v0')
-env = FrozenFeatureWrapper(env)
+env = FrozenLakeFeatureWrapper(env)
 
 # Generate expert trajectories.
 expert_agent = TabularQ(env)
