@@ -4,9 +4,10 @@ from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
 from irl_benchmark.rl.algorithms.value_iteration import ValueIteration
 
+import numpy as np
+
 
 class MaxEnt(BaseIRLAlgorithm):
-
     """Maximum Entropy IRL (Ziebart et al., 2008).
 
     Not to be confused with Maximum Entropy Deep IRL (Wulfmeier et al., 2016)
