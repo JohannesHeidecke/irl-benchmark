@@ -23,7 +23,7 @@ def run_appr_irl(use_projection):
     reward_function = FeatureBasedRewardFunction(
         env, np.random.normal(size=16))
     env = RewardWrapper(env, reward_function)
-    appr_irl = ApprIRL(env, expert_trajs, proj=use_projection)
+    appr_irl = ApprIRL(env, expert_trajs, TabularQ, proj=use_projection)
     appr_irl.train(120, 27, verbose=False)
     return appr_irl.distances
 
