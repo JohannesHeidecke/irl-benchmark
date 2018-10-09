@@ -13,8 +13,7 @@ def to_one_hot(hot_vals, max_val):
 
 
 def unwrap_env(env, until_class=None):
-    '''
-    Unwraps wrapped env until we get an instance that is a until_class.
+    '''Unwrap wrapped env until we get an instance that is a until_class.
 
     If cls is None we will unwrap all the way.
     '''
@@ -34,7 +33,7 @@ def unwrap_env(env, until_class=None):
 
 
 def get_transition_matrix(env):
-    """Gets transition matrix from discrete environment"""
+    '''Get transition matrix from discrete environment.'''
     env = unwrap_env(env, DiscreteEnv)
 
     n_states = env.observation_space.n
@@ -56,7 +55,7 @@ def get_transition_matrix(env):
 
 
 def get_reward_matrix(env):
-    """Gets reward array from discrete environment"""
+    '''Get reward array from discrete environment.'''
     env = unwrap_env(env, DiscreteEnv)
 
     n_states = env.observation_space.n
@@ -78,14 +77,12 @@ def get_reward_matrix(env):
 
 
 class MetricsLogger():
-    '''
-    Listens for metrics to be stored as json.
-    Metrics can be stored once per run or once per training step.
+    '''Listens for metrics to be stored as json.
 
-    The simplest usage is to load the jsons of relevant runs,
-    select metrics and convert to a pandas DataFrames.
+    Metrics can be stored once per run or once per training step. The
+    simplest usage is to load the jsons of relevant runs, select
+    metrics and convert to a pandas DataFrames.
     '''
-
     def __init__(self):
         self.metrics = defaultdict(lambda: [])
 
@@ -95,3 +92,14 @@ class MetricsLogger():
     def save(self, path):
         with open(path, 'wt') as f:
             json.dump(self.metrics, f)
+
+
+def sigma(array):
+    '''Replace negative entries of array w/ -1, others w/ 1.
+
+    Returns modified array.
+    '''
+    array = array.copy()
+    array[array >= 0] = 1
+    array[array < 0] = -1
+    return array

@@ -5,7 +5,8 @@ import time
 from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
 from irl_benchmark.irl.collect import collect_trajs
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
-from irl_benchmark.rl.algorithms import RandomAgent, TabularQ
+from irl_benchmark.rl.algorithms import RandomAgent
+
 
 def true_reward_per_traj(trajs):
     '''Return (undiscounted) average true reward per trajectory.'''
@@ -14,6 +15,7 @@ def true_reward_per_traj(trajs):
         true_reward_sum += np.sum(traj['true_rewards'])
     return true_reward_sum / len(trajs)
 
+
 class ApprIRL(BaseIRLAlgorithm):
     '''Apprenticeship learning (Abbeel & Ng, 2004).
 
@@ -21,7 +23,6 @@ class ApprIRL(BaseIRLAlgorithm):
     If proj=True is passed at initialization, the projection alg will be used.
     Else the max-margin algorithm will be used via the cvxpy SVM solver.
     '''
-
     def __init__(self,
                  env,
                  expert_trajs,
@@ -73,10 +74,12 @@ class ApprIRL(BaseIRLAlgorithm):
             iteration_counter += 1
             if verbose:
                 print('ITERATION ' + str(iteration_counter))
-            trajs = collect_trajs(
-                self.env, agent, no_episodes=no_trajs, max_steps_per_episode=max_steps_per_episode)
+            trajs = collect_trajs(self.env, agent,
+                                  no_episodes=no_trajs,
+                                  max_steps_per_episode=max_steps_per_episode)
             if verbose:
-                print('Average true reward per episode: ' + str(true_reward_per_traj(trajs)))
+                print('Average true reward per episode: '
+                      + str(true_reward_per_traj(trajs)))
             current_feature_count = self.feature_count(trajs)
             self.feature_counts.append(current_feature_count)
             self.labels.append(-1.0)
@@ -143,13 +146,3 @@ class ApprIRL(BaseIRLAlgorithm):
     def get_reward_function(self):
         '''Return attribute reward_function.'''
         return self.reward_function
-
-    def feature_count(self, trajs):
-        '''Return empirical feature counts of input trajectories.'''
-        feature_sum = np.zeros(self.env.env.feature_shape())
-        for traj in trajs:
-            gammas = self.gamma**np.arange(len(traj['features']))
-            feature_sum += np.sum(
-                gammas.reshape(-1, 1) * np.array(traj['features']), axis=0)
-        feature_count = feature_sum / len(trajs)
-        return feature_count
