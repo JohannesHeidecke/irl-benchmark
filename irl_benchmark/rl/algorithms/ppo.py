@@ -1,3 +1,5 @@
+from gym.spaces import Box
+
 from irl_benchmark.rl.algorithms import SLMAlgorithm
 
 class PPO(SLMAlgorithm):
@@ -10,4 +12,7 @@ class PPO(SLMAlgorithm):
         )
 
     def pick_action(self, state):
-        action, _ = self.agent.algorithm.action_policy(state, self, body)
+        action = self.agent.algorithm.act(state)
+        if isinstance(self.env.action_space, Box):
+            action = [action]
+        return action

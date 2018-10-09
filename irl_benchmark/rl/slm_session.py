@@ -1,3 +1,5 @@
+import time
+
 from slm_lab.agent import Agent
 from slm_lab.env import OpenAIEnv
 from slm_lab.experiment import analysis
@@ -19,7 +21,7 @@ class Session:
         self.agent = Agent(self.spec, self.info_space, body=body)
 
         enable_aeb_space(self)  # to use lab's data analysis framework
-        logger.info(f'Initialized session {self.index}')
+        # logger.info(f'Initialized session {self.index}')
 
     def run_episode(self):
         self.env.clock.tick('epi')
@@ -30,20 +32,21 @@ class Session:
             action = self.agent.act(state)
             reward, state, done = self.env.step(action)
             self.agent.update(action, reward, state, done)
-        self.agent.body.log_summary()
+        # self.agent.body.log_summary()
 
     def close(self):
         self.agent.close()
         self.env.close()
-        logger.info('Session done and closed.')
+        # logger.info('Session done and closed.')
 
-    def run(self):
-        while self.env.clock.get('epi') <= self.env.max_episode:
+    def run(self, time_limit):
+        t0 = time.time()
+        while time.time() < t0 + time_limit:
             self.run_episode()
         self.data = analysis.analyze_session(self)  # session fitness
         self.close()
         return self.data, self.agent
 
     def update_env(self, env):
-        self.env = env
-        self.agent.body.env = env
+        self.env.u_env = env
+        self.agent.body.env.u_env = env

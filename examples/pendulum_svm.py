@@ -1,6 +1,9 @@
 import gym
+import logging
 import numpy as np
 import pickle
+
+from slm_lab.lib.logger import set_level as set_logging_level
 
 from irl_benchmark.irl.algorithms.appr.appr_irl import ApprIRL
 from irl_benchmark.irl.feature.feature_wrapper import PendulumFeatureWrapper
@@ -9,10 +12,13 @@ from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.rl.algorithms import PPO
 
+# reduce logger output from SLM lab:
+set_logging_level(logging.CRITICAL)
+
 # Define important script constants here:
 store_to = 'data/pendulum/expert/'
 no_episodes = 1000
-max_steps_per_episode = 100
+max_steps_per_episode = 200
 
 # Define the RL algorithm that is used both for the expert and
 # in the IRL loop:
@@ -25,24 +31,24 @@ env = gym.make('Pendulum-v0')
 env = PendulumFeatureWrapper(env)
 
 # Generate expert trajectories.
-expert_agent = rl_alg_factory(env)
-print('Training expert agent...')
-expert_agent.train(15)
-print('Done training expert')
-expert_trajs = collect_trajs(env, expert_agent, no_episodes,
-                             max_steps_per_episode, store_to)
+# expert_agent = rl_alg_factory(env)
+# print('Training expert agent...')
+# expert_agent.train(15)
+# print('Done training expert')
+# expert_trajs = collect_trajs(env, expert_agent, no_episodes,
+#                              max_steps_per_episode, store_to)
 
 # you can comment out the previous block if expert data has already
 # been generated and load the trajectories from file by uncommenting
 # next 2 lines:
-# with open(store_to + 'trajs.pkl', 'rb') as f:
-#     expert_trajs = pickle.load(f)
+with open(store_to + 'trajs.pkl', 'rb') as f:
+    expert_trajs = pickle.load(f)
 
 # Provide random reward function as initial reward estimate.
 # This probably isn't really required.
-reward_function = FeatureBasedRewardFunction(env, np.random.normal(size=16))
+reward_function = FeatureBasedRewardFunction(env, np.random.normal(size=3))
 env = RewardWrapper(env, reward_function)
 
 # Run projection algorithm for up to 5 minutes.
-appr_irl = ApprIRL(env, expert_trajs, rl_alg_factory, proj=True)
-appr_irl.train(600, verbose=True)
+appr_irl = ApprIRL(env, expert_trajs, rl_alg_factory, proj=False)
+appr_irl.train(time_limit=60, rl_time_per_iteration=10, eps=0, no_trajs=100, max_steps_per_episode=200, verbose=True)

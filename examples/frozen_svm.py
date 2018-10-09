@@ -47,4 +47,5 @@ env = RewardWrapper(env, reward_function)
 
 # Run projection algorithm for up to 5 minutes.
 appr_irl = ApprIRL(env, expert_trajs, rl_alg_factory, proj=True)
-appr_irl.train(600, verbose=True)
+appr_irl.train(time_limit=600, rl_time_per_iteration=45, eps=0, no_trajs=100, max_steps_per_episode=100, verbose=True)
+

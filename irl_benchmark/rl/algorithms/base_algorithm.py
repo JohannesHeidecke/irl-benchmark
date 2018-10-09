@@ -1,4 +1,5 @@
 import gym
+import logging
 import numpy as np
 import os
 
@@ -50,19 +51,26 @@ class SLMAlgorithm(RLAlgorithm):
     def __init__(self, env, spec_file, spec_name):
         '''Set environment and get spec JSON file from spec_file.'''
 
+        self.env = env
         self.spec = spec_util.get(spec_file=spec_file, spec_name=spec_name)
+        # make sure the spec only contains one agent and one environment:
+        assert len(self.spec['agent']) == 1
+        assert len(self.spec['env']) == 1
+        # make sure the specification is for the right environment id:
+        self.spec['env'][0]['name'] = env.spec.id
         self.info_space = InfoSpace()
+        # self.agent will only be filled after training.
         self.agent = None
         
         os.environ['PREPATH'] = slm_util.get_prepath(self.spec, self.info_space)
 
     def train(self, time_limit):
+        # create a session to train for time_limit seconds
         os.environ['lab_mode'] = 'training'
-        # TODO: there should be a time limit here, not episode limit!
-        self.spec['env'][0]['max_episode'] = 10
-
         session = Session(self.spec, self.info_space)
-        _, agent = session.run()
+        session.update_env(self.env)
+        _, agent = session.run(time_limit)
+        # persist trained agent:
         self.agent = agent
 
 
@@ -73,5 +81,4 @@ class RandomAgent(RLAlgorithm):
     '''
 
     def pick_action(self, state):
-        assert isinstance(self.env.action_space, gym.spaces.Discrete)
-        return np.random.choice(self.env.action_space.n)
+        return self.env.action_space.sample()
