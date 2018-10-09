@@ -78,6 +78,7 @@ class MaxEnt(BaseIRLAlgorithm):
             for state in episode['states']:
                 feat_exp += feat_map[state]
         feat_exp = feat_exp / len(self.expert_trajs)
+        #print(feat_exp)
 
         agent = self.rl_alg_factory(self.env)
 

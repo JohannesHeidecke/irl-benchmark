@@ -13,7 +13,7 @@ from irl_benchmark.utils.utils import get_transition_matrix
 
 store_to = 'data/frozen/expert/'
 no_episodes = 1000
-max_steps_per_episode = 100
+max_steps_per_episode = 1000
 
 env = gym.make('FrozenLake8x8-v0')
 env = FrozenLakeFeatureWrapper(env)
@@ -21,9 +21,9 @@ initial_reward_function_estimate = FeatureBasedRewardFunction(env, np.zeros(64))
 env = RewardWrapper(env, initial_reward_function_estimate)
 
 # Generate expert trajectories.
-expert_agent = TabularQ(env)
+expert_agent = ValueIteration(env)
 print('Training expert agent...')
-expert_agent.train(15)
+expert_agent.train(30)
 print('Done training expert')
 expert_trajs = collect_trajs(env, expert_agent, no_episodes,
                              max_steps_per_episode, store_to)
@@ -43,3 +43,4 @@ rewards = meirl.train(feat_map)
 rewards = (rewards - np.min(rewards))/(np.max(rewards) - np.min(rewards))
 
 print(rewards)
+
