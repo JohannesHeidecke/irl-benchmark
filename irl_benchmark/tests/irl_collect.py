@@ -12,13 +12,20 @@ from irl_benchmark.rl.algorithms.base_algorithm import RandomAgent
 
 
 class CollectTestCase(unittest.TestCase):
-
+    '''Test if collect module correctly collects trajectories.'''
     def test_agents_collect(self):
+        '''Check types and components of returned trajectories.
+
+        Uses a random agent on FrozenLake.'''
         env = gym.make('FrozenLake-v0')
         agent = RandomAgent(env)
         trajs = collect_trajs(env, agent, 10, 100, store_to='tests/tempdata/')
         with open('tests/tempdata/trajs.pkl', 'rb') as f:
             pickle_trajs = pickle.load(f)
+        # Return must be a dictionary containing non-empty lists for
+        # keys 'states', 'actions', and 'rewards'.  Lists at keys
+        # 'true_rewards' and 'features' must be empty as the test uses
+        # neither a FeatureWrapper nor a RewardWrapper.
         for traj in trajs:
             assert type(traj) is dict
             assert len(traj['states']) > 0
@@ -38,6 +45,9 @@ class CollectTestCase(unittest.TestCase):
         trajs = collect_trajs(env, agent, 10, 100, store_to='tests/tempdata/')
         with open('tests/tempdata/trajs.pkl', 'rb') as f:
             pickle_trajs = pickle.load(f)
+        # This test uses both a FeatureWrapper and a
+        # RewardWrapper. Therefore, all components of the return must
+        # be non-empty.
         for traj in trajs:
             assert type(traj) is dict
             assert len(traj['states']) > 0

@@ -11,6 +11,19 @@ from irl_benchmark.rl.algorithms import TabularQ
 
 
 def run_appr_irl(use_projection, duration):
+    '''Run ApprIRL on FrozenLake and return distance of feature counts.
+
+    The RL steps use Tabular Q-learning.
+
+    Args:
+      use_projection: `bool`, use projection alg if true, else use max-margin
+      duration: `float`, maximum total training time for IRL and initial expert 
+
+    Returns:
+      appr_irl.distances: `list`, L2 distances betw expert feature counts and
+                          the feature counts obtained by the current RL agent
+                          (trained using the current reward estimate).
+    '''
     store_to = 'data/frozen/expert'
     no_episodes = 1000
     max_steps_per_episode = 100
@@ -29,9 +42,21 @@ def run_appr_irl(use_projection, duration):
 
 
 class ApprIRLTestCase(unittest.TestCase):
+    '''Test both implementations of Apprenticeship IRL (Abeel & Ng, 2004).'''
 
     def test_svm(self, duration=2):
+        '''Test if the max-margin implementation plausibly works.
+
+        Checks if it runs for a credible number of steps, and if the latest
+        distance is credibly small, and strictly smaller than the first.
+
+        NOTE: With the default value of duration, this test only checks if
+        ApprIRL compiles at all, not if its results are credible.
+        '''
+        # In all cases check whether ApprIRL runs at all.
         distances = run_appr_irl(False, duration)
+
+        # Check results only if duration was manually set to be large.
         if duration < 5:
             return
         assert len(distances) >= 3
@@ -40,7 +65,18 @@ class ApprIRLTestCase(unittest.TestCase):
         assert distances[-1] < 5
 
     def test_proj(self, duration=2):
+        '''Test if the projection implementation plausibly works.
+
+        Checks if it runs for a credible number of steps, and if the latest
+        distance is credibly small, and strictly smaller than the first.
+
+        NOTE: With the default value of duration, this test only checks if
+        ApprIRL compiles at all, not if its results are credible.
+        '''
+        # In all cases check whether ApprIRL runs at all.
         distances = run_appr_irl(True, duration)
+
+        # Check results only if duration was manually set to be large.
         if duration < 5:
             return
         assert len(distances) >= 3
