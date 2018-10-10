@@ -1,3 +1,6 @@
+import os
+import sys
+
 import gym
 import numpy as np
 
@@ -11,11 +14,14 @@ It also tests if it is enough to optimise each hyper_param independently.
 
 
 def run(**hyper_params):
+    if 'COMET_KEY' not in os.environ:
+        print('Please set the COMET_KEY environment variable')
+        print('e.g. by running with: `COMET_KEY="your-key" python example.py`')
+        sys.exit()
+    api_key = os.environ['COMET_KEY']
     # Create an experiment
     experiment = Experiment(
-        api_key="lXbOUQyoigKWUW6OrLSoTiJyY",
-        project_name="tabular_q",
-        workspace="irl-benchmark")
+        api_key=api_key, project_name="tabular_q", workspace="irl-benchmark")
 
     def metric_listener(reward):
         experiment.log_metric('reward', reward)
