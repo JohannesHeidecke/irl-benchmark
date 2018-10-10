@@ -2,6 +2,7 @@ import gym
 import numpy as np
 
 from irl_benchmark.rl.algorithms.tabular_q import TabularQ
+from irl_benchmark.utils.utils import MetricsLogger
 
 from comet_ml import Experiment
 
@@ -13,8 +14,11 @@ def run():
         project_name="tabular_q",
         workspace="irl-benchmark")
 
+    metrics_logger = MetricsLogger()
+
     def metric_listener(reward):
         experiment.log_metric('reward', reward)
+        metrics_logger.log_metric('reward', reward)
 
     duration = 5
     hyper_params = {'gamma': 0.95, 'alpha_start': 0.8}
@@ -27,6 +31,8 @@ def run():
     rewards = agent.train(duration, metric_listener)
 
     experiment.log_metric('MA(100) reward', np.mean(rewards[-100:]))
+
+    metrics_logger.save('data/example_tabular_q_metrics.json')
 
 
 if __name__ == '__main__':

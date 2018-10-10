@@ -77,7 +77,7 @@ def get_reward_matrix(env):
     return rewards
 
 
-class MetricsListener():
+class MetricsLogger():
     '''
     Listens for metrics to be stored as json.
     Metrics can be stored once per run or once per training step.

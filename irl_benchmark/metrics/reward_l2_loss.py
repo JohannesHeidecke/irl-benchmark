@@ -26,7 +26,9 @@ class RewardL2Loss(object):
 
     def evaluate(self,
                  estim_reward: AbstractRewardFunction,
-                 use_sampling=False) -> float:
+                 use_sampling=False,
+                 use_gpu=False,
+                 gamma=1.0) -> float:
         '''Return distance between estim_reward and true reward.'''
         if use_gpu and torch.cuda.device_count(
         ) > 0 and torch.cuda.is_available():
