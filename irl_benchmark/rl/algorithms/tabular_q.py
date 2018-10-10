@@ -11,6 +11,7 @@ class TabularQ(RLAlgorithm):
 
     Only works for discrete observation/action spaces.
     '''
+
     def __init__(
             self,
             env,
@@ -94,7 +95,7 @@ class TabularQ(RLAlgorithm):
         self.Q[s][a] += self.get_alpha() * (r + self.gamma * Qp - Q)
         self.n_updates += 1
 
-    def train(self, time_limit):
+    def train(self, time_limit, metric_listener=None):
         '''Train agent for at most time_limit seconds.
 
         Return undiscounted sum of rewards.'''
@@ -115,6 +116,10 @@ class TabularQ(RLAlgorithm):
 
             sum_reward = np.sum(rs)
             sum_rewards.append(sum_reward)
+
+            # Push each episode to listener
+            if metric_listener is not None:
+                metric_listener(sum_reward)
 
         return sum_rewards
 
