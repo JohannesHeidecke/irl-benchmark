@@ -1,3 +1,4 @@
+import functools
 import gym
 from gym.envs.classic_control.pendulum import PendulumEnv, angle_normalize
 import numpy as np
@@ -73,3 +74,36 @@ class PendulumFeatureWrapper(FeatureWrapper):
     def feature_shape(self):
         '''Return one-hot encoding of next_state.'''
         return (3, )
+
+# # # # # #
+# MAKE FEATURE WRAPPERS ACCESSIBLE BELOW:
+# # # # # #
+
+_feature_wrappers = {}
+
+def make(key):
+    return _feature_wrappers[key]()
+
+
+def _register_feature_wrapper(key):
+    def decorator(f):
+        @functools.wraps(f)
+        def new_f():
+            return f(gym.make(key))
+        new_f.__doc__ = "Creates feature wrapper for {}".format(key)
+        _feature_wrappers[key] = new_f
+        return new_f
+    return decorator
+
+
+@_register_feature_wrapper('FrozenLake-v0')
+def frozen_lake(env):
+    return FrozenLakeFeatureWrapper(env)
+
+@_register_feature_wrapper('FrozenLake8x8-v0')
+def frozen_lake_8_8(env):
+    return FrozenLakeFeatureWrapper(env)
+
+@_register_feature_wrapper('Pendulum-v0')
+def pendulum(env):
+    return PendulumFeatureWrapper(env)

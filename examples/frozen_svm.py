@@ -3,8 +3,8 @@ import numpy as np
 import pickle
 
 from irl_benchmark.irl.algorithms.appr.appr_irl import ApprIRL
-from irl_benchmark.irl.feature.feature_wrapper import FrozenLakeFeatureWrapper
 from irl_benchmark.irl.collect import collect_trajs
+from irl_benchmark.irl.feature import feature_wrapper
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.rl.algorithms import TabularQ
@@ -23,8 +23,7 @@ def rl_alg_factory(env):
 # However, FrozenLake doesn't provide features. It is sufficiently small
 # to work with tabular methods. Therefore, we just use a wrapper that uses
 # a one-hot encoding of the state space as features.
-env = gym.make('FrozenLake-v0')
-env = FrozenLakeFeatureWrapper(env)
+env = feature_wrapper.make('FrozenLake-v0')
 
 # Generate expert trajectories.
 expert_agent = rl_alg_factory(env)
