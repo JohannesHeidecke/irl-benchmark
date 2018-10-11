@@ -74,6 +74,16 @@ class FrozenLakeFeatureWrapper(FeatureWrapper):
         '''Return dimension of the one-hot vectors used as features.'''
         return (self.env.observation_space.n, )
 
+    def feature_range(self):
+        '''Get maximum and minimum values of all k features.
+
+        Returns:
+        `np.ndarray` of shape (2, k) w/ max in 1st and min in 2nd row.
+        '''
+        ranges = np.zeros((2, self.feature_shape()[0]))
+        ranges[0] = np.ones(self.feature_shape()[0])
+        return ranges
+
 
 class PendulumFeatureWrapper(FeatureWrapper):
     def features(self, current_state, action, next_state):
