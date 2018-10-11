@@ -27,6 +27,7 @@ class ValueIteration(RLAlgorithm):
 
     def train(self, time_limit, metrics_listener=None):
         t0 = time()
+
         n_states, n_actions, _ = np.shape(self.P)
 
         values = np.zeros([n_states])
@@ -66,6 +67,7 @@ class ValueIteration(RLAlgorithm):
 
         self.V = values
         self.pi = policy
+
 
     def policy(self, s):
         return self.pi[s]
