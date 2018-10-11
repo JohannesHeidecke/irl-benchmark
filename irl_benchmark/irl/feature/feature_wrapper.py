@@ -82,10 +82,12 @@ class PendulumFeatureWrapper(FeatureWrapper):
 _feature_wrappers = {}
 
 def make(key):
+    '''Return a feature wrapper around the environment specified in key.'''
     return _feature_wrappers[key]()
 
 
 def _register_feature_wrapper(key):
+    '''Unified way of wrapping a feature wrapper around a gym environment'''
     def decorator(f):
         @functools.wraps(f)
         def new_f():
@@ -95,13 +97,14 @@ def _register_feature_wrapper(key):
         return new_f
     return decorator
 
-
 @_register_feature_wrapper('FrozenLake-v0')
 def frozen_lake(env):
     return FrozenLakeFeatureWrapper(env)
 
 @_register_feature_wrapper('FrozenLake8x8-v0')
 def frozen_lake_8_8(env):
+    # same feature wrapper as for 'FrozenLake-v0' can be used
+    # as size of state space is automatically extracted
     return FrozenLakeFeatureWrapper(env)
 
 @_register_feature_wrapper('Pendulum-v0')
