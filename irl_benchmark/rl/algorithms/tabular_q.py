@@ -15,7 +15,7 @@ class TabularQ(RLAlgorithm):
     def __init__(
             self,
             env,
-            gamma=0.95,
+            gamma=0.8,
             alpha_start=0.8,
             alpha_end=0.1,
             alpha_decay=1e-4,

@@ -26,22 +26,22 @@ def rl_alg_factory(env):
 # However, FrozenLake doesn't provide features. It is sufficiently small
 # to work with tabular methods. Therefore, we just use a wrapper that uses
 # a one-hot encoding of the state space as features.
-env = gym.make('FrozenLake8x8-v0')
+env = gym.make('FrozenLake-v0')
 env = FrozenLakeFeatureWrapper(env)
 
 # Generate expert trajectories.
-# expert_agent = rl_alg_factory(env)
-# print('Training expert agent...')
-# expert_agent.train(60)
-# print('Done training expert')
-# expert_trajs = collect_trajs(env, expert_agent, no_episodes,
-#                              max_steps_per_episode, store_to)
+expert_agent = rl_alg_factory(env)
+print('Training expert agent...')
+expert_agent.train(600)
+print('Done training expert')
+expert_trajs = collect_trajs(env, expert_agent, no_episodes,
+                             max_steps_per_episode, store_to)
 
 # you can comment out the previous block if expert data has already
 # been generated and load the trajectories from file by uncommenting
 # next 2 lines:
-with open(store_to + 'trajs.pkl', 'rb') as f:
-    expert_trajs = pickle.load(f)
+# with open(store_to + 'trajs.pkl', 'rb') as f:
+#     expert_trajs = pickle.load(f)
 
 # Provide random reward function as initial reward estimate.
 # This probably isn't really required.
@@ -51,5 +51,5 @@ reward_function = FeatureBasedRewardFunction(env,
 env = RewardWrapper(env, reward_function)
 
 # Run Relative Entropy IRL for by default 60 seconds.
-relent = RelEnt(env, expert_trajs, rl_alg_factory, horizon=100, delta=1e-3)
-relent.train(1e-3, verbose=True)
+relent = RelEnt(env, expert_trajs, rl_alg_factory, horizon=100, delta=.05)
+relent.train(1e-3, 60, verbose=True)
