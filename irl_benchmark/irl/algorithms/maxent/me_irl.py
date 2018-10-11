@@ -44,8 +44,7 @@ class MaxEnt(BaseIRLAlgorithm):
         mu = np.zeros((self.n_states, longest_traj_len))
 
         for traj in self.expert_trajs:
-            for state in traj['states']:
-                mu[state, 0] += 1
+            mu[traj['states'][0], 0] += 1
         mu[:, 0] = mu[:, 0] / len(self.expert_trajs)
 
         for t in range(1, longest_traj_len):
