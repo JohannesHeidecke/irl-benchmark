@@ -40,7 +40,7 @@ class RelEnt(BaseIRLAlgorithm):
                           and returns an RL agent
         baseline_agent -- `RLAlgorithm`, used to get non-optimal trajectories.
                           If None, a RandomAgent will be used.
-        gamma -- `float`, discount factor; note that large values won't work 
+        gamma -- `float`, discount factor; note that large values won't work
                  well for environments like FrozenLake where discounting is the
                  only incentive to quickly reach the goal state
         horizon -- `int`, fixed length of trajectories to be considered
@@ -83,6 +83,7 @@ class RelEnt(BaseIRLAlgorithm):
         )
         # Calculate expert feature counts.
         self.expert_feature_count = self.feature_count(self.expert_trajs)
+        print(self.expert_feature_count)
         # Set tolerance epsilon (one per feature) for not matching
         # expert feature counts.
         self.epsilons = np.zeros(self.n_features)
@@ -132,7 +133,7 @@ class RelEnt(BaseIRLAlgorithm):
         '''Train for at most time_limit seconds w/ n_trajs non-expert trajs.
 
         Args:
-        step_size -- `float`, size of each gradient descent step
+        step_size -- `float`, size of each gradient ascent step
         time_limit -- `int`, number of seconds to train
         n_trajs -- `int`, number of non-expert trajs to be collected
         verbose -- `bool`, if true print gradient norms and reward weights
@@ -146,7 +147,7 @@ class RelEnt(BaseIRLAlgorithm):
 
         # Estimate subgradient based on collected trajectories, then
         # update reward coefficients.
-        print('Starting subgradient descent...')
+        print('Starting subgradient ascent...')
         iteration_counter = 0
         while time.time() < t0 + time_limit:
             # replace the previous with the following line when using pdb
@@ -155,7 +156,7 @@ class RelEnt(BaseIRLAlgorithm):
             reward_coefficients += step_size * subgrads
             reward_coefficients /= np.linalg.norm(reward_coefficients)
             iteration_counter += 1
-            if verbose and iteration_counter % 5 == 0:
+            if verbose and iteration_counter % 200 == 0:
                 print('ITERATION ' + str(iteration_counter)
                       + ' grad norm: ' + str(np.linalg.norm(subgrads)))
                 print('ITERATION ' + str(iteration_counter)
