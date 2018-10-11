@@ -1,9 +1,39 @@
 import numpy as np
+import slm_lab.agent.net
 import torch
-from ..irl.reward.reward_function import (
-    AbstractRewardFunction, TabularRewardFunction, State)
+from gym.spaces.discrete import Discrete as DiscreteSpace
+from irl_benchmark.utils import utils
+from irl_benchmark.irl.reward.reward_function import (AbstractRewardFunction,
+    State, StateActionState, TabularRewardFunction)
+from irl_benchmark.utils.utils import unwrap_env
+from slm_lab.lib import logger
+
+torch.nn.MSELoss
+
 
 __all__ = ['RewardL2Loss']
+
+logger = logger.get_logger(__name__)
+
+_env_net_specs = {
+    "FrozenLake-v0": {
+        "type": "MLPNet",
+        "shared": False,
+        "hid_layers": [32],
+        "hid_layers_activation": "selu",
+        "clip_grad": False,
+        "use_same_optim": True,
+        "optim_spec": {
+          "name": "Adam",
+          "lr": 0.01
+        },
+        "lr_decay": "rate_decay",
+        "lr_decay_frequency": 200,
+        "lr_decay_min_timestep": 200,
+        "lr_anneal_timestep": 10000,
+        "batch_size": 64,
+    }
+}
 
 
 class RewardL2Loss(object):
@@ -24,16 +54,20 @@ class RewardL2Loss(object):
         self.true_reward = true_reward
 
     def evaluate(self, estim_reward: AbstractRewardFunction,
-                 gamma: float, use_sampling=False, use_gpu=True) -> float:
+                 gamma: float, use_sampling=False, use_gpu=True, n_iters=5000) -> float:
         '''Return distance between estim_reward and true reward.'''
         if use_gpu and torch.cuda.device_count() > 0:
             device = torch.cuda.device(0)
         else:
             use_gpu = False
             device = torch.device('cpu')
+        # HACK: whether to use GPU or not should go in the Spec.
 
         if use_sampling:
-            return NotImplementedError()
+            env = self.true_reward.env
+            net_spec = _env_net_specs[env.spec.id]
+            return _optimize_net(env, net_spec, gamma, self.true_reward,
+                                 estim_reward, n_iters)
         else:
             domain = estim_reward.domain()
             if not isinstance(domain, State):
@@ -103,3 +137,76 @@ def _scalable_term(R, gamma, phi):
     return ((R_full - phi.reshape([-1, 1, 1])
              + gamma*phi.reshape([1, 1, -1]))
             .reshape([-1]))
+
+
+class RewardLossModule(torch.nn.Module):
+    def __init__(self, estim_reward, gamma, in_dim, net, net_dtype):
+        super(RewardLossModule, self).__init__()
+        self.estim_reward = estim_reward
+        self.gamma = gamma
+        self.in_dim = in_dim
+        self.net_dtype = net_dtype
+
+        # child Modules
+        self.c = torch.nn.Parameter(torch.ones((), dtype=net_dtype),
+                                    requires_grad=True)
+        self.net = net
+
+    def reset_parameters(self):
+        self.c[...] = 1.0
+
+    @staticmethod
+    def correctly_shaped(R, dtype, device):
+        return (torch.from_numpy(R)
+                .to(dtype=dtype, device=device)
+                .reshape((R.shape + (1, 1))[:3]))
+
+    def forward(self, input):
+        dev_dtype = dict(device=self.c.device, dtype=self.net_dtype)
+        oh_states = utils.to_one_hot(
+            input.state, self.in_dim,
+            lambda s: torch.zeros(s, **dev_dtype))
+
+        R = self.correctly_shaped(self.estim_reward.reward(input), **dev_dtype)
+
+        phi_s = self.net(oh_states)
+        return (self.c**2 * R - phi_s.reshape([-1, 1, 1])
+                + self.gamma*phi_s.reshape([1, 1, -1]))
+
+
+def _optimize_net(env, net_spec, gamma, true_reward, estim_reward, n_iters):
+    env = unwrap_env(env)
+    if isinstance(env.observation_space, DiscreteSpace):
+        in_dim = env.observation_space.n
+    else:
+        assert len(env.observation_space.shape) == 1, (
+            "Cannot handle tensor spaces")
+        in_dim = env.observation_space.shape[0]
+
+    NetClass = getattr(slm_lab.agent.net, net_spec['type'])
+    net_spec["loss_spec"] = {"name": "MSELoss", "reduction": "sum"}
+    net = NetClass(net_spec, in_dim, out_dim=1)
+    net_dtype = next(next(net.modules()).parameters()).dtype
+
+    net.model = RewardLossModule(estim_reward, gamma, in_dim, net.model,
+                                 net_dtype)
+    # Reconstruct optimizer with new set of parameters
+    net.optim = slm_lab.agent.net.net_util.get_optim(
+        net, net_spec["optim_spec"])
+
+    print("Resulting net:", net)
+
+    for _ in range(n_iters):
+        # d = true_reward.domain_sample(net_spec['batch_size'])
+        sas = true_reward.domain()
+        R_true = (RewardLossModule.correctly_shaped(
+            true_reward.reward(sas),
+            dtype=net_dtype,
+            device=net.device)
+                  .repeat(1, 1, 16))  # HACK
+        loss = net.training_step(x=sas, y=R_true)
+        with torch.no_grad():
+            torch.clamp(net.model.c, 0., np.inf, out=net.model.c)
+    return loss
+
+

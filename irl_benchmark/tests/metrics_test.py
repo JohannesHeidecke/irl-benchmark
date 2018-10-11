@@ -58,3 +58,27 @@ def test_l2_metric_s():
     assert np.allclose(opt_loss, loss)
     assert np.allclose(opt_c, c)
     assert np.allclose(opt_phi, phi)
+
+
+def test_l2_metric_sample_s():
+    '''
+    Tests the L2-minimisation by potentials metric when the reward is only a
+    function of the state, and we can't handle the full domain. For this
+    reason, we parameterise the phi mappings with a neural network.
+    '''
+    gamma = 0.9
+
+    env_true = truth.make('FrozenLake-v0')
+    domain = env_true.domain()
+    R_true = torch.from_numpy(env_true.reward(domain))
+    assert R_true.shape == (16,), "16 states"
+
+    env_learned = TabularRewardFunction(
+        env_true.env,
+        torch.randn(R_true.shape, device=device, dtype=float_type))
+
+    metric = RewardL2Loss(env_true)
+    loss_analytic = float(metric.evaluate(env_learned, gamma, use_sampling=False))
+    loss = float(metric.evaluate(env_learned, gamma, use_sampling=True,
+                                 n_iters=1000))
+    assert np.allclose(loss_analytic, loss, rtol=1e-3)
