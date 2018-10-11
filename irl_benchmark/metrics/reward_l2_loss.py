@@ -8,8 +8,6 @@ from irl_benchmark.irl.reward.reward_function import (AbstractRewardFunction,
 from irl_benchmark.utils.utils import unwrap_env
 from slm_lab.lib import logger
 
-torch.nn.MSELoss
-
 
 __all__ = ['RewardL2Loss']
 
