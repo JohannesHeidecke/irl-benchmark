@@ -83,7 +83,6 @@ class RelEnt(BaseIRLAlgorithm):
         )
         # Calculate expert feature counts.
         self.expert_feature_count = self.feature_count(self.expert_trajs)
-        print(self.expert_feature_count)
         # Set tolerance epsilon (one per feature) for not matching
         # expert feature counts.
         self.epsilons = np.zeros(self.n_features)
@@ -128,7 +127,7 @@ class RelEnt(BaseIRLAlgorithm):
         subgrads = self.expert_feature_count - frac - alphas * self.epsilons
         return subgrads
 
-    def train(self, step_size=1e-2, time_limit=60, n_trajs=1000,
+    def train(self, step_size=1e-2, time_limit=60, n_trajs=10000,
               verbose=False):
         '''Train for at most time_limit seconds w/ n_trajs non-expert trajs.
 
@@ -156,7 +155,7 @@ class RelEnt(BaseIRLAlgorithm):
             reward_coefficients += step_size * subgrads
             reward_coefficients /= np.linalg.norm(reward_coefficients)
             iteration_counter += 1
-            if verbose and iteration_counter % 200 == 0:
+            if verbose and iteration_counter < 10:
                 print('ITERATION ' + str(iteration_counter)
                       + ' grad norm: ' + str(np.linalg.norm(subgrads)))
                 print('ITERATION ' + str(iteration_counter)
