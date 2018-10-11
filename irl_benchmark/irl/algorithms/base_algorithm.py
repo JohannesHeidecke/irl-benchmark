@@ -52,21 +52,3 @@ class BaseIRLAlgorithm(object):
                 gammas.reshape(-1, 1) * np.array(traj['features']), axis=0)
         feature_count = feature_sum / len(trajs)
         return feature_count
-
-    def joint_prob_of_actions(self, traj):
-        '''Return joint probability of traj.
-
-        This is the function U from Boularias et al. (2011, p. 185),
-        which they describe as 'the joint probability of the actions
-        conditioned on the states in [traj]'.
-        '''
-        raise NotImplementedError()
-
-    def policy_prob_of_actions(self, traj, policy):
-        '''Return product of the policy's action probabilities for traj.
-
-        For now assumes that policy is represented as table.'''
-        states = traj['states']
-        actions = traj['actions']
-        probs = [policy[states[i]][actions[i]] for i in range(len(states))]
-        return np.prod(np.array(probs))

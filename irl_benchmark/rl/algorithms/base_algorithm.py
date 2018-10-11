@@ -1,5 +1,3 @@
-import gym
-import logging
 import numpy as np
 import os
 
@@ -34,8 +32,24 @@ class RLAlgorithm(object):
         pass
 
     def policy(self, state):
-        """ Return an optimal policy distribution """
+        '''Return an optimal policy distribution.'''
         pass
+
+    def joint_prob_of_actions(self, traj):
+        '''Return joint probability of traj.
+
+        This is the function U from Boularias et al. (2011, p. 185),
+        which they describe as 'the joint probability of the actions
+        conditioned on the states in [traj]'.
+        '''
+        return self.policy_prob_of_actions(traj)
+
+    def policy_prob_of_actions(self, traj):
+        '''Return product of the policy's action probabilities for traj.'''
+        states = traj['states']
+        acts = traj['actions']
+        # probs = [self.policy(states[i])[acts[i]] for i in range(len(acts))]
+        return 1  # np.prod(np.array(probs))
 
 
 class SLMAlgorithm(RLAlgorithm):
@@ -61,8 +75,9 @@ class SLMAlgorithm(RLAlgorithm):
         self.info_space = InfoSpace()
         # self.agent will only be filled after training.
         self.agent = None
-        
-        os.environ['PREPATH'] = slm_util.get_prepath(self.spec, self.info_space)
+
+        os.environ['PREPATH'] = slm_util.get_prepath(self.spec,
+                                                     self.info_space)
 
     def train(self, time_limit):
         '''Create a SLM-lab session to train for time_limit seconds.'''
@@ -78,7 +93,10 @@ class RandomAgent(RLAlgorithm):
     '''Agent picking actions uniformly at random, for test purposes.
 
     Only works in environments with finite action space.
+    Must be initialized with gym.Env environment.
     '''
-
     def pick_action(self, state):
         return self.env.action_space.sample()
+
+    def policy(self, state):
+        return np.ones(self.env.action_space.n) / self.env.action_space.n
