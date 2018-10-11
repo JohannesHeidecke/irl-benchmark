@@ -28,7 +28,7 @@ class RelEnt(BaseIRLAlgorithm):
     Currently hard-coded to use a random baseline policy.
     '''
     def __init__(self, env, expert_trajs, rl_alg_factory,
-                 baseline_agent=None, gamma=.99, horizon=20, delta=.05,
+                 baseline_agent=None, gamma=.8, horizon=20, delta=.05,
                  eps=None):
         '''Set environment, RL agent factory, expert trajectories, and parameters.
 
@@ -40,7 +40,9 @@ class RelEnt(BaseIRLAlgorithm):
                           and returns an RL agent
         baseline_agent -- `RLAlgorithm`, used to get non-optimal trajectories.
                           If None, a RandomAgent will be used.
-        gamma -- `float`, discount factor
+        gamma -- `float`, discount factor; note that large values won't work 
+                 well for environments like FrozenLake where discounting is the
+                 only incentive to quickly reach the goal state
         horizon -- `int`, fixed length of trajectories to be considered
         delta -- confidence that feature count difference between output policy
                  and expert policy is less than 2 * epsilon
@@ -144,13 +146,22 @@ class RelEnt(BaseIRLAlgorithm):
 
         # Estimate subgradient based on collected trajectories, then
         # update reward coefficients.
+        print('Starting subgradient descent...')
+        iteration_counter = 0
         while time.time() < t0 + time_limit:
+            # replace the previous with the following line when using pdb
+            #  for _ in range(50):
             subgrads = self.subgradients(trajs, reward_coefficients)
             reward_coefficients += step_size * subgrads
             reward_coefficients /= np.linalg.norm(reward_coefficients)
-            if verbose:
-                print('Grad norm: ' + str(np.linalg.norm(subgrads)))
-                print('Reward coefficients: ' + str(reward_coefficients))
+            iteration_counter += 1
+            if verbose and iteration_counter % 5 == 0:
+                print('ITERATION ' + str(iteration_counter)
+                      + ' grad norm: ' + str(np.linalg.norm(subgrads)))
+                print('ITERATION ' + str(iteration_counter)
+                      + ' reward coefficients: ' + str(reward_coefficients))
+
+        print('Final reward coefficients: ' + str(reward_coefficients))
 
         self.reward_function = FeatureBasedRewardFunction(
             self.env_rew, reward_coefficients)
