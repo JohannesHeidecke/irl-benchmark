@@ -17,7 +17,7 @@ Recommended workflow:
 1. Make sure your local master branch is up to date with remote master. (`git pull --rebase`)
 2. Work directly on master
 3. When you are done, commit your changes
-4. Push your changes to remote branchname (`git push HEAD:origin branchname`)
+4. Push your changes to remote branchname (`git push origin HEAD:branchname`)
 5. Open a pull request on github
 6. Make changes to your files based on reviews. Push these changes to the same branch, (`git push origin HEAD:branchname`)
 7. When everything is working, "Squash and merge" your pull request on Github and celebrate the merge!

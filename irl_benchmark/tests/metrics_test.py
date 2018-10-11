@@ -34,15 +34,15 @@ def test_l2_metric_s():
     '''
     gamma = 0.9
 
-    env_true = truth.make('FrozenLake-v0')
-    domain = env_true.domain()
-    R_true = torch.from_numpy(env_true.reward(domain))
+    rew_true = truth.make('FrozenLake-v0')
+    domain = rew_true.domain()
+    R_true = torch.from_numpy(rew_true.reward(domain))
     assert R_true.shape == (16,), "16 states"
 
-    env_learned = TabularRewardFunction(
-        env_true.env,
+    rew_learned = TabularRewardFunction(
+        rew_true.env,
         torch.randn(R_true.shape, device=device, dtype=float_type))
-    R_learned = torch.from_numpy(env_learned.reward(domain))
+    R_learned = torch.from_numpy(rew_learned.reward(domain))
 
     opt_result = scipy.optimize.minimize(
         fun=tabular_l2_loss, x0=np.ones([17]), args=(R_true, R_learned, gamma),
@@ -51,7 +51,36 @@ def test_l2_metric_s():
     opt_c = opt_result.x[0]**2
     opt_phi = opt_result.x[1:]
 
-    metric = RewardL2Loss(env_true)
+    metric = RewardL2Loss(rew_true)
+    loss = metric.evaluate(rew_learned, gamma, use_sampling=False)
+    c, phi = metric._last_c, metric._last_phi
+
+    assert np.allclose(opt_loss, loss)
+    assert np.allclose(opt_c, c)
+    assert np.allclose(opt_phi, phi)
+
+
+def test_l2_metric_s_8x8():
+    gamma = 0.9
+
+    rew_true = truth.make('FrozenLake8x8-v0')
+    domain = rew_true.domain()
+    R_true = torch.from_numpy(rew_true.reward(domain))
+    assert R_true.shape == (64,), "16 states"
+
+    env_learned = TabularRewardFunction(
+        rew_true.env,
+        torch.randn(R_true.shape, device=device, dtype=float_type))
+    R_learned = torch.from_numpy(env_learned.reward(domain))
+
+    opt_result = scipy.optimize.minimize(
+        fun=tabular_l2_loss, x0=np.ones([65]), args=(R_true, R_learned, gamma),
+        method='BFGS', jac=True, options=dict(maxiter=1000), tol=1e-8)
+    opt_loss = opt_result.fun
+    opt_c = opt_result.x[0]**2
+    opt_phi = opt_result.x[1:]
+
+    metric = RewardL2Loss(rew_true)
     loss = metric.evaluate(env_learned, gamma, use_sampling=False)
     c, phi = metric._last_c, metric._last_phi
 

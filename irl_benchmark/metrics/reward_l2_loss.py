@@ -56,7 +56,7 @@ class RewardL2Loss(object):
     def evaluate(self, estim_reward: AbstractRewardFunction,
                  gamma: float, use_sampling=False, use_gpu=True, n_iters=5000) -> float:
         '''Return distance between estim_reward and true reward.'''
-        if use_gpu and torch.cuda.device_count() > 0:
+        if use_gpu and torch.cuda.device_count() > 0 and torch.cuda.is_available():
             device = torch.cuda.device(0)
         else:
             use_gpu = False
@@ -208,5 +208,3 @@ def _optimize_net(env, net_spec, gamma, true_reward, estim_reward, n_iters):
         with torch.no_grad():
             torch.clamp(net.model.c, 0., np.inf, out=net.model.c)
     return loss
-
-
