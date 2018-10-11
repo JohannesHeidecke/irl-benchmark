@@ -43,7 +43,7 @@ def avg_undiscounted_return(trajs):
 # However, FrozenLake doesn't provide features. It is sufficiently small
 # to work with tabular methods. Therefore, we just use a wrapper that uses
 # a one-hot encoding of the state space as features.
-env = gym.make('FrozenLake8x8-v0')
+env = gym.make('FrozenLake-v0')
 env = FrozenLakeFeatureWrapper(env)
 
 # Generate expert trajectories.
@@ -71,11 +71,11 @@ reward_function = FeatureBasedRewardFunction(env,
 env = RewardWrapper(env, reward_function)
 
 # Run Relative Entropy IRL for by default 60 seconds.
-relent = RelEnt(env, expert_trajs, rl_alg_factory, horizon=500, delta=.05)
+relent = RelEnt(env, expert_trajs, rl_alg_factory, horizon=500, delta=.01)
 relent.train(1e-3, 60, verbose=False)
 
 # Check how often the goal state was reached.
-test_agent = PPO(env)
+test_agent = rl_alg_factory(relent.env, lp=True)
 print('Training test agent w/ reward obtained by RelEnt...')
 test_agent.train(60)
 print('Done training test agent.')
