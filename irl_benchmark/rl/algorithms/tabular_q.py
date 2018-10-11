@@ -11,7 +11,6 @@ class TabularQ(RLAlgorithm):
 
     Only works for discrete observation/action spaces.
     '''
-
     def __init__(
             self,
             env,

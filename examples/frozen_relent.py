@@ -9,33 +9,53 @@ from irl_benchmark.irl.collect import collect_trajs
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.rl.algorithms import TabularQ
+from irl_benchmark.rl.algorithms.value_iteration import ValueIteration
+from irl_benchmark.rl.algorithms.ppo import PPO
 from irl_benchmark.utils.utils import unwrap_env
 
 # Define important script constants here:
 store_to = 'data/frozen/expert/'
 no_episodes = 1000
-max_steps_per_episode = 100
+max_steps_per_episode = 500
 
 
-def rl_alg_factory(env):
+def rl_alg_factory(env, lp=False):
     '''Return an RL algorithm that will collect expert trajectories.'''
-    return TabularQ(env)
+    if lp:
+        return ValueIteration(env, error=1e-5)
+    else:
+        return TabularQ(env)
+
+
+def avg_undiscounted_return(trajs):
+    total_true_reward = 0
+    if len(trajs[0]['true_rewards']) > 0:
+        for traj in trajs:
+            total_true_reward += np.sum(traj['true_rewards'])
+    else:
+        for traj in trajs:
+            total_true_reward += np.sum(traj['rewards'])
+    avg_undiscounted_return = total_true_reward / len(trajs)
+    return avg_undiscounted_return
 
 
 # RelEnt IRL assumes that rewards are linear in features.
 # However, FrozenLake doesn't provide features. It is sufficiently small
 # to work with tabular methods. Therefore, we just use a wrapper that uses
 # a one-hot encoding of the state space as features.
-env = gym.make('FrozenLake-v0')
+env = gym.make('FrozenLake8x8-v0')
 env = FrozenLakeFeatureWrapper(env)
 
 # Generate expert trajectories.
-expert_agent = rl_alg_factory(env)
+expert_agent = rl_alg_factory(env, lp=True)
 print('Training expert agent...')
 expert_agent.train(600)
 print('Done training expert')
 expert_trajs = collect_trajs(env, expert_agent, no_episodes,
                              max_steps_per_episode, store_to)
+expert_performance = avg_undiscounted_return(expert_trajs)
+print('The expert ' +
+      'reached the goal in ' + str(expert_performance) + ' of trajs.')
 
 # you can comment out the previous block if expert data has already
 # been generated and load the trajectories from file by uncommenting
@@ -51,5 +71,17 @@ reward_function = FeatureBasedRewardFunction(env,
 env = RewardWrapper(env, reward_function)
 
 # Run Relative Entropy IRL for by default 60 seconds.
-relent = RelEnt(env, expert_trajs, rl_alg_factory, horizon=100, delta=.05)
-relent.train(1e-3, 60, verbose=True)
+relent = RelEnt(env, expert_trajs, rl_alg_factory, horizon=500, delta=.05)
+relent.train(1e-3, 60, verbose=False)
+
+# Check how often the goal state was reached.
+test_agent = PPO(env)
+print('Training test agent w/ reward obtained by RelEnt...')
+test_agent.train(60)
+print('Done training test agent.')
+test_trajs = collect_trajs(relent.env, test_agent, no_episodes,
+                           max_steps_per_episode,
+                           store_to='data/frozen/foo')
+irl_performance = avg_undiscounted_return(test_trajs)
+print('The test agent trained w/ the reward estimated by RelEnt IRL ' +
+      'reached the goal in ' + str(irl_performance) + ' of trajs.')

@@ -38,7 +38,8 @@ def run_appr_irl(use_projection, duration):
         env, np.random.normal(size=16))
     env = RewardWrapper(env, reward_function)
     appr_irl = ApprIRL(env, expert_trajs, TabularQ, proj=use_projection)
-    appr_irl.train(time_limit=duration, rl_time_per_iteration=duration/2, verbose=False)
+    appr_irl.train(time_limit=duration,
+                   rl_time_per_iteration=duration/2, verbose=False)
     return appr_irl.distances
 
 
@@ -61,6 +62,7 @@ def test_svm(duration=2):
     assert len(distances) <= 10  # unrealistically high
     assert distances[-1] < distances[0]
     assert distances[-1] < 5
+
 
 def test_proj(duration=2):
     '''Test if the projection implementation plausibly works.
