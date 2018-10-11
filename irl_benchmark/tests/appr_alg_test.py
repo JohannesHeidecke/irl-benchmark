@@ -34,8 +34,7 @@ def run_appr_irl(use_projection, duration):
     expert_agent.train(duration)
     expert_trajs = collect_trajs(env, expert_agent, no_episodes,
                                  max_steps_per_episode, store_to)
-    reward_function = FeatureBasedRewardFunction(
-        env, np.random.normal(size=16))
+    reward_function = FeatureBasedRewardFunction(env, parameters=np.random.normal(size=16))
     env = RewardWrapper(env, reward_function)
     appr_irl = ApprIRL(env, expert_trajs, TabularQ, proj=use_projection)
     appr_irl.train(time_limit=duration, rl_time_per_iteration=duration/2, verbose=False)

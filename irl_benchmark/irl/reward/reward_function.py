@@ -26,7 +26,7 @@ class StateActionState(NamedTuple):
 
 
 class AbstractRewardFunction(object):
-    def __init__(self, env, action_in_domain=False,
+    def __init__(self, env, parameters=None, action_in_domain=False,
                  next_state_in_domain=False):
         '''The (abstract) superclass for reward functions.
 
@@ -42,7 +42,7 @@ class AbstractRewardFunction(object):
         if next_state_in_domain:
             assert action_in_domain
         self.next_state_in_domain = next_state_in_domain
-        self.parameters = None
+        self.parameters = parameters
 
     def domain(self) -> Union[State, StateAction, StateActionState]:
         '''Return the domain of the reward function as a namedtuple.
@@ -90,7 +90,7 @@ class TabularRewardFunction(AbstractRewardFunction):
                  action_in_domain=False,
                  next_state_in_domain=False):
         '''Pass gym environment and optinally reward domain and table.'''
-        super(TabularRewardFunction, self).__init__(env, action_in_domain,
+        super(TabularRewardFunction, self).__init__(env, parameters, action_in_domain,
                                                     next_state_in_domain)
 
         # this reward function is only implemented for
@@ -175,7 +175,7 @@ class FeatureBasedRewardFunction(AbstractRewardFunction):
         Rewards will be calculated by taking the standard inner product
         of reward coefficients and features.
         '''
-        super(FeatureBasedRewardFunction, self).__init__(env, parameters)
+        super(FeatureBasedRewardFunction, self).__init__(env=env, parameters=parameters)
         self.parameters = np.array(parameters)
 
     def reward(self, domain_batch):

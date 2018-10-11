@@ -22,11 +22,13 @@ class ValueIteration(RLAlgorithm):
         self.error = error
 
         self.P = get_transition_matrix(env)
-        self.rewards = get_reward_matrix(env)
+        self.rewards = None
         self.n_actions = env.action_space.n
 
     def train(self, time_limit, metrics_listener=None):
         t0 = time()
+
+        self.rewards = get_reward_matrix(self.env)
 
         n_states, n_actions, _ = np.shape(self.P)
 

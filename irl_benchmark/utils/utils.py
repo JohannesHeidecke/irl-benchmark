@@ -1,10 +1,11 @@
-from collections import defaultdict
 import json
+from collections import defaultdict
 
 import numpy as np
-import pandas as pd
-
 from gym.envs.toy_text.discrete import DiscreteEnv
+
+import irl_benchmark.irl.reward.reward_wrapper as rew_wrapper
+import irl_benchmark.irl.feature.feature_wrapper as feat_wrapper
 
 
 def to_one_hot(hot_vals, max_val):
@@ -32,6 +33,21 @@ def unwrap_env(env, until_class=None):
                 until_class))
     return env
 
+def unwrap_to_subclass_of(env, superclass):
+    '''
+    Unwraps wrapped env until we get an instance that is a subclass of superclass.
+
+    '''
+
+    while hasattr(env, 'env') and not issubclass(type(env), superclass):
+        env = env.env
+
+    if not isinstance(env, superclass):
+        raise ValueError(
+            "Unwrapping env did not yield an instance which is subclass of  {}".format(
+                superclass))
+    return env
+
 def is_unwrappable_to(env, to_class):
     '''Check if env can be unwrapped to to_class.'''
     if isinstance(env, to_class):
@@ -42,8 +58,20 @@ def is_unwrappable_to(env, to_class):
             return True
     return False
 
+def is_unwrappable_to_subclass_of(env, superclass):
+    '''Check if env can be unwrapped to to_class.'''
+
+    if issubclass(type(env), superclass):
+        return True
+    while hasattr(env, 'env'):
+        env = env.env
+        if issubclass(type(env), superclass):
+            return True
+    return False
+
 def get_transition_matrix(env):
     '''Gets transition matrix from discrete environment.'''
+
     env = unwrap_env(env, DiscreteEnv)
 
     n_states = env.observation_space.n
@@ -66,7 +94,29 @@ def get_transition_matrix(env):
 
 def get_reward_matrix(env):
     '''Gets reward array from discrete environment.'''
-    env = unwrap_env(env, DiscreteEnv)
+
+    discrete_env = unwrap_env(env, DiscreteEnv)
+
+    if is_unwrappable_to(env, rew_wrapper.RewardWrapper):
+        reward_wrapper = unwrap_env(env, rew_wrapper.RewardWrapper)
+        reward_function = reward_wrapper.reward_function
+        P_based_on_reward_function = {}
+        for (state, P_for_state) in unwrap_env(env, DiscreteEnv).P.items():
+            P_based_on_reward_function[state] = {}
+            for (action, P_for_state_action) in P_for_state.items():
+                outcomes = []
+                for outcome in P_for_state_action:
+                    P_entry = list(outcome)
+                    next_state = outcome[1]
+                    if is_unwrappable_to_subclass_of(env, feat_wrapper.FeatureWrapper):
+                        reward_input = unwrap_to_subclass_of(env, feat_wrapper.FeatureWrapper).features(state, action, next_state)
+                    else:
+                        reward_input = reward_wrapper.get_reward_input_for(state, action, next_state)
+                    P_entry[2] = reward_function.reward(reward_input).item()
+                    outcomes.append(tuple(P_entry))
+                P_based_on_reward_function[state][action] = outcomes
+        discrete_env.P = P_based_on_reward_function
+        print(P_based_on_reward_function)
 
     n_states = env.observation_space.n
     n_actions = env.action_space.n
@@ -74,7 +124,7 @@ def get_reward_matrix(env):
     rewards = np.zeros([n_states, n_actions])
 
     # Iterate over "from" states:
-    for s, P_given_state in env.P.items():
+    for s, P_given_state in discrete_env.P.items():
 
         # Iterate over actions:
         for a, transitions in P_given_state.items():
