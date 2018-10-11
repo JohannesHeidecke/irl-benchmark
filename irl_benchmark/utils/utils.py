@@ -33,7 +33,7 @@ def unwrap_env(env, until_class=None):
     return env
 
 def is_unwrappable_to(env, to_class):
-    '''Check if env can be unwrapped to to_class'''
+    '''Check if env can be unwrapped to to_class.'''
     if isinstance(env, to_class):
         return True
     while hasattr(env, 'env'):
@@ -43,7 +43,7 @@ def is_unwrappable_to(env, to_class):
     return False
 
 def get_transition_matrix(env):
-    """Gets transition matrix from discrete environment"""
+    '''Gets transition matrix from discrete environment.'''
     env = unwrap_env(env, DiscreteEnv)
 
     n_states = env.observation_space.n
@@ -65,7 +65,7 @@ def get_transition_matrix(env):
 
 
 def get_reward_matrix(env):
-    """Gets reward array from discrete environment"""
+    '''Gets reward array from discrete environment.'''
     env = unwrap_env(env, DiscreteEnv)
 
     n_states = env.observation_space.n

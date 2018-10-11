@@ -8,11 +8,11 @@ from irl_benchmark.utils.utils import is_unwrappable_to
 env_ids = ['FrozenLake-v0', 'FrozenLake8x8-v0', 'Pendulum-v0']
 
 def envs_feature_based():
-    '''Return all environments for which a feature wrapper exists'''
+    '''Return all environments for which a feature wrapper exists.'''
     return set(feature_wrapper.feature_wrappable_envs())
 
 def envs_known_transitions():
-    '''Return all environments for which transition dynamics are known'''
+    '''Return all environments for which transition dynamics are known.'''
     result = []
     for env_id in env_ids:
         if is_unwrappable_to(gym.make(env_id),DiscreteEnv):
