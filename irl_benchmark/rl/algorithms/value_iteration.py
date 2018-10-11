@@ -25,7 +25,7 @@ class ValueIteration(RLAlgorithm):
         self.rewards = get_reward_matrix(env)
         self.n_actions = env.action_space.n
 
-    def train(self, time_limit):
+    def train(self, time_limit, metrics_listener=None):
         t0 = time()
         n_states, n_actions, _ = np.shape(self.P)
 

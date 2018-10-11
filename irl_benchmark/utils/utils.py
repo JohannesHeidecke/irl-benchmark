@@ -1,4 +1,8 @@
+from collections import defaultdict
+import json
+
 import numpy as np
+import pandas as pd
 
 from gym.envs.toy_text.discrete import DiscreteEnv
 
@@ -71,3 +75,23 @@ def get_reward_matrix(env):
                 rewards[s, a] += r * proba
 
     return rewards
+
+
+class MetricsLogger():
+    '''
+    Listens for metrics to be stored as json.
+    Metrics can be stored once per run or once per training step.
+
+    The simplest usage is to load the jsons of relevant runs,
+    select metrics and convert to a pandas DataFrames.
+    '''
+
+    def __init__(self):
+        self.metrics = defaultdict(lambda: [])
+
+    def log_metric(self, name, value):
+        self.metrics[name].append(value)
+
+    def save(self, path):
+        with open(path, 'wt') as f:
+            json.dump(self.metrics, f)

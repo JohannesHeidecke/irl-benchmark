@@ -18,6 +18,8 @@ cloudpickle==0.5.2
 colorama==0.3.9
 colorlog==3.1.0
 colorlover==0.2.1
+comet-git-pure==0.19.6
+comet-ml==1.0.29
 coverage==4.4.2
 cryptography==2.2.1
 cvxpy==1.0.9
@@ -46,7 +48,7 @@ ipykernel==4.7.0
 ipython==7.0.1
 ipython-genutils==0.2.0
 ipywidgets==7.4.2
--e git+https://github.com/JohannesHeidecke/irl-benchmark.git@dd50cb6d5b62796e5039eb48a7f98c083d35d708#egg=irl_benchmark
+-e git+https://github.com/JohannesHeidecke/irl-benchmark.git@6b6a8c8c4613148c417dd7fa3a76b6204f778700#egg=irl_benchmark
 jdcal==1.4
 jedi==0.12.1
 Jinja2==2.10
@@ -67,8 +69,10 @@ more-itertools==4.3.0
 multiprocess==0.70.6.1
 nbconvert==5.4.0
 nbformat==4.4.0
+netifaces==0.10.7
 notebook==5.7.0
 numpy==1.14.3
+nvidia-ml-py3==7.352.0
 olefile==0.46
 opencv-python==3.4.0.12
 openpyxl==2.5.0b1
@@ -116,7 +120,6 @@ scs==2.0.2
 Send2Trash==1.5.0
 simplegeneric==0.8.1
 six==1.11.0
--e git+https://github.com/JohannesHeidecke/SLM-Lab.git@fc7c15a8c9d7207480a68be7dec32d958f7a7cf3#egg=slm_lab
 tensorboard==1.11.0
 tensorflow==1.11.0
 termcolor==1.1.0
@@ -132,6 +135,8 @@ unityagents==0.2.0
 urllib3==1.22
 wcwidth==0.1.7
 webencodings==0.5.1
+websocket-client==0.53.0
 Werkzeug==0.14.1
 widgetsnbextension==3.4.2
+wurlitzer==1.0.2
 xlrd==1.1.0

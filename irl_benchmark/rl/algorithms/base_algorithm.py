@@ -17,7 +17,7 @@ class RLAlgorithm(object):
         '''Set environment.'''
         self.env = env
 
-    def train(self, time_limit):
+    def train(self, time_limit, metrics_listener=None):
         '''Train for at most time_limit seconds.'''
         pass
 
