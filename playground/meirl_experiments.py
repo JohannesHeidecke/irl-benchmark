@@ -37,7 +37,7 @@ def rl_alg_factory(env):
 
 
 meirl = MaxEnt(env,  expert_trajs=expert_trajs, transition_dynamics=transition_dynamics, rl_alg_factory=rl_alg_factory)
-rewards = meirl.train(feat_map, verbose=True)
+rewards = meirl.train(feat_map, time_limit=60, verbose=True)
 
 rewards = (rewards - np.min(rewards))/(np.max(rewards) - np.min(rewards))
 

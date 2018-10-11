@@ -1,10 +1,10 @@
+import gym
 import numpy as np
 import time
 
 from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
-from irl_benchmark.rl.algorithms.value_iteration import ValueIteration
-
+from irl_benchmark.utils.utils import unwrap_env
 
 class MaxEnt(BaseIRLAlgorithm):
     '''Maximum Entropy IRL (Ziebart et al., 2008).
@@ -13,16 +13,20 @@ class MaxEnt(BaseIRLAlgorithm):
     or Maximum Causal Entropy IRL (Ziebart et al., 2010).
     '''
 
-    def __init__(self, 
-            env, 
-            expert_trajs, 
-            transition_dynamics, 
-            rl_alg_factory, 
-            gamma=0.99, 
+    def __init__(self,
+            env,
+            expert_trajs,
+            transition_dynamics,
+            rl_alg_factory,
+            gamma=0.99,
             lr=0.02
         ):
         '''Initialize Maximum Entropy IRL algorithm. '''
         super(MaxEnt, self).__init__(env, expert_trajs, rl_alg_factory)
+        # make sure env is DiscreteEnv (other cases not implemented yet
+        # TODO: implement other cases
+        unwrap_env(env, gym.envs.toy_text.discrete.DiscreteEnv)
+
         self.gamma = gamma
         self.transition_dynamics = transition_dynamics
         self.n_states, self.n_actions, _ = np.shape(self.transition_dynamics)
