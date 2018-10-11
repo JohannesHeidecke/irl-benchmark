@@ -95,6 +95,7 @@ def get_reward_matrix(env):
     '''Gets reward array from discrete environment.'''
 
     discrete_env = unwrap_env(env, DiscreteEnv)
+    correct_P = discrete_env.P
 
     if is_unwrappable_to(env, rew_wrapper.RewardWrapper):
         reward_wrapper = unwrap_env(env, rew_wrapper.RewardWrapper)
@@ -114,7 +115,7 @@ def get_reward_matrix(env):
                     P_entry[2] = reward_function.reward(reward_input).item()
                     outcomes.append(tuple(P_entry))
                 P_based_on_reward_function[state][action] = outcomes
-        discrete_env.P = P_based_on_reward_function
+        correct_P = P_based_on_reward_function
         print(P_based_on_reward_function)
 
     n_states = env.observation_space.n
@@ -123,7 +124,7 @@ def get_reward_matrix(env):
     rewards = np.zeros([n_states, n_actions])
 
     # Iterate over "from" states:
-    for s, P_given_state in discrete_env.P.items():
+    for s, P_given_state in correct_P.items():
 
         # Iterate over actions:
         for a, transitions in P_given_state.items():
