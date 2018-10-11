@@ -5,7 +5,7 @@ import numpy as np
 from slm_lab.lib.logger import set_level as set_logging_level
 
 from irl_benchmark.irl.collect import collect_trajs
-from irl_benchmark.irl.feature.feature_wrapper import PendulumFeatureWrapper
+from irl_benchmark.irl.feature import feature_wrapper
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.rl.algorithms.ppo import PPO
@@ -19,8 +19,7 @@ def test_ppo_pendulum():
     trajs = collect_trajs(env, agent, 1, None)
 
 def test_ppo_pendulum_wrapped():
-    env = gym.make('Pendulum-v0')
-    env = PendulumFeatureWrapper(env)
+    env = feature_wrapper.make('Pendulum-v0')
     agent = PPO(env)
     agent.train(2)
     assert isinstance(agent.agent.body.env.u_env, PendulumFeatureWrapper)

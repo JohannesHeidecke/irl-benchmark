@@ -6,7 +6,7 @@ import pickle
 from slm_lab.lib.logger import set_level as set_logging_level
 
 from irl_benchmark.irl.algorithms.appr.appr_irl import ApprIRL
-from irl_benchmark.irl.feature.feature_wrapper import PendulumFeatureWrapper
+from irl_benchmark.irl.feature import feature_wrapper
 from irl_benchmark.irl.collect import collect_trajs
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
@@ -27,8 +27,7 @@ def rl_alg_factory(env):
 
 # Pendulum has features that can easily be extracted from the previous state, 
 # see PendulumFeatureWrapper.
-env = gym.make('Pendulum-v0')
-env = PendulumFeatureWrapper(env)
+env = feature_wrapper.make('Pendulum-v0')
 
 # Generate expert trajectories.
 # expert_agent = rl_alg_factory(env)
