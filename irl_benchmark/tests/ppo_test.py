@@ -6,6 +6,7 @@ from slm_lab.lib.logger import set_level as set_logging_level
 
 from irl_benchmark.irl.collect import collect_trajs
 from irl_benchmark.irl.feature import feature_wrapper
+from irl_benchmark.irl.feature.feature_wrapper import PendulumFeatureWrapper
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.rl.algorithms.ppo import PPO

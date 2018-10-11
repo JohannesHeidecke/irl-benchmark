@@ -81,6 +81,9 @@ class PendulumFeatureWrapper(FeatureWrapper):
 
 _feature_wrappers = {}
 
+def feature_wrappable_envs():
+    return set(_feature_wrappers.keys())
+
 def make(key):
     '''Return a feature wrapper around the environment specified in key.'''
     return _feature_wrappers[key]()
@@ -110,3 +113,4 @@ def frozen_lake_8_8(env):
 @_register_feature_wrapper('Pendulum-v0')
 def pendulum(env):
     return PendulumFeatureWrapper(env)
+
