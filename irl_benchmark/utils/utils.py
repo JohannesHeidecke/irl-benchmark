@@ -34,6 +34,19 @@ def unwrap_env(env, until_class=None):
                 until_class))
     return env
 
+
+def unwrap_to_subclass_of(env, superclass):
+    '''Unwrap env until we get instance of subclass of superclass.'''
+    while hasattr(env, 'env') and not issubclass(type(env), superclass):
+        env = env.env
+
+    if not isinstance(env, superclass):
+        raise ValueError(
+            "Unwrapping env did not yield an instance which is subclass of  {}"
+            .format(superclass))
+    return env
+
+
 def is_unwrappable_to(env, to_class):
     '''Check if env can be unwrapped to to_class.'''
     if isinstance(env, to_class):
@@ -43,6 +56,19 @@ def is_unwrappable_to(env, to_class):
         if isinstance(env, to_class):
             return True
     return False
+
+
+def is_unwrappable_to_subclass_of(env, superclass):
+    '''Check if env can be unwrapped to to_class.'''
+
+    if issubclass(type(env), superclass):
+        return True
+    while hasattr(env, 'env'):
+        env = env.env
+        if issubclass(type(env), superclass):
+            return True
+    return False
+
 
 def get_transition_matrix(env, with_absorbing_state=True):
     '''Gets transition matrix from discrete environment.'''
@@ -71,8 +97,6 @@ def get_transition_matrix(env, with_absorbing_state=True):
                     assert with_absorbing_state is True
                     table[next_state, :, :] = 0.0
                     table[next_state, :, -1] = 1.0
-
-
 
     if with_absorbing_state:
         # absorbing state that is reached whenever done == True
@@ -125,19 +149,27 @@ def get_reward_matrix(env, with_absorbing_state=True):
                         # not part of the wrapper's reward function)
                         outcome[2] = 0.0
                     else:
-                        if isinstance(reward_function, FeatureBasedRewardFunction):
+                        if isinstance(reward_function,
+                                      FeatureBasedRewardFunction):
                             # reward function needs features as input
-                            reward_input = unwrap_env(env, feat_wrapper.FeatureWrapper).features(None, None, next_state)
-                        elif isinstance(reward_function, TabularRewardFunction):
+                            reward_input = unwrap_env(
+                                env, feat_wrapper.FeatureWrapper).features(
+                                    None, None, next_state)
+                        elif isinstance(reward_function,
+                                        TabularRewardFunction):
                             # reward function needs domain batch as input
                             assert reward_function.action_in_domain is False
                             assert reward_function.next_state_in_domain is False
-                            reward_input = reward_wrapper.get_reward_input_for(None, None, next_state)
+                            reward_input = reward_wrapper.get_reward_input_for(
+                                None, None, next_state)
                         else:
-                            raise ValueError('The RewardWrapper\'s reward_function is' +
-                                             'of not supported type ' + str(type(reward_function)))
+                            raise ValueError(
+                                'The RewardWrapper\'s reward_function is' +
+                                'of not supported type ' +
+                                str(type(reward_function)))
                         # update the reward part of the outcome
-                        outcome[2] = reward_function.reward(reward_input).item()
+                        outcome[2] = reward_function.reward(
+                            reward_input).item()
                     outcomes.append(tuple(outcome))
                 P_based_on_reward_function[state][action] = outcomes
         correct_P = P_based_on_reward_function
