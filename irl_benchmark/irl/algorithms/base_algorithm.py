@@ -47,6 +47,7 @@ class BaseIRLAlgorithm(object):
         feature_sum = np.zeros(unwrap_env(self.env,
                                           FeatureWrapper).feature_shape())
         for traj in trajs:
+            assert len(traj['features']) > 0
             gammas = self.gamma ** np.arange(len(traj['features']))
             feature_sum += np.sum(
                 gammas.reshape(-1, 1) * np.array(traj['features']), axis=0)

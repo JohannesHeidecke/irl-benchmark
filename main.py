@@ -4,10 +4,7 @@ import time
 import os
 import pickle
 
-
-# FIXME, replace this with import:
-def run(*args):
-    return {'ile': 123, 'l2_loss': 234, 'avg_return': 345}
+from experiment import run
 
 
 def main():
@@ -29,7 +26,11 @@ def main():
         for env_id, agent_id, no_expert_trajs in product(
                 env_ids, agent_ids, no_expert_trajss):
 
+            print('= ' * 20)
+            print('running ' + str(env_id) + ', ' + str(agent_id) + ' ' + str(no_expert_trajs))
+
             res = run(env_id, agent_id, no_expert_trajs)
+            print(res)
 
             # Pickle the entire run result
             path = 'data/{}/{}_{}_{}_{}.pickle'.format(

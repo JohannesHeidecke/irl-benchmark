@@ -116,4 +116,5 @@ class MaxEnt(BaseIRLAlgorithm):
             theta += self.lr * grad
 
         # return sigmoid(normalize(rewards))
+        self.reward_function = reward_function_estimate
         return theta

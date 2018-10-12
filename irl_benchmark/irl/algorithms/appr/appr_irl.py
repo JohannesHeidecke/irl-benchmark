@@ -47,7 +47,7 @@ class ApprIRL(BaseIRLAlgorithm):
               time_limit=300,
               rl_time_per_iteration=30,
               eps=0,
-              no_trajs=100,
+              no_trajs=1000,
               max_steps_per_episode=1000,
               verbose=False):
         '''Accumulate feature counts and estimate reward function.
@@ -112,6 +112,10 @@ class ApprIRL(BaseIRLAlgorithm):
 
                 problem = cvx.Problem(objective, constraints)
                 problem.solve()
+                if w.value is None:
+                    print('NO MORE SVM SOLUTION!!')
+                    return
+
 
                 yResult = feature_counts.dot(w.value) + b.value
                 supportVectorRows = np.where(np.isclose(np.abs(yResult), 1))[0]

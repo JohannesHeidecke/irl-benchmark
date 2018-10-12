@@ -1,7 +1,7 @@
 import json
 from collections import defaultdict
 from copy import copy
-
+import matplotlib.pyplot as pl
 import numpy as np
 from gym.envs.toy_text.discrete import DiscreteEnv
 
@@ -10,9 +10,20 @@ import irl_benchmark.irl.reward.reward_wrapper as rew_wrapper
 import irl_benchmark.irl.feature.feature_wrapper as feat_wrapper
 
 
-def to_one_hot(hot_vals, max_val):
-    '''Convert an int list of data into one-hot vectors.'''
-    return np.eye(max_val)[np.array(hot_vals, dtype=np.uint32)]
+def to_one_hot(hot_vals, max_val, zeros_fun=np.zeros):
+    '''Convert an int, or a list of ints, to a one-hot array of floats.
+
+    `zeros_fun` controls which function is used to create the array. It should
+    be either `numpy.zeros` or `torch.zeros`.
+    '''
+    try:
+        N = len(hot_vals)
+        res = zeros_fun((N, max_val))
+        res[np.arange(N), hot_vals] = 1.
+    except TypeError:
+        res = zeros_fun((max_val,))
+        res[hot_vals] = 1.
+    return res
 
 
 def unwrap_env(env, until_class=None):
@@ -68,9 +79,8 @@ def get_transition_matrix(env, with_absorbing_state=True):
             # Iterate over "to" states:
             for probability, next_state, _, done in transitions:
                 table[state, action, next_state] += probability
-                if done:
+                if done and with_absorbing_state is True:
                     # map next_state to absorbing state:
-                    assert with_absorbing_state is True
                     table[next_state, :, :] = 0.0
                     table[next_state, :, -1] = 1.0
 
@@ -105,7 +115,8 @@ def get_reward_matrix(env, with_absorbing_state=True):
                     rewired_outcome = (1.0, n_states - 1, 0, True)
                     correct_P[state][action] = [rewired_outcome]
 
-    # however, if there is a reward wrapper, we need to use the wrapped reward function:
+    # however, if there is a reward wrapper, we need to use the
+    # wrapped reward function:
     if is_unwrappable_to(env, rew_wrapper.RewardWrapper):
         # get the reward function:
         reward_wrapper = unwrap_env(env, rew_wrapper.RewardWrapper)
@@ -211,3 +222,71 @@ def avg_undiscounted_return(trajs):
             total_true_reward += np.sum(traj['rewards'])
     avg_undiscounted_return = total_true_reward / len(trajs)
     return avg_undiscounted_return
+
+
+def plot(data):
+    '''Make shiny plots for the presentation on Saturday.
+    Args:
+    data -- `np.ndarray` of default shape (2, 5, 4, 3, 50)
+    n_envs -- `int`, number of environments in the data
+    n_algs -- `int`, number of IRL algorithms in the data
+    n_exp_trajs -- `int`, number of numbers of expert trajectories in the data.
+                   E.g. if an alg was run once w/ each of 10, 100, and 100
+                   expert trajectories then n_exp_trajs would be 3
+    n_metrics -- `int`, number of metrics in the data
+    n_seeds -- `int`, number of independent runs in the data
+    '''
+    pl.rcParams['font.size'] = 16
+
+    # Create fake data for testing.
+    if data is None:
+        data = {
+            'environment_labels': ['FrozenLake', 'FrozenLake8x8'],
+            'algorithm_labels': ['Appr-SVM', 'Appr-Proj',
+                                 'MaxEnt', 'MaxCausalEnt', 'RelEnt'],
+            'metric_labels': ['L2 error', 'true return',
+                              'inverse learning loss'],
+            'n_trajs_list': [10 ** n for n in range(1, 6)],
+            'results': np.random.randn(2, 5, 3, 5, 50),
+            }
+
+    # Unpack data dictionary.
+    envs = data['environment_labels']
+    algs = data['algorithm_labels']
+    metrics = data['metric_labels']
+    n_trajs_list = data['n_trajs_list']
+    results = data['results']
+    n_envs = len(envs)
+    n_algs = len(algs)
+    n_metrics = len(metrics)
+    n_trajs_list = np.array(n_trajs_list)
+    data_std = np.std(results, axis=4)
+    data_mean = np.mean(results, axis=4)
+    data = np.stack([data_mean - data_std, data_mean, data_mean +
+                     data_std], axis=4)
+
+    # fig = pl.figure(figsize=[300, 300])
+    fig, ax_lst = pl.subplots(n_algs, n_envs, sharex=True, figsize=[20, 13])
+    fig.suptitle('Inverse Reinforcement Learning Benchmark')
+    for env in range(n_envs):
+        for alg in range(n_algs):
+            for metric in range(n_metrics):
+                ax = ax_lst[alg, env]
+                ax.plot(n_trajs_list, data[env, alg, metric, :, 1],
+                        label=metrics[metric])
+                ax.fill_between(n_trajs_list,
+                                data[env, alg, metric, :, 0],
+                                data[env, alg, metric, :, 2],
+                                alpha=.5)
+                if env == 0:
+                    ax.set_ylabel(algs[alg])
+                if env == 0 and alg == 0:
+                    ax.legend(loc='upper center', bbox_to_anchor=(1.0, 1.6),
+                              ncol=3, fancybox=True, shadow=True)
+                if alg == 0:
+                    ax.set_title(envs[env])
+                if alg == n_algs - 1:
+                    ax.set_xlabel('Number of expert trajectories')
+    pl.xscale('log')
+    pl.savefig('foo.pdf')
+    return None
