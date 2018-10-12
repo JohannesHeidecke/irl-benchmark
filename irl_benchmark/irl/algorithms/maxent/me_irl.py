@@ -6,6 +6,7 @@ from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
 from irl_benchmark.utils.utils import unwrap_env
 
+
 class MaxEnt(BaseIRLAlgorithm):
     '''Maximum Entropy IRL (Ziebart et al., 2008).
 
@@ -14,13 +15,12 @@ class MaxEnt(BaseIRLAlgorithm):
     '''
 
     def __init__(self,
-            env,
-            expert_trajs,
-            transition_dynamics,
-            rl_alg_factory,
-            gamma=0.99,
-            lr=0.02
-        ):
+                 env,
+                 expert_trajs,
+                 transition_dynamics,
+                 rl_alg_factory,
+                 gamma=0.99,
+                 lr=0.02):
         '''Initialize Maximum Entropy IRL algorithm. '''
         super(MaxEnt, self).__init__(env, expert_trajs, rl_alg_factory)
         # make sure env is DiscreteEnv (other cases not implemented yet
@@ -37,7 +37,7 @@ class MaxEnt(BaseIRLAlgorithm):
         under the given policy.
 
         Returns vector of state visitation frequencies.
-        ''' 
+        '''
 
         # get the length of longest trajectory:
         longest_traj_len = 1  # init
@@ -56,11 +56,16 @@ class MaxEnt(BaseIRLAlgorithm):
                 tot = 0
                 for pre_s in range(self.n_states):
                     for action in range(self.n_actions):
-                        tot += mu[pre_s, t - 1] * self.transition_dynamics[pre_s, action, s] * policy[pre_s, action]
+                        tot += mu[pre_s, t - 1] * self.transition_dynamics[
+                            pre_s, action, s] * policy[pre_s, action]
                 mu[s, t] = tot
         return np.sum(mu, 1)
 
-    def train(self, feat_map, time_limit=300, rl_time_per_iteration=15, verbose=False):
+    def train(self,
+              feat_map,
+              time_limit=300,
+              rl_time_per_iteration=15,
+              verbose=False):
         """
         Maximum Entropy Inverse Reinforcement Learning (Maxent IRL)
         inputs:
@@ -78,8 +83,7 @@ class MaxEnt(BaseIRLAlgorithm):
         t0 = time.time()
 
         # init parameters
-        theta = np.random.uniform(size=(feat_map.shape[1],))
-        
+        theta = np.random.uniform(size=(feat_map.shape[1], ))
 
         # calc feature expectations
         feat_exp = np.zeros([feat_map.shape[1]])
@@ -98,7 +102,8 @@ class MaxEnt(BaseIRLAlgorithm):
             if verbose:
                 print('iteration: {}'.format(iteration_counter))
 
-            reward_function_estimate = FeatureBasedRewardFunction(self.env, theta)
+            reward_function_estimate = FeatureBasedRewardFunction(
+                self.env, theta)
             self.env.update_reward_function(reward_function_estimate)
 
             # compute policy
