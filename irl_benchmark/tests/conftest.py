@@ -1,7 +1,7 @@
 import pytest
 import inspect
 
-FAST_RUN = False
+FAST_RUN = True
 
 
 def pytest_addoption(parser):
