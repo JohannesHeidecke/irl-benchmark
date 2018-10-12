@@ -39,4 +39,4 @@ def test_frozen_finds_good_solution(duration=0.1):
 
 @pytest.mark.slow
 def test_frozen_finds_good_solution_slow():
-    test_frozen_finds_good_solution(1)
+    test_frozen_finds_good_solution(2)
