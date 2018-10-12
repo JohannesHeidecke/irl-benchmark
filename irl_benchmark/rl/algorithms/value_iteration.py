@@ -30,10 +30,10 @@ class ValueIteration(RLAlgorithm):
     def softmax(self, q):
         '''∀ s: V_s = temperature * log(\sum_a exp(Q_sa/temperature))'''
 
-        # We can rewrite as: t*log(sum_a exp((q_a -
-        # qmax)/t)*exp(qmax/t)) subtracting q_max for robustness qmax
-        # goes straight through below softmax function:
-        # t*log(exp(qmax/t)) = qmax
+        # We can rewrite as:
+        # t*log(sum_a exp((q_a - qmax)/t)*exp(qmax/t))
+        # subtracting q_max for robustness
+        # qmax goes straight through below softmax function: t*log(exp(qmax/t)) = qmax
 
         q_max = q.max(axis=1, keepdims=True)
         scaled = (q - q_max) / self.temperature
