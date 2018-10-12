@@ -1,9 +1,7 @@
-from collections import defaultdict
 import json
+from collections import defaultdict
 
 import numpy as np
-import pandas as pd
-
 from gym.envs.toy_text.discrete import DiscreteEnv
 
 
@@ -32,6 +30,7 @@ def unwrap_env(env, until_class=None):
                 until_class))
     return env
 
+
 def is_unwrappable_to(env, to_class):
     '''Check if env can be unwrapped to to_class.'''
     if isinstance(env, to_class):
@@ -41,6 +40,7 @@ def is_unwrappable_to(env, to_class):
         if isinstance(env, to_class):
             return True
     return False
+
 
 def get_transition_matrix(env):
     '''Gets transition matrix from discrete environment.'''
