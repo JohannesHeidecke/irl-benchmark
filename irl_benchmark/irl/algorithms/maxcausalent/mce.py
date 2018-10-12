@@ -29,7 +29,8 @@ class MaxCausalEnt(BaseIRLAlgorithm):
         super(MaxCausalEnt, self).__init__(env, expert_trajs, rl_alg_factory)
         # make sure env is DiscreteEnv (other cases not implemented yet
         # TODO: implement other cases
-        self.base_env =  unwrap_env(env, gym.envs.toy_text.discrete.DiscreteEnv)
+        assert is_unwrappable_to(env, DiscreteEnv)
+        self.base_env = unwrap_env(env, gym.envs.toy_text.discrete.DiscreteEnv)
 
         self.gamma = gamma
         self.transition_dynamics = transition_dynamics
