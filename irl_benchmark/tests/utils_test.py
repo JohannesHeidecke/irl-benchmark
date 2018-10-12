@@ -2,14 +2,15 @@ import gym
 from gym.envs.toy_text.discrete import DiscreteEnv
 from gym.wrappers.time_limit import TimeLimit
 import numpy as np
+import pytest
 
 from irl_benchmark.irl.feature.feature_wrapper import FrozenLakeFeatureWrapper
 from irl_benchmark.irl.feature import feature_wrapper
 from irl_benchmark.irl.reward.reward_function import TabularRewardFunction, FeatureBasedRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
-from irl_benchmark.utils.utils import (is_unwrappable_to, unwrap_env, to_one_hot,
-                                       get_transition_matrix, get_reward_matrix)
-
+from irl_benchmark.utils.utils import (is_unwrappable_to, unwrap_env,
+                                       to_one_hot, get_transition_matrix,
+                                       get_reward_matrix)
 
 
 def test_unwrap():
@@ -59,7 +60,9 @@ def test_get_reward_matrix():
     true_rews[-2] = 1.0
     for s in range(64 + 1):
         for a in range(4):
-            assert np.isclose(reward_matrix[s, a], transition_matrix[s, a, :].dot(true_rews))
+            assert np.isclose(reward_matrix[s, a],
+                              transition_matrix[s, a, :].dot(true_rews))
+
 
 def test_get_reward_matrix_wrapped_tabular():
     env = gym.make('FrozenLake8x8-v0')
@@ -71,7 +74,9 @@ def test_get_reward_matrix_wrapped_tabular():
     reward_matrix = get_reward_matrix(env, with_absorbing_state=True)
     for s in range(64 + 1):
         for a in range(4):
-            assert np.isclose(reward_matrix[s, a], transition_matrix[s, a, :].dot(true_rews))
+            assert np.isclose(reward_matrix[s, a],
+                              transition_matrix[s, a, :].dot(true_rews))
+
 
 def test_get_reward_matrix_wrapped_feature():
     env = feature_wrapper.make('FrozenLake8x8-v0')
@@ -83,12 +88,14 @@ def test_get_reward_matrix_wrapped_feature():
     reward_matrix = get_reward_matrix(env, with_absorbing_state=True)
     for s in range(64 + 1):
         for a in range(4):
-            assert np.isclose(reward_matrix[s, a], transition_matrix[s, a, :].dot(true_rews))
+            assert np.isclose(reward_matrix[s, a],
+                              transition_matrix[s, a, :].dot(true_rews))
 
 
 def test_is_unwrappable_to():
     assert is_unwrappable_to(gym.make('FrozenLake-v0'), TimeLimit)
     assert is_unwrappable_to(gym.make('FrozenLake-v0'), DiscreteEnv)
-    assert is_unwrappable_to(feature_wrapper.make('FrozenLake-v0'), FrozenLakeFeatureWrapper)
-    assert is_unwrappable_to(feature_wrapper.make('FrozenLake8x8-v0'), FrozenLakeFeatureWrapper)
-
+    assert is_unwrappable_to(
+        feature_wrapper.make('FrozenLake-v0'), FrozenLakeFeatureWrapper)
+    assert is_unwrappable_to(
+        feature_wrapper.make('FrozenLake8x8-v0'), FrozenLakeFeatureWrapper)
