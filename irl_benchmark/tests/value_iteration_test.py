@@ -12,7 +12,7 @@ from irl_benchmark.utils.utils import get_reward_matrix
 
 def test_frozen_finds_good_solution(duration=0.1):
     '''
-    Check if goal was reached in at least 40% of 100 episodes.
+    Check if goal was reached in at least 30% of 100 episodes.
     '''
     env = gym.make('FrozenLake-v0')
     agent = ValueIteration(env)
@@ -36,9 +36,8 @@ def test_frozen_finds_good_solution(duration=0.1):
     assert (agent.V == agent2.V).all()
     assert (agent.pi == agent2.pi).all()
 
-    if duration >= 1.0:
-        assert np.mean(episode_rewards) > 0.25
-        assert np.max(episode_rewards) == 1.0
+    assert np.mean(episode_rewards) > 0.3
+    assert np.max(episode_rewards) == 1.0
 
 
 def test_true_reward_not_leaked(duration=0.1):
@@ -54,6 +53,29 @@ def test_true_reward_not_leaked(duration=0.1):
     agent.train(0.1)
     assert np.all(
         agent.rewards == get_reward_matrix(env, with_absorbing_state=True))
+
+
+def test_frozen_finds_good_solution_stoch(duration=0.1):
+    '''
+    Check if goal was reached in at least 30% of 100 episodes.
+    '''
+    env = gym.make('FrozenLake-v0')
+    agent = ValueIteration(env, temperature=0.0002)
+    agent.train(duration)
+    N = 100
+    episode_rewards = []
+    for episode in range(N):
+        episode_reward = 0
+        state = env.reset()
+        done = False
+        while not done:
+            state, reward, done, _ = env.step(agent.pick_action(state))
+            episode_reward += reward
+        episode_rewards.append(episode_reward)
+
+    if duration >= 1.0:
+        assert np.mean(episode_rewards) > 0.3
+        assert np.max(episode_rewards) == 1.0
 
 
 @pytest.mark.slow

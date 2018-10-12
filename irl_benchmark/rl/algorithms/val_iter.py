@@ -1,5 +1,7 @@
 import numpy as np
 
+# TODO(ao) remove this file and use new
+
 
 def mellowmax(values, omega=1):
     """
@@ -21,8 +23,8 @@ class GoodValueIteration():
         self.gamma = gamma
         self.error = error
 
-    def train(self, rewards, temperature=None, threshold=1e-10):  # 'train' really doesn't seem like a good naming here.
-
+    def train(self, rewards, temperature=None, threshold=1e-10
+              ):  # 'train' really doesn't seem like a good naming here.
         """
         Does value iteration on the given rewards, based on the transition dynamics.
         :param rewards:
@@ -40,7 +42,8 @@ class GoodValueIteration():
                 v_prev = np.copy(v)
 
                 # calculate q fucntion
-                q = rewards.reshape((-1, 1)) + self.gamma * np.dot(self.transition_dynamics, v_prev)
+                q = rewards.reshape((-1, 1)) + self.gamma * np.dot(
+                    self.transition_dynamics, v_prev)
 
                 # v = max(q)
                 v = np.amax(q, axis=1)
@@ -51,7 +54,8 @@ class GoodValueIteration():
 
             # Compute stochastic policy
             # Assigns equal probability to taking actions whose Q_sa == max_a(Q_sa)
-            max_q_index = (q == np.tile(np.amax(q, axis=1), (self.n_actions, 1)).T)
+            max_q_index = (q == np.tile(
+                np.amax(q, axis=1), (self.n_actions, 1)).T)
             policy = max_q_index / np.sum(max_q_index, axis=1).reshape((-1, 1))
 
         else:
@@ -62,7 +66,8 @@ class GoodValueIteration():
                 v_prev = np.copy(v)
 
                 # calculate q fucntion
-                q = rewards.reshape((-1, 1)) + self.gamma * np.dot(self.transition_dynamics, v_prev)
+                q = rewards.reshape((-1, 1)) + self.gamma * np.dot(
+                    self.transition_dynamics, v_prev)
 
                 # v = max(q)
                 v = mellowmax(q, temperature)

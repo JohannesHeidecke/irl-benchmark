@@ -15,64 +15,123 @@ class ValueIteration(RLAlgorithm):
             self,
             env,
             gamma=0.8,
-            error=0.01,
+            error=1e-6,
+            temperature=None,
     ):
         self.env = env
         self.gamma = gamma
         self.error = error
+        self.temperature = temperature
 
+        self.n_actions = env.action_space.n
         self.P = get_transition_matrix(env)
         self.rewards = None
-        self.n_actions = env.action_space.n
 
-    def train(self, time_limit, metrics_listener=None, reward_function=None):
+    def softmax(self, q):
+        '''∀ s: V_s = temperature * log(\sum_a exp(Q_sa/temperature))'''
+
+        # We can rewrite as:
+        # t*log(sum_a exp((q_a - qmax)/t)*exp(qmax/t))
+        # subtracting q_max for robustness
+        # qmax goes straight through below softmax function: t*log(exp(qmax/t)) = qmax
+
+        q_max = q.max(axis=1, keepdims=True)
+        scaled = (q - q_max) / self.temperature
+        exp_sum = np.exp(scaled).sum(axis=1)
+
+        values = self.temperature * np.log(exp_sum) + q_max.reshape([-1])
+        return values
+
+    def mellowmax(self, q):
+        '''
+        The below paper reports mellowmax has desirable properties that
+        softmax doesn't.
+
+        https://arxiv.org/pdf/1612.05628.pdf
+        :param values: 2-D numpy array
+        :param temperature: the softmax temperature
+        '''
+
+        softmax = self.softmax(q)
+        return softmax - np.log(q.shape[1]) * self.temperature
+
+    def _boltzmann_vi(self, time_limit, metrics_listener=None):
         t0 = time()
-
-        self.rewards = get_reward_matrix(self.env)
 
         n_states, n_actions, _ = np.shape(self.P)
 
         values = np.zeros([n_states])
+        q = np.zeros([n_states, n_actions])
 
-        if reward_function is not None:
-            for state in range(self.rewards.shape[0]):
-                for action in range(self.rewards.shape[1]):
-                    self.rewards[state] = reward_function[state]
+        err = float('inf')
 
         # estimate values
-        while True:
-            values_tmp = values.copy()
+        while err > self.error:
+            values_old = values.copy()
 
-            for s in range(n_states):
-                values[s] = max([
-                    sum([
-                        self.P[s, a, s1] *
-                        (self.rewards[s, a] + self.gamma * values_tmp[s1])
-                        for s1 in range(n_states)
-                    ]) for a in range(n_actions)
-                ])
+            q = self.gamma * self.P.dot(values) + self.rewards
+            values = self.mellowmax(q)
 
-            err = np.max(np.abs(values - values_tmp))
-            if err < self.error:
-                break
+            err = np.max(np.abs(values - values_old))
+
             if time() > t0 + time_limit:
                 print('Value iteration exceeded time limit with max err = {}'.
                       format(err))
                 break
 
-        # generate deterministic policy
-        policy = np.zeros([n_states, n_actions])
-        for s in range(n_states):
-            a = np.argmax([
-                sum([
-                    self.P[s, a, s1] *
-                    (self.rewards[s, a] + self.gamma * values[s1])
-                    for s1 in range(n_states)
-                ]) for a in range(n_actions)
-            ])
-            policy[s, a] = 1.0
+        # Compute stochastic policy:
+
+        # Broadcast values to shape of q
+        self.pi = np.exp((q - values.reshape([-1, 1])) / self.temperature)
+
+        # Mellowmax correction:
+        self.pi = self.pi / q.shape[1]
+
+        # Normalize:
+        self.pi = self.pi / self.pi.sum(axis=1, keepdims=True)
 
         self.V = values
+        self.Q = q
+
+    def train(self, time_limit, metrics_listener=None, reward_function=None):
+        self.rewards = get_reward_matrix(self.env)
+
+        if self.temperature is not None:
+            return self._boltzmann_vi(time_limit, metrics_listener)
+        t0 = time()
+
+        n_states, n_actions, _ = np.shape(self.P)
+
+        values = np.zeros([n_states])
+        q = np.zeros([n_states, n_actions])
+
+        err = float('inf')
+
+        # estimate values
+        while err > self.error:
+            values_old = values.copy()
+
+            q = self.gamma * self.P.dot(values) + self.rewards
+            values = q.max(axis=1)
+
+            err = np.max(np.abs(values - values_old))
+
+            if time() > t0 + time_limit:
+                print('Value iteration exceeded time limit with max err = {}'.
+                      format(err))
+                break
+
+        # generate policy
+        policy = np.zeros([n_states, n_actions])
+
+        for s in range(n_states):
+            best_actions = q[s] == np.max(q[s])
+            n_best = best_actions.sum()
+
+            policy[s, best_actions] = 1.0 / n_best
+
+        self.V = values
+        self.Q = q
         self.pi = policy
 
     def policy(self, s):
