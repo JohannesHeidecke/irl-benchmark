@@ -85,29 +85,6 @@ def get_transition_matrix(env, with_absorbing_state=True):
 def get_reward_matrix(env, with_absorbing_state=True):
     '''Gets reward array from discrete environment.'''
 
-    discrete_env = unwrap_env(env, DiscreteEnv)
-
-    if is_unwrappable_to(env, rew_wrapper.RewardWrapper):
-        reward_wrapper = unwrap_env(env, rew_wrapper.RewardWrapper)
-        reward_function = reward_wrapper.reward_function
-        P_based_on_reward_function = {}
-        for (state, P_for_state) in unwrap_env(env, DiscreteEnv).P.items():
-            P_based_on_reward_function[state] = {}
-            for (action, P_for_state_action) in P_for_state.items():
-                outcomes = []
-                for outcome in P_for_state_action:
-                    P_entry = list(outcome)
-                    next_state = outcome[1]
-                    if is_unwrappable_to_subclass_of(env, feat_wrapper.FeatureWrapper):
-                        reward_input = unwrap_to_subclass_of(env, feat_wrapper.FeatureWrapper).features(state, action, next_state)
-                    else:
-                        reward_input = reward_wrapper.get_reward_input_for(state, action, next_state)
-                    P_entry[2] = reward_function.reward(reward_input).item()
-                    outcomes.append(tuple(P_entry))
-                P_based_on_reward_function[state][action] = outcomes
-        discrete_env.P = P_based_on_reward_function
-        print(P_based_on_reward_function)
-
     n_states = env.observation_space.n
     if with_absorbing_state:
         n_states += 1
