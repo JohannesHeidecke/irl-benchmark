@@ -27,16 +27,33 @@ class ValueIteration(RLAlgorithm):
         self.rewards = None
         self.n_actions = env.action_space.n
 
-    def mellowmax(self, q):
-    '''
-    This paper reports mellowmax has desirable properties that softmax doesn't.
+    def softmax(self, q):
+        '''∀ s: V_s = temperature * log(\sum_a exp(Q_sa/temperature))'''
 
-    https://arxiv.org/pdf/1612.05628.pdf
-    :param values: 1-D numpy array :TODO: check if we need for higher dimensional
-    :param omega: the mellowmax parameter
-    '''
-    t = self.temperature
-    return np.log(np.sum(np.exp(t * values))) - np.log(len(values)) / t
+        # We can write:
+        # t*log(sum_a exp((q_a - qmax)/t)*exp(qmax/t))
+        # to subtract q_max for robustness
+        # qmax goes straight through t*log(exp(qmax/t)) = qmax
+
+        q_max = q.max(axis=1)
+        scaled = (q - q_max) / self.temperature
+        exp_sum = np.exp(scaled).sum(axis=1)
+
+        values = self.temperature * np.log(exp_sum) + q_max
+        return values
+
+    def mellowmax(self, q):
+        '''
+        The below paper reports mellowmax has desirable properties that
+        softmax doesn't.
+
+        https://arxiv.org/pdf/1612.05628.pdf
+        :param values: 2-D numpy array
+        :param temperature: the mellowmax temperature
+        '''
+
+        softmax = self.softmax(q)
+        return softmax - np.log(q.shape[1]) / self.temperature
 
     def _boltzmann_vi(self, time_limit, metrics_listener=None):
         t0 = time()
@@ -54,17 +71,19 @@ class ValueIteration(RLAlgorithm):
         while err > self.error:
             values_old = values.copy()
 
-            for s in range(n_states):
-                # Get the q values for this state
-                q = np.array([
-                    sum([
-                        self.P[s, a, s1] *
-                        (self.rewards[s, a] + self.gamma * values[s1])
-                        for s1 in range(n_states)
-                    ]) for a in range(n_actions)
-                ])
-                qs[s] = q
-                values[s] = self.mellowmax(q)
+            q = self.gamma * self.P.dot(values) + self.rewards
+            values = self.softmax(q)
+            # for s in range(n_states):
+            #     # Get the q values for this state
+            #     q = np.array([
+            #         sum([
+            #             self.P[s, a, s1] *
+            #             (self.rewards[s, a] + self.gamma * values[s1])
+            #             for s1 in range(n_states)
+            #         ]) for a in range(n_actions)
+            #     ])
+            #     qs[s] = q
+            #     values[s] = self.mellowmax(q)
 
             err = np.max(np.abs(values - values_old))
 
