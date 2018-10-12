@@ -22,7 +22,7 @@ def test_ppo_pendulum_wrapped():
     env = feature_wrapper.make('Pendulum-v0')
     agent = PPO(env)
     agent.train(2)
-    assert isinstance(agent.agent.body.env.u_env, PendulumFeatureWrapper)
+    assert isinstance(agent.agent.body.env.u_env, feature_wrapper.PendulumFeatureWrapper)
     trajs = collect_trajs(env, agent, 1, None)
     assert np.array(trajs[0]['features']).shape == (200, 3)
     reward_function = FeatureBasedRewardFunction(env, np.zeros(3))

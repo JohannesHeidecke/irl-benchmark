@@ -48,7 +48,6 @@ ipykernel==4.7.0
 ipython==7.0.1
 ipython-genutils==0.2.0
 ipywidgets==7.4.2
--e git+https://github.com/JohannesHeidecke/irl-benchmark.git@6b6a8c8c4613148c417dd7fa3a76b6204f778700#egg=irl_benchmark
 jdcal==1.4
 jedi==0.12.1
 Jinja2==2.10
@@ -75,7 +74,6 @@ numpy==1.14.3
 nvidia-ml-py3==7.352.0
 olefile==0.46
 opencv-python==3.4.0.12
-openpyxl==2.5.0b1
 osqp==0.4.1
 pandas==0.22.0
 pandocfilters==1.4.2

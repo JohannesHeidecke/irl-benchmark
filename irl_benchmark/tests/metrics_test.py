@@ -59,6 +59,7 @@ def l2_metric_s(key, states, gamma=0.9):
 
 
 def test_l2_metric_s_analytic():
+    torch.manual_seed(12)
     for key, states in [
             ('FrozenLake-v0', 16),
             ('FrozenLake8x8-v0', 64)]:
@@ -83,11 +84,12 @@ def l2_metric_nnet_s(key, states, gamma=0.9):
     metric = RewardL2Loss(env_true)
     loss_analytic = float(metric.evaluate(env_learned, gamma, use_sampling=False))
     loss = float(metric.evaluate(env_learned, gamma, use_sampling=True,
-                                 n_iters=10000))
+                                 n_iters=50000))
     assert np.allclose(loss_analytic, loss, rtol=1e-3)
 
 
 def test_l2_metric_s_nnet():
+    torch.manual_seed(11)
     for key, states in [
             ('FrozenLake-v0', 16),
             ('FrozenLake8x8-v0', 64)]:
@@ -95,6 +97,7 @@ def test_l2_metric_s_nnet():
 
 
 def test_l2_basic_properties(gamma=0.9):
+    torch.manual_seed(10)
     env_true = truth.make('FrozenLake-v0')
     env_learned = TabularRewardFunction(
         env_true.env,
@@ -114,7 +117,7 @@ def test_l2_basic_properties(gamma=0.9):
                     kwargs[key] = value
             return metric.evaluate(reward, **kwargs).detach().numpy()
 
-        assert np.allclose(meval(env_true, n_iters=10000), 0, atol=1e-4), (
+        assert np.allclose(meval(env_true, n_iters=10000), 0, atol=1e-3 if use_sampling else 1e-8), (
             f"Distance from true reward to itself is 0 "
             f"(use_sampling={use_sampling})")
         assert meval(trf(env_true, lambda p: -p)) > 0.1, (
@@ -123,19 +126,19 @@ def test_l2_basic_properties(gamma=0.9):
 
         assert np.allclose(
             meval(env_learned),
-            meval(trf(env_learned, lambda p: 5*p))), (
+            meval(trf(env_learned, lambda p: 5*p), n_iters=10000), rtol=0.01 if use_sampling else 1e-6), (
                 "scaling learned reward doesn't change result "
                 f"(use_sampling={use_sampling})")
 
         assert np.allclose(
             meval(env_learned, n_iters=10000),
-            meval(trf(env_learned, lambda p: p + 10), n_iters=10000), rtol=1e-2), (
+            meval(trf(env_learned, lambda p: p + 10), n_iters=10000), rtol=1e-2 if use_sampling else 1e-6), (
                 "biasing learned reward doesn't change result "
                 f"(use_sampling={use_sampling})")
 
         assert np.allclose(
             meval(env_learned, n_iters=10000),
-            meval(trf(env_learned, lambda p: p - 10), n_iters=10000), rtol=1e-2), (
+            meval(trf(env_learned, lambda p: p - 10), n_iters=10000), rtol=1e-2 if use_sampling else 1e-6), (
                 "biasing learned reward doesn't change result "
                 f"(use_sampling={use_sampling})")
 
