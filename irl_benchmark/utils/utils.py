@@ -35,18 +35,6 @@ def unwrap_env(env, until_class=None):
     return env
 
 
-def unwrap_to_subclass_of(env, superclass):
-    '''Unwrap env until we get instance of subclass of superclass.'''
-    while hasattr(env, 'env') and not issubclass(type(env), superclass):
-        env = env.env
-
-    if not isinstance(env, superclass):
-        raise ValueError(
-            "Unwrapping env did not yield an instance which is subclass of  {}"
-            .format(superclass))
-    return env
-
-
 def is_unwrappable_to(env, to_class):
     '''Check if env can be unwrapped to to_class.'''
     if isinstance(env, to_class):
@@ -54,18 +42,6 @@ def is_unwrappable_to(env, to_class):
     while hasattr(env, 'env'):
         env = env.env
         if isinstance(env, to_class):
-            return True
-    return False
-
-
-def is_unwrappable_to_subclass_of(env, superclass):
-    '''Check if env can be unwrapped to to_class.'''
-
-    if issubclass(type(env), superclass):
-        return True
-    while hasattr(env, 'env'):
-        env = env.env
-        if issubclass(type(env), superclass):
             return True
     return False
 

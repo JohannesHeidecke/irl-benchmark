@@ -1,13 +1,11 @@
-import numpy as np
-
 import gym
+import numpy as np
 
 from irl_benchmark.irl.algorithms.maxent.me_irl import MaxEnt
 from irl_benchmark.irl.collect import collect_trajs
 from irl_benchmark.irl.feature.feature_wrapper import FrozenLakeFeatureWrapper
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
-from irl_benchmark.rl.algorithms import TabularQ
 from irl_benchmark.rl.algorithms.value_iteration import ValueIteration
 from irl_benchmark.utils.utils import get_transition_matrix
 

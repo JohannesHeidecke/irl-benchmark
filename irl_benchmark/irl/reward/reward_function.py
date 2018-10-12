@@ -1,5 +1,6 @@
 '''Module containing reward functions to be used for IRL.'''
 
+
 from typing import NamedTuple, Union
 from copy import copy
 
