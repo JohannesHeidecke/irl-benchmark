@@ -1,6 +1,5 @@
 import gym
 import numpy as np
-import pytest
 
 from irl_benchmark.rl.algorithms.value_iteration import ValueIteration
 '''Test Value Iteration on FrozenLake.'''
@@ -29,15 +28,8 @@ def test_frozen_finds_good_solution(duration=1):
     agent.save(fn)
     agent2 = ValueIteration(env)
     agent2.load(fn)
+    assert (agent.V == agent2.V).all()
+    assert (agent.pi == agent2.pi).all()
 
-    if duration >= 1:
-        assert (agent.V == agent2.V).all()
-        assert (agent.pi == agent2.pi).all()
-
-        assert np.mean(episode_rewards) > 0.4
-        assert np.max(episode_rewards) == 1.0
-
-
-@pytest.mark.slow
-def test_frozen_finds_good_solution_slow():
-    test_frozen_finds_good_solution(1)
+    assert np.mean(episode_rewards) > 0.4
+    assert np.max(episode_rewards) == 1.0

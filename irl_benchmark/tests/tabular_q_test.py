@@ -1,12 +1,11 @@
 import gym
 import numpy as np
-import pytest
 
 from irl_benchmark.rl.algorithms.tabular_q import TabularQ
 '''Test Tabular Q-Learning on FrozenLake.'''
 
 
-def test_frozen_finds_good_solution(duration=0.1):
+def test_frozen_finds_good_solution(duration=1):
     '''
     Check if goal was reached in at least 40% of 100 episodes.
     '''
@@ -32,11 +31,5 @@ def test_frozen_finds_good_solution(duration=0.1):
     for k, v in agent.Q.items():
         assert (v == agent2.Q[k]).all()
 
-    if duration >= 2:
-        assert np.mean(episode_rewards) > 0.4
-        assert np.max(episode_rewards) == 1.0
-
-
-@pytest.mark.slow
-def test_frozen_finds_good_solution_slow():
-    test_frozen_finds_good_solution(2)
+    assert np.mean(episode_rewards) > 0.4
+    assert np.max(episode_rewards) == 1.0
