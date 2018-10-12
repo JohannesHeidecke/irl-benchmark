@@ -17,13 +17,30 @@ _env_net_specs = {
     "FrozenLake-v0": {
         "type": "MLPNet",
         "shared": False,
-        "hid_layers": [32],
+        "hid_layers": [64],
         "hid_layers_activation": "selu",
         "clip_grad": False,
         "use_same_optim": True,
         "optim_spec": {
           "name": "Adam",
-          "lr": 0.01
+          "lr": 0.005
+        },
+        "lr_decay": "rate_decay",
+        "lr_decay_frequency": 200,
+        "lr_decay_min_timestep": 200,
+        "lr_anneal_timestep": 10000,
+        "batch_size": 64,
+    },
+    "FrozenLake8x8-v0": {
+        "type": "MLPNet",
+        "shared": False,
+        "hid_layers": [64],
+        "hid_layers_activation": "selu",
+        "clip_grad": False,
+        "use_same_optim": True,
+        "optim_spec": {
+          "name": "Adam",
+          "lr": 0.005
         },
         "lr_decay": "rate_decay",
         "lr_decay_frequency": 200,
@@ -65,7 +82,7 @@ class RewardL2Loss(object):
             env = self.true_reward.env
             net_spec = _env_net_specs[env.spec.id]
             return _optimize_net(env, net_spec, gamma, self.true_reward,
-                                 estim_reward, n_iters)
+                                 estim_reward, n_iters=n_iters)
         else:
             domain = estim_reward.domain()
             if not isinstance(domain, State):
@@ -194,14 +211,14 @@ def _optimize_net(env, net_spec, gamma, true_reward, estim_reward, n_iters):
 
     print("Resulting net:", net)
 
-    for _ in range(n_iters):
+    for i in range(n_iters):
         # d = true_reward.domain_sample(net_spec['batch_size'])
         sas = true_reward.domain()
         R_true = (RewardLossModule.correctly_shaped(
             true_reward.reward(sas),
             dtype=net_dtype,
             device=net.device)
-                  .repeat(1, 1, 16))  # HACK
+                  .expand([-1, -1, in_dim]))  # HACK
         loss = net.training_step(x=sas, y=R_true)
         with torch.no_grad():
             torch.clamp(net.model.c, 0., np.inf, out=net.model.c)

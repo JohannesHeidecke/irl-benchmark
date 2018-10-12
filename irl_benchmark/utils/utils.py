@@ -8,7 +8,11 @@ from gym.envs.toy_text.discrete import DiscreteEnv
 
 
 def to_one_hot(hot_vals, max_val, zeros_fun=np.zeros):
-    '''Convert an int list of data into one-hot vectors.'''
+    '''Convert an int, or a list of ints, to a one-hot array of floats.
+
+    `zeros_fun` controls which function is used to create the array. It should
+    be either `numpy.zeros` or `torch.zeros`.
+    '''
     try:
         N = len(hot_vals)
         res = zeros_fun((N, max_val))
