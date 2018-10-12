@@ -15,8 +15,8 @@ max_steps_per_episode = 1000
 
 env = gym.make('FrozenLake8x8-v0')
 env = FrozenLakeFeatureWrapper(env)
-initial_reward_function_estimate = FeatureBasedRewardFunction(env, np.zeros(64))
-env = RewardWrapper(env, initial_reward_function_estimate)
+initial_reward_function_estimate = FeatureBasedRewardFunction(env=env, parameters=np.zeros(64))
+env = RewardWrapper(env=env, reward_function=initial_reward_function_estimate)
 
 # Generate expert trajectories.
 expert_agent = ValueIteration(env)

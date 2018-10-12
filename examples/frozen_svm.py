@@ -1,6 +1,5 @@
 import gym
 import numpy as np
-import pickle
 
 from irl_benchmark.irl.algorithms.appr.appr_irl import ApprIRL
 from irl_benchmark.irl.collect import collect_trajs
@@ -14,10 +13,12 @@ store_to = 'data/frozen/expert/'
 no_episodes = 1000
 max_steps_per_episode = 100
 
+
 def rl_alg_factory(env):
     '''Return an RL algorithm which is used both for the expert and
     in the IRL loop.'''
     return TabularQ(env)
+
 
 # Apprenticeship IRL assumes that rewards are linear in features.
 # However, FrozenLake doesn't provide features. It is sufficiently small
@@ -46,5 +47,10 @@ env = RewardWrapper(env, reward_function)
 
 # Run projection algorithm for up to 5 minutes.
 appr_irl = ApprIRL(env, expert_trajs, rl_alg_factory, proj=True)
-appr_irl.train(time_limit=600, rl_time_per_iteration=45, eps=0, no_trajs=100, max_steps_per_episode=100, verbose=True)
-
+appr_irl.train(
+    time_limit=600,
+    rl_time_per_iteration=45,
+    eps=0,
+    no_trajs=100,
+    max_steps_per_episode=100,
+    verbose=True)

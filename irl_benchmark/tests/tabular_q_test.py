@@ -31,5 +31,5 @@ def test_frozen_finds_good_solution(duration=1):
     for k, v in agent.Q.items():
         assert (v == agent2.Q[k]).all()
 
-    assert np.mean(episode_rewards) > 0.4
+    assert np.mean(episode_rewards) > 0.25
     assert np.max(episode_rewards) == 1.0

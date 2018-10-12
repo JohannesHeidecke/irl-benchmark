@@ -14,7 +14,7 @@ class ValueIteration(RLAlgorithm):
     def __init__(
             self,
             env,
-            gamma=0.95,
+            gamma=0.8,
             error=0.01,
     ):
         self.env = env
@@ -22,11 +22,13 @@ class ValueIteration(RLAlgorithm):
         self.error = error
 
         self.P = get_transition_matrix(env)
-        self.rewards = get_reward_matrix(env)
+        self.rewards = None
         self.n_actions = env.action_space.n
 
     def train(self, time_limit, metrics_listener=None, reward_function=None):
         t0 = time()
+
+        self.rewards = get_reward_matrix(self.env)
 
         n_states, n_actions, _ = np.shape(self.P)
 
@@ -73,12 +75,11 @@ class ValueIteration(RLAlgorithm):
         self.V = values
         self.pi = policy
 
-
     def policy(self, s):
         return self.pi[s]
 
     def pick_action(self, s):
-        ''' Sample an action from policy '''
+        '''Sample an action from policy.'''
         return np.random.choice(range(self.n_actions), p=self.policy(s))
 
     def save(self, path):

@@ -21,7 +21,7 @@ class Session:
         self.agent = Agent(self.spec, self.info_space, body=body)
 
         enable_aeb_space(self)  # to use lab's data analysis framework
-        # logger.info(f'Initialized session {self.index}')
+        logger.info(f'Initialized session {self.index}')
 
     def run_episode(self):
         self.env.clock.tick('epi')
@@ -32,12 +32,12 @@ class Session:
             action = self.agent.act(state)
             reward, state, done = self.env.step(action)
             self.agent.update(action, reward, state, done)
-        # self.agent.body.log_summary()
+        self.agent.body.log_summary()
 
     def close(self):
         self.agent.close()
         self.env.close()
-        # logger.info('Session done and closed.')
+        logger.info('Session done and closed.')
 
     def run(self, time_limit):
         t0 = time.time()
