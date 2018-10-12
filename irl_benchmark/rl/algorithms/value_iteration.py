@@ -30,16 +30,16 @@ class ValueIteration(RLAlgorithm):
     def softmax(self, q):
         '''∀ s: V_s = temperature * log(\sum_a exp(Q_sa/temperature))'''
 
-        # We can write:
+        # We can rewrite as:
         # t*log(sum_a exp((q_a - qmax)/t)*exp(qmax/t))
         # subtracting q_max for robustness
-        # qmax goes straight through t*log(exp(qmax/t)) = qmax
+        # qmax goes straight through below softmax function: t*log(exp(qmax/t)) = qmax
 
-        q_max = q.max(axis=1)
+        q_max = q.max(axis=1, keepdims=True)
         scaled = (q - q_max) / self.temperature
         exp_sum = np.exp(scaled).sum(axis=1)
 
-        values = self.temperature * np.log(exp_sum) + q_max
+        values = self.temperature * np.log(exp_sum) + q_max.reshape([-1])
         return values
 
     def mellowmax(self, q):
@@ -53,7 +53,7 @@ class ValueIteration(RLAlgorithm):
         '''
 
         softmax = self.softmax(q)
-        return softmax - np.log(q.shape[1]) / self.temperature
+        return softmax - np.log(q.shape[1]) * self.temperature
 
     def _boltzmann_vi(self, time_limit, metrics_listener=None):
         t0 = time()
@@ -79,14 +79,16 @@ class ValueIteration(RLAlgorithm):
                       format(err))
                 break
 
-        # Compute stochastic policy
-        self.pi = np.exp((q - values) / self.temperature)
+        # Compute stochastic policy:
+
+        # Broadcast values to shape of q
+        self.pi = np.exp((q - values.reshape([-1, 1])) / self.temperature)
 
         # Mellowmax correction:
         self.pi = self.pi / q.shape[1]
 
         # Normalize:
-        self.pi = self.pi / self.pi.sum(axis=1)
+        self.pi = self.pi / self.pi.sum(axis=1, keepdims=True)
 
         self.V = values
         self.Q = q
@@ -101,6 +103,7 @@ class ValueIteration(RLAlgorithm):
         n_states, n_actions, _ = np.shape(self.P)
 
         values = np.zeros([n_states])
+        q = np.zeros([n_states, n_actions])
 
         err = float('inf')
 
@@ -108,15 +111,8 @@ class ValueIteration(RLAlgorithm):
         while err > self.error:
             values_old = values.copy()
 
-            for s in range(n_states):
-                # TODO(ao) rewrite numpy style
-                values[s] = max([
-                    sum([
-                        self.P[s, a, s1] *
-                        (self.rewards[s, a] + self.gamma * values_old[s1])
-                        for s1 in range(n_states)
-                    ]) for a in range(n_actions)
-                ])
+            q = self.gamma * self.P.dot(values) + self.rewards
+            values = q.max(axis=1)
 
             err = np.max(np.abs(values - values_old))
 
@@ -127,17 +123,9 @@ class ValueIteration(RLAlgorithm):
 
         # generate policy
         policy = np.zeros([n_states, n_actions])
+
         for s in range(n_states):
-            # Get the q values for this state
-            # TODO(ao) rewrite numpy style
-            q = np.array([
-                sum([
-                    self.P[s, a, s1] *
-                    (self.rewards[s, a] + self.gamma * values[s1])
-                    for s1 in range(n_states)
-                ]) for a in range(n_actions)
-            ])
-            best_actions = q == np.max(q)
+            best_actions = q[s] == np.max(q[s])
             n_best = best_actions.sum()
 
             policy[s, best_actions] = 1.0 / n_best
