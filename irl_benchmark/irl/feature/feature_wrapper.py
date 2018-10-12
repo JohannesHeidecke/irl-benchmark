@@ -21,6 +21,7 @@ class FeatureWrapper(gym.Wrapper):
 
     def step(self, action):
         '''Call base class step method but also log features.
+
         Args:
           action: `int` corresponding to action to take
         Returns:
@@ -49,9 +50,18 @@ class FeatureWrapper(gym.Wrapper):
         '''Get shape of features.'''
         raise NotImplementedError()
 
+    def feature_range(self):
+        '''Get maximum and minimum values of all k features.
+
+        Returns:
+        `np.ndarray` of shape (2, k) w/ max in 1st and min in 2nd row.
+        '''
+        raise NotImplementedError()
+
 
 class FrozenLakeFeatureWrapper(FeatureWrapper):
     '''Feature wrapper that was ad hoc written for the FrozenLake env.
+
     Would also work to get one-hot features for any other discrete env
     such that feature-based algorithms can be used in a tabular setting.
     '''
@@ -63,6 +73,16 @@ class FrozenLakeFeatureWrapper(FeatureWrapper):
     def feature_shape(self):
         '''Return dimension of the one-hot vectors used as features.'''
         return (self.env.observation_space.n, )
+
+    def feature_range(self):
+        '''Get maximum and minimum values of all k features.
+
+        Returns:
+        `np.ndarray` of shape (2, k) w/ max in 1st and min in 2nd row.
+        '''
+        ranges = np.zeros((2, self.feature_shape()[0]))
+        ranges[0] = np.ones(self.feature_shape()[0])
+        return ranges
 
 
 class PendulumFeatureWrapper(FeatureWrapper):

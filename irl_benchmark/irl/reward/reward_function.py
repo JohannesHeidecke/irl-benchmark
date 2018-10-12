@@ -1,5 +1,6 @@
 '''Module containing reward functions to be used for IRL.'''
 
+
 from typing import NamedTuple, Union
 from copy import copy
 
@@ -125,7 +126,11 @@ class TabularRewardFunction(AbstractRewardFunction):
         self.parameters = np.array(parameters)
 
     def domain(self):
-        ''' Return the domain of the reward function. Returns a namedtuple, either State, StateAction, or StateActionState '''
+        '''Return the domain of the reward function.
+
+        Returns a namedtuple, either State, StateAction, or
+        StateActionState.
+        '''
         # domain always contains states:
         states = np.arange(self.env.observation_space.n)
         if self.action_in_domain:
@@ -168,7 +173,11 @@ class TabularRewardFunction(AbstractRewardFunction):
 
 
 class FeatureBasedRewardFunction(AbstractRewardFunction):
-    ''' A reward function which is linear in some provided features.'''
+    '''A reward function which is linear in some provided features.
+
+    The self.parameters are the coefficients that are multiplied with
+    the features to get the reward.
+    '''
     def __init__(self, env, parameters):
         '''Pass gym env and reward coefficients.
 
