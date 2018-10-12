@@ -164,3 +164,20 @@ def sigma(array):
     array[array >= 0] = 1
     array[array < 0] = -1
     return array
+
+
+def avg_undiscounted_return(trajs):
+    '''Return average undiscounted true return of trajs.
+
+    Args:
+    trajs -- `list` of dictionaries w/ keys 'true_rewards' and 'rewards'
+    '''
+    total_true_reward = 0
+    if len(trajs[0]['true_rewards']) > 0:
+        for traj in trajs:
+            total_true_reward += np.sum(traj['true_rewards'])
+    else:
+        for traj in trajs:
+            total_true_reward += np.sum(traj['rewards'])
+    avg_undiscounted_return = total_true_reward / len(trajs)
+    return avg_undiscounted_return

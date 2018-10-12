@@ -11,7 +11,7 @@ from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.rl.algorithms import TabularQ
 from irl_benchmark.rl.algorithms.value_iteration import ValueIteration
 from irl_benchmark.rl.algorithms.ppo import PPO
-from irl_benchmark.utils.utils import unwrap_env
+from irl_benchmark.utils.utils import unwrap_env, avg_undiscounted_return
 
 # Define important script constants here:
 store_to = 'data/frozen/expert/'
@@ -25,18 +25,6 @@ def rl_alg_factory(env, lp=False):
         return ValueIteration(env, error=1e-5)
     else:
         return TabularQ(env)
-
-
-def avg_undiscounted_return(trajs):
-    total_true_reward = 0
-    if len(trajs[0]['true_rewards']) > 0:
-        for traj in trajs:
-            total_true_reward += np.sum(traj['true_rewards'])
-    else:
-        for traj in trajs:
-            total_true_reward += np.sum(traj['rewards'])
-    avg_undiscounted_return = total_true_reward / len(trajs)
-    return avg_undiscounted_return
 
 
 # RelEnt IRL assumes that rewards are linear in features.

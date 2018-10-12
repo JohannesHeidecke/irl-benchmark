@@ -1,3 +1,5 @@
+'''Test both implementations of Apprenticeship IRL (Abeel & Ng, 2004).'''
+
 import gym
 import numpy as np
 
@@ -7,8 +9,6 @@ from irl_benchmark.irl.collect import collect_trajs
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.rl.algorithms import TabularQ
-
-'''Test both implementations of Apprenticeship IRL (Abeel & Ng, 2004).'''
 
 
 def run_appr_irl(use_projection, duration):
