@@ -104,7 +104,7 @@ def test_svm(duration=0.1):
     # Check results only if duration was manually set to be large.
     if duration < 5:
         return
-    assert len(distances) >= 3
+    assert len(distances) >= 2
     assert len(distances) <= 10  # unrealistically high
     assert distances[-1] < distances[0]
     assert distances[-1] < 5
@@ -126,7 +126,7 @@ def test_proj(duration=0.1):
     # Check results only if duration was manually set to be large.
     if duration < 5:
         return
-    assert len(distances) >= 3
+    assert len(distances) >= 2
     assert len(distances) <= 10  # unrealistically high
     assert distances[-1] < distances[0]
     assert distances[-1] < 5
