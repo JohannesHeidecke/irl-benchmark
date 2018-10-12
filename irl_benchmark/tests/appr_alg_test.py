@@ -3,6 +3,8 @@
 import gym
 import numpy as np
 
+import pytest
+
 from irl_benchmark.irl.algorithms.appr.appr_irl import ApprIRL
 from irl_benchmark.irl.feature.feature_wrapper import FrozenLakeFeatureWrapper
 from irl_benchmark.irl.collect import collect_trajs
@@ -11,13 +13,19 @@ from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.rl.algorithms.value_iteration import ValueIteration
 from irl_benchmark.utils.utils import avg_undiscounted_return
 
+from irl_benchmark.rl.algorithms import TabularQ
+'''Test both implementations of Apprenticeship IRL (Abeel & Ng, 2004).'''
+
 
 def rl_alg_factory(env):
     return ValueIteration(env, error=1e-5)
 
 
-def run_appr_irl(irl_train_time=20, large_map=False,
-                 use_projection=False, no_episodes=1000, horizon=100,
+def run_appr_irl(irl_train_time=20,
+                 large_map=False,
+                 use_projection=False,
+                 no_episodes=1000,
+                 horizon=100,
                  store_to='data/frozen/appr'):
     '''Run ApprIRL on FrozenLake and return distance of feature counts.
 
@@ -47,22 +55,22 @@ def run_appr_irl(irl_train_time=20, large_map=False,
     env = FrozenLakeFeatureWrapper(env)
     expert_agent = ValueIteration(env, error=1e-5)
     expert_agent.train(15)
-    expert_trajs = collect_trajs(env, expert_agent, no_episodes,
-                                 horizon, expert_store)
+    expert_trajs = collect_trajs(env, expert_agent, no_episodes, horizon,
+                                 expert_store)
 
     # Run Apprenticeship IRL and agent trained w/ the obtained reward.
     initial_reward = np.random.normal(size=16)
-    reward_function = FeatureBasedRewardFunction(env,
-                                                 parameters=initial_reward)
+    reward_function = FeatureBasedRewardFunction(
+        env, parameters=initial_reward)
     env = RewardWrapper(env, reward_function)
     appr_irl = ApprIRL(env, expert_trajs, rl_alg_factory, proj=use_projection)
-    appr_irl.train(time_limit=irl_train_time,
-                   rl_time_per_iteration=15, verbose=False)
+    appr_irl.train(
+        time_limit=irl_train_time, rl_time_per_iteration=5, verbose=False)
     test_agent = ValueIteration(appr_irl.env, error=1e-5)
-    test_agent.train(15)
+    test_agent.train(min(5, irl_train_time))
     test_store = store_to + '/test'
-    test_trajs = collect_trajs(appr_irl.env, test_agent, no_episodes,
-                               horizon, test_store)
+    test_trajs = collect_trajs(appr_irl.env, test_agent, no_episodes, horizon,
+                               test_store)
 
     # Check how often the goal state was reached.
     expert_performance = avg_undiscounted_return(expert_trajs)
@@ -76,11 +84,11 @@ def run_appr_irl(irl_train_time=20, large_map=False,
         'distances': appr_irl.distances,
         'expert_avg_return': expert_performance,
         'test_avg_return': irl_performance,
-        }
+    }
     return results
 
 
-def test_svm(duration=2):
+def test_svm(duration=0.1):
     '''Test if the max-margin implementation plausibly works.
 
     Checks if it runs for a credible number of steps, and if the latest
@@ -96,13 +104,13 @@ def test_svm(duration=2):
     # Check results only if duration was manually set to be large.
     if duration < 5:
         return
-    assert len(distances) >= 3
+    assert len(distances) >= 2
     assert len(distances) <= 10  # unrealistically high
     assert distances[-1] < distances[0]
     assert distances[-1] < 5
 
 
-def test_proj(duration=2):
+def test_proj(duration=0.1):
     '''Test if the projection implementation plausibly works.
 
     Checks if it runs for a credible number of steps, and if the latest
@@ -118,7 +126,17 @@ def test_proj(duration=2):
     # Check results only if duration was manually set to be large.
     if duration < 5:
         return
-    assert len(distances) >= 3
+    assert len(distances) >= 2
     assert len(distances) <= 10  # unrealistically high
     assert distances[-1] < distances[0]
     assert distances[-1] < 5
+
+
+@pytest.mark.slow
+def test_svm_slow():
+    test_svm(20)
+
+
+@pytest.mark.slow
+def test_proj_slow():
+    test_proj(20)
