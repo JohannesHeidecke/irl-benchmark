@@ -1,4 +1,4 @@
-'''Test both implementations of Apprenticeship IRL (Abeel & Ng, 2004).'''
+'''Test Relative Entropy IRL (Boularias et al., 2011).'''
 
 import gym
 import numpy as np
@@ -22,7 +22,8 @@ def rl_alg_factory(env, lp=False):
 
 
 def run_relent_irl(irl_step_size=1e-3, irl_train_time=60,
-                   large_map=False, no_episodes=1000, horizon=100,
+                   rl_train_time=15, large_map=False,
+                   no_episodes=1000, horizon=100,
                    store_to='data/frozen/relent'):
     '''Run RelEnt IRL on FrozenLake and return dictionary w/ metrics.
 
@@ -54,7 +55,7 @@ def run_relent_irl(irl_step_size=1e-3, irl_train_time=60,
         env = gym.make('FrozenLake-v0')
     env = FrozenLakeFeatureWrapper(env)
     expert_agent = rl_alg_factory(env)
-    expert_agent.train(15)
+    expert_agent.train(rl_train_time)
     expert_store = store_to + '/expert'
     expert_trajs = collect_trajs(env, expert_agent, no_episodes,
                                  horizon, expert_store)
@@ -68,7 +69,8 @@ def run_relent_irl(irl_step_size=1e-3, irl_train_time=60,
     env = RewardWrapper(env, reward_function)
 
     # Train Relative Entropy IRL and test_agent based on the obtained reward.
-    relent = RelEnt(env, expert_trajs, rl_alg_factory, horizon=500, delta=.01)
+    relent = RelEnt(env, expert_trajs, rl_alg_factory,
+                    horizon=horizon, eps=1e-3)
     relent.train(irl_step_size, irl_train_time, verbose=False)
     test_agent = rl_alg_factory(relent.env)
     test_agent.train(60)
@@ -89,7 +91,7 @@ def run_relent_irl(irl_step_size=1e-3, irl_train_time=60,
     return results
 
 
-def test_relent(duration=2):
+def test_relent(duration=1, no_episodes=1, horizon=1):
     '''Test if RelEnt IRL plausibly works.
 
     Checks if:
@@ -101,12 +103,13 @@ def test_relent(duration=2):
     ApprIRL compiles at all, not if its results are credible.
     '''
     # In all cases check whether ApprIRL runs at all.
-    results = run_relent_irl(irl_train_time=duration)
+    results = run_relent_irl(irl_train_time=duration,
+                             rl_train_time=duration,
+                             no_episodes=no_episodes, horizon=horizon)
 
     # Check results only if duration was manually set to be large.
-    if duration < 5:
-        return
-    assert np.linalg.norm(
-        results['initial_reward'] - results['irl_reward']
-        ) > .1  # Note that irl_reward is normalized to a unit vector.
-    assert results['test_avg_return'] > .01
+    if duration > 5:
+        assert np.linalg.norm(
+            results['initial_reward'] - results['irl_reward']
+            ) > .1  # Note that irl_reward is normalized to a unit vector.
+        assert results['test_avg_return'] > .01

@@ -144,7 +144,8 @@ class RelEnt(BaseIRLAlgorithm):
 
         # Estimate subgradient based on collected trajectories, then
         # update reward coefficients.
-        print('Starting subgradient ascent...')
+        if verbose:
+            print('Starting subgradient ascent...')
         iteration_counter = 0
         while time.time() < t0 + time_limit:
             # replace the previous with the following line when using pdb
@@ -158,8 +159,8 @@ class RelEnt(BaseIRLAlgorithm):
                       + ' grad norm: ' + str(np.linalg.norm(subgrads)))
                 print('ITERATION ' + str(iteration_counter)
                       + ' reward coefficients: ' + str(reward_coefficients))
-
-        print('Final reward coefficients: ' + str(reward_coefficients))
+        if verbose:
+            print('Final reward coefficients: ' + str(reward_coefficients))
 
         self.reward_function = FeatureBasedRewardFunction(
             self.env_rew, reward_coefficients)
