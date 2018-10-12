@@ -1,7 +1,7 @@
 import json
 from collections import defaultdict
 from copy import copy
-import pyplot as pl
+import matplotlib.pyplot as pl
 import numpy as np
 from gym.envs.toy_text.discrete import DiscreteEnv
 
