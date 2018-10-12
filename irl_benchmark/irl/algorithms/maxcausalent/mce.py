@@ -1,10 +1,10 @@
 import gym
+import numpy as np
+from gym.envs.toy_text.discrete import DiscreteEnv
 
 from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
-import numpy as np
-
 from irl_benchmark.rl.algorithms.val_iter import GoodValueIteration
-from irl_benchmark.utils.utils import unwrap_env
+from irl_benchmark.utils.utils import unwrap_env, is_unwrappable_to
 
 
 class MaxCausalEnt(BaseIRLAlgorithm):
@@ -20,10 +20,10 @@ class MaxCausalEnt(BaseIRLAlgorithm):
                  transition_dynamics,
                  feat_mat,
                  rl_alg_factory,
-                 temperature = 1,
+                 temperature=1,
                  gamma=0.99,
                  lr=0.2,
-                 epochs = 1
+                 epochs=1
                  ):
         '''Initialize Maximum Entropy IRL algorithm. '''
         super(MaxCausalEnt, self).__init__(env, expert_trajs, rl_alg_factory)
@@ -68,7 +68,7 @@ class MaxCausalEnt(BaseIRLAlgorithm):
             for timestep in len(traj['states']):
                 state = traj['states'][timestep]
                 action = traj['actions'][timestep]
-                
+
                 sa_visit_count[state, action] += 1
 
         # Count into probability
@@ -76,8 +76,7 @@ class MaxCausalEnt(BaseIRLAlgorithm):
 
         return sa_visit_count, P0
 
-    def occupancy_measure(self, policy, P0, t_max = None, threshold = 1e-6):
-
+    def occupancy_measure(self, policy, P0, t_max=None, threshold=1e-6):
 
         """
         Computes occupancy measure of a MDP under a given time-constrained policy
@@ -98,9 +97,8 @@ class MaxCausalEnt(BaseIRLAlgorithm):
         1D numpy array of shape (mdp.nS)
         """
 
-
         if P0 is None:
-            P0 = np.ones(self.n_states)/self.n_states
+            P0 = np.ones(self.n_states) / self.n_states
         d_prev = np.zeros_like(P0)
 
         t = 0
@@ -111,7 +109,7 @@ class MaxCausalEnt(BaseIRLAlgorithm):
 
             d = np.copy(P0)
 
-            for state in  range(self.n_states):
+            for state in range(self.n_states):
                 for action in range(self.n_actions):
                     # for all next_state reachable:
 
@@ -120,7 +118,7 @@ class MaxCausalEnt(BaseIRLAlgorithm):
                         prob = self.transition_dynamics[state, action, next_state]
                         d[next_state] += self.gamma * d_prev[state] * policy[state, action] * prob
 
-            diff = np.amax(abs(d_prev - d)) # maxima of the flattened array
+            diff = np.amax(abs(d_prev - d))  # maxima of the flattened array
             d_prev = np.copy(d)
 
             if t_max is not None:
@@ -142,15 +140,14 @@ class MaxCausalEnt(BaseIRLAlgorithm):
         trajectories (Levine et al, supplement to the GPIRL paper).
         Parameters
 
-        We finally return rewards (non-normalized)
+        We finally return rewards (non-normalized).
         """
 
         sa_visit_count, P0 = self.sa_visitations()
 
-        mean_s_visit_count = np.sum(sa_visit_count, 1)/ len(self.expert_trajs)
+        mean_s_visit_count = np.sum(sa_visit_count, 1) / len(self.expert_trajs)
 
         mean_feature_count = np.dot(self.feat_mat.T, mean_s_visit_count)
-
 
         # initialize the parameters
         theta = np.random.rand(self.feat_mat.shape[1])
@@ -162,8 +159,7 @@ class MaxCausalEnt(BaseIRLAlgorithm):
             v, q, policy = solver.train(rewards=r, temperature=None)
 
             # Log-Likelihood
-            l = np.sum(sa_visit_count * (q - v))   # check: broadcasting works as intended or not
-
+            l = np.sum(sa_visit_count * (q - v))  # check: broadcasting works as intended or not
 
             # occupancy measure
             d = self.occupancy_measure(policy=policy, P0=P0)
@@ -172,7 +168,7 @@ class MaxCausalEnt(BaseIRLAlgorithm):
             dl_dtheta = -(mean_feature_count - np.dot(self.feat_mat.T, d))
 
             # graduate descent
-            theta -= self.lr* dl_dtheta
+            theta -= self.lr * dl_dtheta
 
             # report stuff every
             if (i + 1) % 10 == 0:
@@ -180,6 +176,3 @@ class MaxCausalEnt(BaseIRLAlgorithm):
 
         estimated_rewards = np.dot(self.feat_mat, theta)
         return estimated_rewards
-
-
-
