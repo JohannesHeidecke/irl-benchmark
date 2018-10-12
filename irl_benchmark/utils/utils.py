@@ -68,9 +68,8 @@ def get_transition_matrix(env, with_absorbing_state=True):
             # Iterate over "to" states:
             for probability, next_state, _, done in transitions:
                 table[state, action, next_state] += probability
-                if done:
+                if done and with_absorbing_state is True:
                     # map next_state to absorbing state:
-                    assert with_absorbing_state is True
                     table[next_state, :, :] = 0.0
                     table[next_state, :, -1] = 1.0
 
