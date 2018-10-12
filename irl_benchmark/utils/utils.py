@@ -7,9 +7,16 @@ import pandas as pd
 from gym.envs.toy_text.discrete import DiscreteEnv
 
 
-def to_one_hot(hot_vals, max_val):
+def to_one_hot(hot_vals, max_val, zeros_fun=np.zeros):
     '''Convert an int list of data into one-hot vectors.'''
-    return np.eye(max_val)[np.array(hot_vals)]
+    try:
+        N = len(hot_vals)
+        res = zeros_fun((N, max_val))
+        res[np.arange(N), hot_vals] = 1.
+    except TypeError:
+        res = zeros_fun((max_val,))
+        res[hot_vals] = 1.
+    return res
 
 
 def unwrap_env(env, until_class=None):

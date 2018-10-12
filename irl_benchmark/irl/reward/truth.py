@@ -1,6 +1,7 @@
 import functools
 import gym
 import numpy as np
+import functools
 
 from irl_benchmark.irl.reward.reward_function import TabularRewardFunction
 
