@@ -122,29 +122,3 @@ def test_proj(duration=2):
     assert len(distances) <= 10  # unrealistically high
     assert distances[-1] < distances[0]
     assert distances[-1] < 5
-
-
-svm_test_avg_results = []
-# svm_exp_avg_rets = []
-proj_test_avg_results = []
-# proj_exp_avg_rets = []
-for i in range(10):
-    svm_test_avg_result = run_appr_irl(no_episodes=100000)
-    # svm_exp_avg_ret = run_appr_irl()['expert_avg_return']
-    proj_test_avg_result = run_appr_irl(use_projection=True,
-                                        no_episodes=100000)
-    # proj_exp_avg_ret = run_appr_irl(use_projection=True)['expert_avg_return']
-    svm_test_avg_results.append(svm_test_avg_result)
-    # svm_exp_avg_rets.append(svm_exp_avg_ret)
-    proj_test_avg_results.append(proj_test_avg_result)
-    # proj_exp_avg_rets.append(proj_exp_avg_ret)
-# print('SVM test avg returns')
-# print(svm_test_avg_returns)
-# # print('SVM expert avg returns')
-# # print(svm_exp_avg_rets)
-# print('\n')
-# print('Proj test avg returns')
-# print(proj_test_avg_returns)
-# print('Proj expert avg returns')
-# print(proj_exp_avg_rets)
-# print('\n')
