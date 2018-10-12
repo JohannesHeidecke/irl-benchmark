@@ -10,9 +10,20 @@ import irl_benchmark.irl.reward.reward_wrapper as rew_wrapper
 import irl_benchmark.irl.feature.feature_wrapper as feat_wrapper
 
 
-def to_one_hot(hot_vals, max_val):
-    '''Convert an int list of data into one-hot vectors.'''
-    return np.eye(max_val)[np.array(hot_vals, dtype=np.uint32)]
+def to_one_hot(hot_vals, max_val, zeros_fun=np.zeros):
+    '''Convert an int, or a list of ints, to a one-hot array of floats.
+
+    `zeros_fun` controls which function is used to create the array. It should
+    be either `numpy.zeros` or `torch.zeros`.
+    '''
+    try:
+        N = len(hot_vals)
+        res = zeros_fun((N, max_val))
+        res[np.arange(N), hot_vals] = 1.
+    except TypeError:
+        res = zeros_fun((max_val,))
+        res[hot_vals] = 1.
+    return res
 
 
 def unwrap_env(env, until_class=None):
