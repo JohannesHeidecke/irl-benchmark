@@ -15,23 +15,19 @@ from irl_benchmark.utils.utils import sigma
 
 class RelEnt(BaseIRLAlgorithm):
     '''Relative Entropy IRL (Boularias et al., 2011).
-
     Assumes that reward is linear in features. Model-free,
     i.e. doesn't require transition dynamics.
-
     Based on minimizing the relative entropy (=KL divergence) between
     a baseline policy and a policy that matches the feature counts of
     the expert demonstrations. This minimization is done by
     subgradient descent, which is done approximately via importance
     sampling.
-
     Currently hard-coded to use a random baseline policy.
     '''
     def __init__(self, env, expert_trajs, rl_alg_factory,
                  baseline_agent=None, gamma=.8, horizon=20, delta=.05,
                  eps=None):
         '''Set environment, RL agent factory, expert trajectories, and parameters.
-
         Args:
         env -- wrapped environment; unwrap_env must get envs of the following
                types from it: gym.Env, FeatureWrapper, RewardWrapper
@@ -50,7 +46,6 @@ class RelEnt(BaseIRLAlgorithm):
                     to guarantee matching expert feature counts within epsilon
                     with confidence delta (via Hoeffding's inequality). But
                     this requires the range of feature values.
-
         NOTE: Performance of the algorithm might depend on epsilons in a way
         I don't currently understand, as the epsilons occur in the expression
         used to approximate the relevant subgradient (ibid., p. 187, eq. 7).
@@ -97,12 +92,10 @@ class RelEnt(BaseIRLAlgorithm):
 
     def subgradients(self, trajs, reward_coefficients):
         '''Return sample-based subgradients as in ibid., p. 185, eq. 8.
-
         Args:
         trajs -- `list` of trajectories
         reward_coefficients -- `np.ndarray` of shape (self.n_features, )
         policy -- function (state: int) -> probabilities: np.ndarray
-
         Returns:
         subgrads -- `np.ndarray` of shape (self.n_features, )
         '''
@@ -128,13 +121,11 @@ class RelEnt(BaseIRLAlgorithm):
     def train(self, step_size=1e-2, time_limit=60, n_trajs=10000,
               verbose=False):
         '''Train for at most time_limit seconds w/ n_trajs non-expert trajs.
-
         Args:
         step_size -- `float`, size of each gradient ascent step
         time_limit -- `int`, number of seconds to train
         n_trajs -- `int`, number of non-expert trajs to be collected
         verbose -- `bool`, if true print gradient norms and reward weights
-
         Returns nothing.
         '''
         t0 = time.time()
