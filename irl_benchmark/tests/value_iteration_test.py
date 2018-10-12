@@ -33,13 +33,15 @@ def test_frozen_finds_good_solution(duration=0.1):
     agent.save(fn)
     agent2 = ValueIteration(env)
     agent2.load(fn)
+    assert (agent.V == agent2.V).all()
+    assert (agent.pi == agent2.pi).all()
 
     if duration >= 1.0:
         assert np.mean(episode_rewards) > 0.25
         assert np.max(episode_rewards) == 1.0
 
 
-def test_true_reward_not_leaked(0.1):
+def test_true_reward_not_leaked(duration=0.1):
     env = feature_wrapper.make('FrozenLake-v0')
     reward_function = FeatureBasedRewardFunction(env, np.random.randn(16))
     env = RewardWrapper(env, reward_function)
@@ -49,20 +51,15 @@ def test_true_reward_not_leaked(0.1):
         agent.rewards == get_reward_matrix(env, with_absorbing_state=True))
     reward_function = FeatureBasedRewardFunction(env, np.random.randn(16))
     env.update_reward_function(reward_function)
-    agent.train(0.5)
+    agent.train(0.1)
     assert np.all(
         agent.rewards == get_reward_matrix(env, with_absorbing_state=True))
-
-    if duration >= 1:
-        assert (agent.V == agent2.V).all()
-        assert (agent.pi == agent2.pi).all()
-        assert np.mean(episode_rewards) > 0.4
-        assert np.max(episode_rewards) == 1.0
 
 
 @pytest.mark.slow
 def test_frozen_finds_good_solution_slow():
     test_frozen_finds_good_solution(1)
+
 
 @pytest.mark.slow
 def test_true_reward_not_leaked_slow():
