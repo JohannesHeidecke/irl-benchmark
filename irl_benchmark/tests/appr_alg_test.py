@@ -1,13 +1,14 @@
 import gym
 import numpy as np
 
+import pytest
+
 from irl_benchmark.irl.algorithms.appr.appr_irl import ApprIRL
 from irl_benchmark.irl.feature.feature_wrapper import FrozenLakeFeatureWrapper
 from irl_benchmark.irl.collect import collect_trajs
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.rl.algorithms import TabularQ
-
 '''Test both implementations of Apprenticeship IRL (Abeel & Ng, 2004).'''
 
 
@@ -34,15 +35,16 @@ def run_appr_irl(use_projection, duration):
     expert_agent.train(duration)
     expert_trajs = collect_trajs(env, expert_agent, no_episodes,
                                  max_steps_per_episode, store_to)
-    reward_function = FeatureBasedRewardFunction(
-        env, np.random.normal(size=16))
+    reward_function = FeatureBasedRewardFunction(env,
+                                                 np.random.normal(size=16))
     env = RewardWrapper(env, reward_function)
     appr_irl = ApprIRL(env, expert_trajs, TabularQ, proj=use_projection)
-    appr_irl.train(time_limit=duration, rl_time_per_iteration=duration/2, verbose=False)
+    appr_irl.train(
+        time_limit=duration, rl_time_per_iteration=duration / 2, verbose=False)
     return appr_irl.distances
 
 
-def test_svm(duration=2):
+def test_svm(duration=0.1):
     '''Test if the max-margin implementation plausibly works.
 
     Checks if it runs for a credible number of steps, and if the latest
@@ -57,12 +59,13 @@ def test_svm(duration=2):
     # Check results only if duration was manually set to be large.
     if duration < 5:
         return
-    assert len(distances) >= 3
+    assert len(distances) >= 2
     assert len(distances) <= 10  # unrealistically high
     assert distances[-1] < distances[0]
     assert distances[-1] < 5
 
-def test_proj(duration=2):
+
+def test_proj(duration=0.1):
     '''Test if the projection implementation plausibly works.
 
     Checks if it runs for a credible number of steps, and if the latest
@@ -77,7 +80,17 @@ def test_proj(duration=2):
     # Check results only if duration was manually set to be large.
     if duration < 5:
         return
-    assert len(distances) >= 3
+    assert len(distances) >= 2
     assert len(distances) <= 10  # unrealistically high
     assert distances[-1] < distances[0]
     assert distances[-1] < 5
+
+
+@pytest.mark.slow
+def test_svm_slow():
+    test_svm(20)
+
+
+@pytest.mark.slow
+def test_proj_slow():
+    test_proj(20)
