@@ -70,9 +70,7 @@ class RelEnt(BaseIRLAlgorithm):
             self.baseline_agent = baseline_agent
         else:
             self.baseline_agent = RandomAgent(self.env_gym)
-        # Set numbers of states, actions, expert trajs, and features.
-        self.n_states = self.env_gym.observation_space.n
-        self.n_actions = self.env_gym.action_space.n
+        # Set expert trajs, and features.
         self.n_trajs = len(self.expert_trajs)
         self.n_features = self.env_feat.feature_shape()[0]
         assert isinstance(self.n_features, int)  # Should be dim of vector.
