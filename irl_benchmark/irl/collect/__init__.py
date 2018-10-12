@@ -37,7 +37,8 @@ def collect_trajs(env,
 
         step_counter = 0
         while not done \
-              and (max_steps_per_episode is None or step_counter < max_steps_per_episode):
+            and (max_steps_per_episode is None or step_counter <
+                 max_steps_per_episode):
             step_counter += 1
             action = agent.pick_action(state)
             next_state, reward, done, info = env.step(action)
