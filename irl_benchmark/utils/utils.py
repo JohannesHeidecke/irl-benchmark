@@ -224,18 +224,8 @@ def avg_undiscounted_return(trajs):
     return avg_undiscounted_return
 
 
-def plot(data):
-    '''Make shiny plots for the presentation on Saturday.
-    Args:
-    data -- `np.ndarray` of default shape (2, 5, 4, 3, 50)
-    n_envs -- `int`, number of environments in the data
-    n_algs -- `int`, number of IRL algorithms in the data
-    n_exp_trajs -- `int`, number of numbers of expert trajectories in the data.
-                   E.g. if an alg was run once w/ each of 10, 100, and 100
-                   expert trajectories then n_exp_trajs would be 3
-    n_metrics -- `int`, number of metrics in the data
-    n_seeds -- `int`, number of independent runs in the data
-    '''
+def plot(data, split_metrics=None):
+    '''Make shiny plots for the presentation on Saturday.'''
     pl.rcParams['font.size'] = 16
 
     # Create fake data for testing.
@@ -253,40 +243,93 @@ def plot(data):
     # Unpack data dictionary.
     envs = data['environment_labels']
     algs = data['algorithm_labels']
-    metrics = data['metric_labels']
+    if split_metrics is not None:
+        metrics = [data['metric_labels'][split_metrics]]
+    else:
+        metrics = data['metric_labels']
     n_trajs_list = data['n_trajs_list']
     results = data['results']
     n_envs = len(envs)
     n_algs = len(algs)
     n_metrics = len(metrics)
     n_trajs_list = np.array(n_trajs_list)
+    if split_metrics is not None:
+        results = results[:, :, split_metrics, :, :]
+        results = np.reshape(results,
+                             [n_envs, n_algs, 1, len(n_trajs_list), -1])
+
     data_std = np.std(results, axis=4)
     data_mean = np.mean(results, axis=4)
     data = np.stack([data_mean - data_std, data_mean, data_mean +
                      data_std], axis=4)
 
     # fig = pl.figure(figsize=[300, 300])
-    fig, ax_lst = pl.subplots(n_algs, n_envs, sharex=True, figsize=[20, 13])
+    if split_metrics is not None:
+        figsize = [20, 10]
+    else:
+        figsize = [20, 13]
+    fig, ax_lst = pl.subplots(n_metrics, n_envs, sharex=True,
+                              figsize=figsize)
     fig.suptitle('Inverse Reinforcement Learning Benchmark')
     for env in range(n_envs):
-        for alg in range(n_algs):
-            for metric in range(n_metrics):
-                ax = ax_lst[alg, env]
+        for metric in range(n_metrics):
+            for alg in range(n_algs):
+                if n_metrics == 1:
+                    ax = ax_lst[env]
+                else:
+                    ax = ax_lst[metric, env]
                 ax.plot(n_trajs_list, data[env, alg, metric, :, 1],
-                        label=metrics[metric])
+                        label=algs[alg])
                 ax.fill_between(n_trajs_list,
                                 data[env, alg, metric, :, 0],
                                 data[env, alg, metric, :, 2],
                                 alpha=.5)
                 if env == 0:
-                    ax.set_ylabel(algs[alg])
-                if env == 0 and alg == 0:
-                    ax.legend(loc='upper center', bbox_to_anchor=(1.0, 1.6),
+                    ax.set_ylabel(metrics[metric])
+                if env == 0 and metric == 0:
+                    ax.legend(loc='upper center', bbox_to_anchor=(1.0, 1.11),
                               ncol=3, fancybox=True, shadow=True)
-                if alg == 0:
+                if metric == 0:
                     ax.set_title(envs[env])
-                if alg == n_algs - 1:
+                if metric == n_metrics - 1:
                     ax.set_xlabel('Number of expert trajectories')
     pl.xscale('log')
     pl.savefig('foo.pdf')
     return None
+
+
+def read_data(path='data/exp_res.npy',
+              labels=[['FrozenLake-v0', 'FrozenLake8x8-v0'],
+                      ['ApprIRL-Proj', 'ApprIRL-SVM', 'RelEntIRL'],
+                      [10, 100, 1000, 10000],
+                      ['average true return',
+                       'inverse learning error',
+                       'L2 distance to true reward']],
+              relent_only=False):
+    '''Return data in format that can be passed to the plot util.'''
+    results = np.load(path)
+
+    if relent_only:
+        labels[1] = ['RelEntIRL']
+        results = results[:, 2, :, :, :]
+        results = np.reshape(results, [2, 1, 4, 3, -1])
+
+    # Swap dimensions for metrics and number of trajs.
+    # On disk: (envs, algs, n_trajs, metrics, runs)
+    # Desired: (envs, algs, metrics, n_trajs, runs)
+    results = results.swapaxes(2, 3)
+
+    # Normalize L2 error by dividing through number of states.
+    # Currently hard-coded to work for FrozenLake and FrozenLake8x8.
+    results[0, :, 2, :, :] /= 16
+    results[1, :, 2, :, :] /= 64
+
+    # Make dictionary w/ keys that can be passed to the plot util.
+    data = {
+        'environment_labels': labels[0],
+        'algorithm_labels': labels[1],
+        'n_trajs_list': labels[2],
+        'metric_labels': labels[3],
+        'results': results,
+        }
+    return data
