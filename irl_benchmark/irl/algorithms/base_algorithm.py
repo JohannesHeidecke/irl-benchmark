@@ -1,55 +1,63 @@
-import numpy as np
+"""Module for the abstract base class of all IRL algorithms."""
+from abc import ABC, abstractmethod
+from typing import Callable, Dict, List, Tuple
 
-from irl_benchmark.utils.utils import unwrap_env
-from irl_benchmark.irl.feature.feature_wrapper import FeatureWrapper
+import gym
+
+from irl_benchmark.irl.reward.reward_function import BaseRewardFunction
+from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
+from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
+from irl_benchmark.utils import is_unwrappable_to
 
 
-class BaseIRLAlgorithm(object):
-    '''The (abstract) base class for all IRL algorithms.'''
-    def __init__(self, env, expert_trajs, rl_alg_factory):
-        '''Set environment, expert trajectories, and RL algorithm factory.
+class BaseIRLAlgorithm(ABC):
+    """The abstract base class for all IRL algorithms."""
 
-        Args:
-          env : gym environment
-          expert_trajs : list of expert trajectories (see irl/collect)
-          rl_alg_factory : function taking an environment and returning
-                           an RL agent
-        '''
+    def __init__(self, env: gym.Env, expert_trajs: List[Dict[str, list]],
+                 rl_alg_factory: Callable[[gym.Env], BaseRLAlgorithm],
+                 config: dict):
+        """
+
+        Parameters
+        ----------
+        env: gym.Env
+            The gym environment to be trained on.
+            Needs to be wrapped in a RewardWrapper to prevent leaking the true reward function.
+        expert_trajs: List[dict]
+            A list of trajectories.
+            Each trajectory is a dictionary with keys
+            ['states', 'actions', 'rewards', 'true_rewards', 'features'].
+            The values of each dictionary are lists.
+            See :func:`irl_benchmark.irl.collect.collect_trajs`.
+        rl_alg_factory: Callable[[gym.Env], BaseRLAlgorithm]
+            A function which returns a new RL algorithm when called.
+        config: dict
+            A dictionary containing algorithm-specific parameters.
+        """
+
+        assert is_unwrappable_to(env, RewardWrapper)
         self.env = env
         self.expert_trajs = expert_trajs
         self.rl_alg_factory = rl_alg_factory
+        self.config = config
 
-    def train(self, time_limit=300, rl_time_per_iteration=30):
-        '''Train up to time_limit seconds.
+    @abstractmethod
+    def train(self, no_irl_iterations: int,
+              no_rl_episodes_per_irl_iteration: int
+              ) -> Tuple[BaseRewardFunction, BaseRLAlgorithm]:
+        """Train the IRL algorithm.
 
-        Args:
-          time_limit: total training time in seconds
-          rl_time_per_iteration: RL training time per step in seconds.
+        Parameters
+        ----------
+        no_irl_iterations: int
+            The number of iteration the algorithm should be run.
+        no_rl_episodes_per_irl_iteration: int
+            The number of episodes the RL algorithm is allowed to run in
+            each iteration of the IRL algorithm.
 
-        Returns nothing.
-        '''
+        Returns
+        -------
+        Tuple[BaseRewardFunction, BaseRLAlgorithm]
+            The estimated reward function and a RL agent trained for this estimate.
+        """
         raise NotImplementedError()
-
-    def get_reward_function(self):
-        '''Return the current reward function estimate.'''
-        raise NotImplementedError()
-
-    def feature_count(self, trajs):
-        '''Return empirical discounted feature counts of input trajectories.
-
-        Args:
-        trajs -- `list` of dictionaries w/ key 'features'
-
-        Returns:
-        feature_count -- `np.ndarray` w/ shape of features,
-                         i.e. one scalar feature count per feature
-        '''
-        feature_sum = np.zeros(unwrap_env(self.env,
-                                          FeatureWrapper).feature_shape())
-        for traj in trajs:
-            assert len(traj['features']) > 0
-            gammas = self.gamma ** np.arange(len(traj['features']))
-            feature_sum += np.sum(
-                gammas.reshape(-1, 1) * np.array(traj['features']), axis=0)
-        feature_count = feature_sum / len(trajs)
-        return feature_count
