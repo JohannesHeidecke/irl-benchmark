@@ -5,7 +5,7 @@ import gym
 
 from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm, IRL_CONFIG_DOMAINS
 from irl_benchmark.irl.reward.reward_function import BaseRewardFunction
-from irl_benchmark.rl.algorithms import BaseRLAlgorithm
+from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
 
 
 class ApprIRL(BaseIRLAlgorithm):
@@ -40,6 +40,14 @@ class ApprIRL(BaseIRLAlgorithm):
         super(ApprIRL, self).__init__(env, expert_trajs, rl_alg_factory,
                                       config)
 
+        # calculate the feature counts of expert trajectories:
+        self.expert_feature_counts = self.feature_count(
+            self.expert_trajs, self.config['gamma'])
+
+        # create list of feature counts:
+        self.feature_counts = []
+        # for SVM mode: create list of labels:
+        self.labels = [1.]
 
     def train(self, no_irl_iterations: int,
               no_rl_episodes_per_irl_iteration: int,

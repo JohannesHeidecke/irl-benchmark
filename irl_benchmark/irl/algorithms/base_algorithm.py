@@ -3,11 +3,13 @@ from abc import ABC, abstractmethod
 from typing import Callable, Dict, List, Tuple
 
 import gym
+import numpy as np
 
+from irl_benchmark.irl.feature.feature_wrapper import FeatureWrapper
 from irl_benchmark.irl.reward.reward_function import BaseRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
-from irl_benchmark.utils import is_unwrappable_to
+from irl_benchmark.utils import is_unwrappable_to, unwrap_env
 
 # A dictionary containing allowed and default values for
 # the config of each IRL algorithm.
@@ -72,6 +74,45 @@ class BaseIRLAlgorithm(ABC):
         """
         raise NotImplementedError()
 
+    def feature_count(self, trajs: List[Dict[str, list]],
+                      gamma: float) -> np.ndarray:
+        """Return empirical discounted feature counts of input trajectories.
+
+        Parameters
+        ----------
+        trajs: List[Dict[str, list]]
+             A list of trajectories.
+            Each trajectory is a dictionary with keys
+            ['states', 'actions', 'rewards', 'true_rewards', 'features'].
+            The values of each dictionary are lists.
+            See :func:`irl_benchmark.irl.collect.collect_trajs`.
+        gamma: float
+            The discount factor. Must be in range [0., 1.].
+
+        Returns
+        -------
+        np.ndarray
+            A numpy array containing discounted feature counts. The shape
+            is the same as the trajectories' feature shapes. One scalar 
+            feature count per feature.
+        """
+        # Initialize feature counts to zeros of correct shape:
+        feature_count = np.zeros(
+            unwrap_env(self.env, FeatureWrapper).feature_shape())
+        for traj in trajs:
+
+            assert traj['features']  # empty lists are False in python
+
+            # gammas is a vector containing [gamma^0, gamma^1, gamma^2, ... gamma^l]
+            # where l is length of the trajectory:
+            gammas = gamma**np.arange(len(traj['features']))
+            # add trajectory's feature count:
+            feature_count += np.sum(
+                gammas.reshape(-1, 1) * np.array(traj['features']), axis=0)
+        # divide feature_count by number of trajectories to normalize:
+        feature_count = feature_count / len(trajs)
+        return feature_count
+
     def preprocess_config(self, config: dict) -> dict:
         """ Pre-processes a config dictionary.
 
@@ -102,8 +143,9 @@ class BaseIRLAlgorithm(ABC):
                 # for numerical fields:
                 if config_domain[key]['type'] in [float, int]:
                     # check if right type:
-                    assert type(config[key]) is config_domain[key][
-                        'type'], "Wrong config value type for key " + str(key)
+                    assert isinstance(
+                        config[key], config_domain[key]['type']
+                    ), "Wrong config value type for key " + str(key)
                     # check if value is high enough:
                     assert config[key] >= config_domain[key][
                         'min'], "Config value too low for key " + str(key)
