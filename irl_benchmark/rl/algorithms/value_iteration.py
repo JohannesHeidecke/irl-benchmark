@@ -52,9 +52,7 @@ class ValueIteration(BaseRLAlgorithm):
         # initialize state values:
         state_values = np.zeros([self.no_states])
 
-        # set current error to be very high and repeat until small enough:
-        current_error = float('inf')
-        while current_error > self.config['epsilon']:
+        while True:  # stops when state values converge
             # remember old values for error computation
             old_state_values = state_values.copy()
             # calculate Q-values:
@@ -65,11 +63,13 @@ class ValueIteration(BaseRLAlgorithm):
                 # using default maximum operator:
                 state_values = self._argmax_state_values(q_values)
             else:
-                # using mellowmax:
+                # using softmax:
                 state_values = self._softmax_state_values(q_values)
 
-            # calculate the current error:
-            current_error = np.max(np.abs(state_values - old_state_values))
+            # stopping condition:
+            # check if state values converged (almost no change since last iteration:
+            if np.allclose(state_values, old_state_values, atol=self.config['epsilon']):
+                break
 
         # persist learned state values and Q-values:
         self.state_values = state_values
@@ -138,7 +138,7 @@ class ValueIteration(BaseRLAlgorithm):
         # Find best actions:
         best_actions = np.isclose(q_values, np.max(q_values, axis=1).reshape((-1, 1)))
         # Initialize probabilities to be zero
-        policy = np.zeros((17, 4))
+        policy = np.zeros((self.no_states, self.no_actions))
         # Assign probability max to all best actions:
         policy[best_actions] = 1
         # Normalize values so their sum is 1. for each state:
