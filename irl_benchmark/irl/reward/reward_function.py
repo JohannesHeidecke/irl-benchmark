@@ -8,7 +8,7 @@ from gym.spaces.discrete import Discrete as DiscreteSpace
 import numpy as np
 
 from irl_benchmark.irl.feature.feature_wrapper import FeatureWrapper
-from irl_benchmark.utils import is_unwrappable_to
+import irl_benchmark.utils as utils
 
 
 # Define some custom named tuples for easier handling
@@ -272,7 +272,7 @@ class FeatureBasedRewardFunction(BaseRewardFunction):
         parameters: Union[None, np.ndarray]
             The parameters of the reward function. One parameter for each feature.
         """
-        assert is_unwrappable_to(env, FeatureWrapper)
+        assert utils.wrapper_utils.is_unwrappable_to(env, FeatureWrapper)
         super(FeatureBasedRewardFunction, self).__init__(env, parameters)
 
     def domain(self) -> np.ndarray:

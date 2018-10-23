@@ -6,6 +6,8 @@ from typing import Union
 import gym
 import numpy as np
 
+from irl_benchmark.config import preprocess_config, RL_CONFIG_DOMAINS
+
 
 class BaseRLAlgorithm(ABC):
     """Base class for Reinforcement Learning agents."""
@@ -21,7 +23,7 @@ class BaseRLAlgorithm(ABC):
             A dictionary of algorithm-specific parameters.
         """
         self.env = env
-        self.config = config
+        self.config = preprocess_config(self, RL_CONFIG_DOMAINS, config)
 
     @abstractmethod
     def train(self, no_episodes: int):

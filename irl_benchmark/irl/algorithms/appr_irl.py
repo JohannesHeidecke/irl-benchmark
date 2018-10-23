@@ -3,7 +3,8 @@ from typing import Callable, Dict, List, Tuple
 
 import gym
 
-from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm, IRL_CONFIG_DOMAINS
+from irl_benchmark.config import IRL_CONFIG_DOMAINS
+from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
 from irl_benchmark.irl.reward.reward_function import BaseRewardFunction
 from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
 
@@ -36,6 +37,10 @@ class ApprIRL(BaseIRLAlgorithm):
             A function which returns a new RL algorithm when called.
         config: dict
             A dictionary containing hyper-parameters for the algorithm.
+            The fields are:
+            * 'gamma': discount factor between 0. and 1.
+            * 'epsilon': small positive value, stopping criterion.
+            * 'mode': which variant of the algorithm to use, either 'svm' or 'projection'.
         """
         super(ApprIRL, self).__init__(env, expert_trajs, rl_alg_factory,
                                       config)
