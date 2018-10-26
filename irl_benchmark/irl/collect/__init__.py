@@ -12,7 +12,7 @@ from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
 def collect_trajs(env: gym.Env,
                   agent: BaseRLAlgorithm,
                   no_trajectories: int,
-                  max_steps_per_episode: int,
+                  max_steps_per_episode: Union[int, None] = None,
                   store_to: Union[str, None] = None) -> List[Dict[str, list]]:
     """ Collect and return trajectories of an agent in an environment.
 
@@ -25,7 +25,8 @@ def collect_trajs(env: gym.Env,
     no_trajectories: int
         Number of trajectories to be collected
     max_steps_per_episode: int
-        Maximum number of steps allowed to take in each episode.
+        Maximum number of steps allowed to take in each episode. Optional.
+        If not set, the environment's default is used.
     store_to: Union[str, None]
         If not None: a path of where trajectories should be persisted.
 

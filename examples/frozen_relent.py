@@ -42,8 +42,8 @@ print('Done training expert')
 expert_trajs = collect_trajs(env, expert_agent, no_episodes,
                              max_steps_per_episode, store_to)
 expert_performance = avg_undiscounted_return(expert_trajs)
-print('The expert ' +
-      'reached the goal in ' + str(expert_performance) + ' of trajs.')
+print('The expert ' + 'reached the goal in ' + str(expert_performance) +
+      ' of trajs.')
 
 # you can comment out the previous block if expert data has already
 # been generated and load the trajectories from file by uncommenting
@@ -67,9 +67,12 @@ test_agent = rl_alg_factory(relent.env, lp=True)
 print('Training test agent w/ reward obtained by RelEnt...')
 test_agent.train(60)
 print('Done training test agent.')
-test_trajs = collect_trajs(relent.env, test_agent, no_episodes,
-                           max_steps_per_episode,
-                           store_to='data/frozen/foo')
+test_trajs = collect_trajs(
+    relent.env,
+    test_agent,
+    no_episodes,
+    max_steps_per_episode,
+    store_to='data/frozen/foo')
 irl_performance = avg_undiscounted_return(test_trajs)
 print('The test agent trained w/ the reward estimated by RelEnt IRL ' +
       'reached the goal in ' + str(irl_performance) + ' of trajs.')

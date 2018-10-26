@@ -1,4 +1,5 @@
 """Module for value iteration RL algorithm."""
+from typing import Union
 
 import gym
 import numpy as np
@@ -68,7 +69,9 @@ class ValueIteration(BaseRLAlgorithm):
 
             # stopping condition:
             # check if state values converged (almost no change since last iteration:
-            if np.allclose(state_values, old_state_values, atol=self.config['epsilon']):
+            if np.allclose(
+                    state_values, old_state_values,
+                    atol=self.config['epsilon']):
                 break
 
         # persist learned state values and Q-values:
@@ -112,7 +115,7 @@ class ValueIteration(BaseRLAlgorithm):
 
         """
         assert np.isscalar(state)
-        assert isinstance(state, int)
+        assert isinstance(state, int) or isinstance(state, np.int64)
 
         # TODO: don't recalculate policy if q_values haven't changed since last time
         if self.config['temperature'] is None:
@@ -136,7 +139,8 @@ class ValueIteration(BaseRLAlgorithm):
             Probabilities for actions given a state. Shape (n_states, n_actions)
         """
         # Find best actions:
-        best_actions = np.isclose(q_values, np.max(q_values, axis=1).reshape((-1, 1)))
+        best_actions = np.isclose(q_values,
+                                  np.max(q_values, axis=1).reshape((-1, 1)))
         # Initialize probabilities to be zero
         policy = np.zeros((self.no_states, self.no_actions))
         # Assign probability max to all best actions:

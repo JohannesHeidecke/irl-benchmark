@@ -15,7 +15,8 @@ max_steps_per_episode = 1000
 
 env = gym.make('FrozenLake8x8-v0')
 env = FrozenLakeFeatureWrapper(env)
-initial_reward_function_estimate = FeatureBasedRewardFunction(env=env, parameters=np.zeros(64))
+initial_reward_function_estimate = FeatureBasedRewardFunction(
+    env=env, parameters=np.zeros(64))
 env = RewardWrapper(env=env, reward_function=initial_reward_function_estimate)
 
 # Generate expert trajectories.
@@ -34,10 +35,13 @@ def rl_alg_factory(env):
     return ValueIteration(env)
 
 
-meirl = MaxEnt(env,  expert_trajs=expert_trajs, transition_dynamics=transition_dynamics, rl_alg_factory=rl_alg_factory)
+meirl = MaxEnt(
+    env,
+    expert_trajs=expert_trajs,
+    transition_dynamics=transition_dynamics,
+    rl_alg_factory=rl_alg_factory)
 rewards = meirl.train(feat_map, time_limit=60, verbose=True)
 
-rewards = (rewards - np.min(rewards))/(np.max(rewards) - np.min(rewards))
+rewards = (rewards - np.min(rewards)) / (np.max(rewards) - np.min(rewards))
 
 print(rewards)
-

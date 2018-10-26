@@ -164,6 +164,10 @@ class TabularRewardFunction(BaseRewardFunction):
         if self.next_state_in_domain:
             self.domain_size *= self.env.observation_space.n
 
+        # TODO: add handling for when parameters are None
+        # maybe better: allow 'zeros', 'ones', 'random'?
+        # same for feature based!!
+
         assert len(parameters) == self.domain_size
         self.parameters = np.array(parameters)
 

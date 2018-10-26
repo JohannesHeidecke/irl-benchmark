@@ -1,12 +1,17 @@
 """Module for apprenticeship learning IRL."""
 from typing import Callable, Dict, List, Tuple
 
+import cvxpy as cvx
 import gym
+import numpy as np
 
 from irl_benchmark.config import IRL_CONFIG_DOMAINS
 from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
-from irl_benchmark.irl.reward.reward_function import BaseRewardFunction
+from irl_benchmark.irl.collect import collect_trajs
+from irl_benchmark.irl.reward.reward_function import BaseRewardFunction, FeatureBasedRewardFunction
 from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
+from irl_benchmark.rl.algorithms.random_agent import RandomAgent
+from irl_benchmark.utils.rl import true_reward_per_traj
 
 
 class ApprIRL(BaseIRLAlgorithm):
@@ -46,19 +51,108 @@ class ApprIRL(BaseIRLAlgorithm):
                                       config)
 
         # calculate the feature counts of expert trajectories:
-        self.expert_feature_counts = self.feature_count(
+        self.expert_feature_count = self.feature_count(
             self.expert_trajs, self.config['gamma'])
 
         # create list of feature counts:
-        self.feature_counts = []
+        self.feature_counts = [self.expert_feature_count]
         # for SVM mode: create list of labels:
         self.labels = [1.]
+
+        self.distances = []
 
     def train(self, no_irl_iterations: int,
               no_rl_episodes_per_irl_iteration: int,
               no_irl_episodes_per_irl_iteration: int
               ) -> Tuple[BaseRewardFunction, BaseRLAlgorithm]:
-        pass
+
+        # TODO: replace all prints with adequate logger output
+        # TODO: add docstring and comments
+
+        agent = RandomAgent(self.env)
+
+        irl_iteration_counter = 0
+        while irl_iteration_counter < no_irl_iterations:
+            irl_iteration_counter += 1
+
+            if self.config['verbose']:
+                print('IRL ITERATION ' + str(irl_iteration_counter))
+
+            trajs = collect_trajs(
+                self.env, agent, no_trajectories=no_irl_episodes_per_irl_iteration)
+
+            if self.config['verbose']:
+                print('Average true reward per episode: ' +
+                      str(true_reward_per_traj(trajs)))
+
+            current_feature_count = self.feature_count(trajs, gamma=self.config['gamma'])
+            self.feature_counts.append(current_feature_count)
+            self.labels.append(-1.)
+
+            feature_counts = np.array(self.feature_counts)
+            labels = np.array(self.labels)
+
+            if self.config['mode'] == 'projection':
+                if irl_iteration_counter == 1:
+                    feature_count_bar = feature_counts[1]
+                else:
+                    line = feature_counts[-1] - feature_count_bar
+                    feature_count_bar += np.dot(
+                        line, feature_counts[0] - feature_count_bar) / np.dot(
+                            line, line) * line
+                reward_coefficients = feature_counts[0] - feature_count_bar
+                distance = np.linalg.norm(reward_coefficients)
+
+            elif self.config['mode'] == 'svm':
+                w = cvx.Variable(feature_counts.shape[1])
+                b = cvx.Variable()
+
+                objective = cvx.Minimize(cvx.norm(w, 2))
+                constraints = [
+                    cvx.multiply(labels, (feature_counts * w + b)) >= 1
+                ]
+
+                problem = cvx.Problem(objective, constraints)
+                problem.solve()
+
+                if w.value is None:
+                    # TODO: replace by logger warning
+                    print('NO MORE SVM SOLUTION!!')
+                    return
+
+                yResult = feature_counts.dot(w.value) + b.value
+                supportVectorRows = np.where(np.isclose(np.abs(yResult), 1))[0]
+
+                if self.config['verbose']:
+                    print('The support vectors are from iterations number ' +
+                          str(supportVectorRows))
+
+                reward_coefficients = w.value
+                distance = 2 / problem.value
+
+            else:
+                raise NotImplementedError()
+
+            if self.config['verbose']:
+                print('Reward coefficients: ' + str(reward_coefficients))
+                print('Distance: ' + str(distance))
+
+            self.distances.append(distance)
+
+            reward_function = FeatureBasedRewardFunction(
+                self.env, reward_coefficients)
+            self.env.update_reward_function(reward_function)
+
+            if distance <= self.config['epsilon']:
+                if self.config['verbose']:
+                    print("Feature counts matched within " +
+                          str(self.config['epsilon']) + ".")
+                break
+
+            agent = self.rl_alg_factory(self.env)
+            agent.train(no_rl_episodes_per_irl_iteration)
+
+        return reward_function, agent
 
 
 IRL_CONFIG_DOMAINS[ApprIRL] = {
@@ -79,4 +173,8 @@ IRL_CONFIG_DOMAINS[ApprIRL] = {
         'max': float('inf'),
         'default': 1e-6,
     },
+    'verbose': {
+        'type': bool,
+        'default': True
+    }
 }

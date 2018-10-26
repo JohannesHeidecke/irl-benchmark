@@ -59,6 +59,8 @@ def preprocess_config(config_for: object, domains: dict, config: dict) -> dict:
                 # check if value is allowed:
                 assert config[key] in config_domain[key][
                     'values'], "Illegal config value : " + config[key]
+            elif config_domain[key]['type'] is bool:
+                assert isinstance(config[key], bool)
             else:
                 # encountered type for which no implementation has been written
                 # extend code above to fix.
