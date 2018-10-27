@@ -12,7 +12,7 @@ from irl_benchmark.config import preprocess_config, RL_CONFIG_DOMAINS
 class BaseRLAlgorithm(ABC):
     """Base class for Reinforcement Learning agents."""
 
-    def __init__(self, env: gym.Env, config: dict):
+    def __init__(self, env: gym.Env, config: Union[dict, None] = None):
         """
 
         Parameters

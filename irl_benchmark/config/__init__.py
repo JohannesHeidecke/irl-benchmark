@@ -33,6 +33,10 @@ def preprocess_config(config_for: object, domains: dict, config: dict) -> dict:
         The processed config dictionary.
 
     """
+    # replace config by empty dictionary if None:
+    if config is None:
+        config = {}
+
     # get config domain for the correct subclass calling this:
     config_domain: dict = domains[type(config_for)]
     for key in config_domain.keys():

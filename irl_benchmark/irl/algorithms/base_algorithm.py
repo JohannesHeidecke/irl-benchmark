@@ -1,6 +1,6 @@
 """Module for the abstract base class of all IRL algorithms."""
 from abc import ABC, abstractmethod
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, List, Tuple, Union
 
 import gym
 import numpy as np
@@ -18,7 +18,7 @@ class BaseIRLAlgorithm(ABC):
 
     def __init__(self, env: gym.Env, expert_trajs: List[Dict[str, list]],
                  rl_alg_factory: Callable[[gym.Env], BaseRLAlgorithm],
-                 config: dict):
+                 config: Union[dict, None] = None):
         """
 
         Parameters
@@ -92,9 +92,10 @@ class BaseIRLAlgorithm(ABC):
             is the same as the trajectories' feature shapes. One scalar
             feature count per feature.
         """
-        # Initialize feature counts to zeros of correct shape:
-        feature_count = np.zeros(
+        # Initialize feature count sum to zeros of correct shape:
+        feature_count_sum = np.zeros(
             unwrap_env(self.env, FeatureWrapper).feature_shape())
+
         for traj in trajs:
 
             assert traj['features']  # empty lists are False in python
@@ -102,9 +103,10 @@ class BaseIRLAlgorithm(ABC):
             # gammas is a vector containing [gamma^0, gamma^1, gamma^2, ... gamma^l]
             # where l is length of the trajectory:
             gammas = gamma**np.arange(len(traj['features']))
-            # add trajectory's feature count:
-            feature_count += np.sum(
+            traj_feature_count = np.sum(
                 gammas.reshape(-1, 1) * np.array(traj['features']), axis=0)
-        # divide feature_count by number of trajectories to normalize:
-        feature_count = feature_count / len(trajs)
+            # add trajectory's feature count:
+            feature_count_sum += traj_feature_count
+        # divide feature_count_sum by number of trajectories to normalize:
+        feature_count = feature_count_sum / len(trajs)
         return feature_count

@@ -2,6 +2,7 @@
 from typing import Union
 
 import gym
+from gym.spaces import Box, Discrete, MultiDiscrete, MultiBinary
 import numpy as np
 
 from irl_benchmark.config import RL_CONFIG_DOMAINS
@@ -12,7 +13,7 @@ class RandomAgent(BaseRLAlgorithm):
     """Random agent. Picks actions uniformly random.
     """
 
-    def __init__(self, env: gym.Env, config: dict = {}):
+    def __init__(self, env: gym.Env, config: dict = None):
         """
 
         Parameters
@@ -48,7 +49,10 @@ class RandomAgent(BaseRLAlgorithm):
         Union[int, float, np.ndarray]
             An action
         """
-        # TODO: do some environments return lists when sampling an action? adapt signature also in base alg
+        # if other spaces are needed, check if their sample method conforms with
+        # returned type, change if necessary.
+        assert isinstance(self.env.action_space,
+                          (Box, Discrete, MultiDiscrete, MultiBinary))
         return self.env.action_space.sample()
 
     def policy(self, state: int) -> np.ndarray:

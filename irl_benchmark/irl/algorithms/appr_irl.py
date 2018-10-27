@@ -9,6 +9,7 @@ from irl_benchmark.config import IRL_CONFIG_DOMAINS
 from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
 from irl_benchmark.irl.collect import collect_trajs
 from irl_benchmark.irl.reward.reward_function import BaseRewardFunction, FeatureBasedRewardFunction
+from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
 from irl_benchmark.rl.algorithms.random_agent import RandomAgent
 from irl_benchmark.utils.rl import true_reward_per_traj
@@ -51,8 +52,8 @@ class ApprIRL(BaseIRLAlgorithm):
                                       config)
 
         # calculate the feature counts of expert trajectories:
-        self.expert_feature_count = self.feature_count(
-            self.expert_trajs, self.config['gamma'])
+        self.expert_feature_count = self.feature_count(self.expert_trajs,
+                                                       self.config['gamma'])
 
         # create list of feature counts:
         self.feature_counts = [self.expert_feature_count]
@@ -65,10 +66,27 @@ class ApprIRL(BaseIRLAlgorithm):
               no_rl_episodes_per_irl_iteration: int,
               no_irl_episodes_per_irl_iteration: int
               ) -> Tuple[BaseRewardFunction, BaseRLAlgorithm]:
+        """Train the apprenticeship learning IRL algorithm.
 
-        # TODO: replace all prints with adequate logger output
-        # TODO: add docstring and comments
+        Parameters
+        ----------
+        no_irl_iterations: int
+            The number of iteration the algorithm should be run.
+        no_rl_episodes_per_irl_iteration: int
+            The number of episodes the RL algorithm is allowed to run in
+            each iteration of the IRL algorithm.
+        no_irl_episodes_per_irl_iteration: int
+            The number of episodes permitted to be run in each iteration
+            to update the current reward estimate (e.g. to estimate state frequencies
+            of the currently optimal policy).
 
+        Returns
+        -------
+        Tuple[BaseRewardFunction, BaseRLAlgorithm]
+            The estimated reward function and a RL agent trained for this estimate.
+        """
+
+        # Initialize training with a random agent.
         agent = RandomAgent(self.env)
 
         irl_iteration_counter = 0
@@ -78,56 +96,76 @@ class ApprIRL(BaseIRLAlgorithm):
             if self.config['verbose']:
                 print('IRL ITERATION ' + str(irl_iteration_counter))
 
+            # Estimate feature count of current agent.
             trajs = collect_trajs(
-                self.env, agent, no_trajectories=no_irl_episodes_per_irl_iteration)
-
+                self.env,
+                agent,
+                no_trajectories=no_irl_episodes_per_irl_iteration)
             if self.config['verbose']:
                 print('Average true reward per episode: ' +
                       str(true_reward_per_traj(trajs)))
+            current_feature_count = self.feature_count(
+                trajs, gamma=self.config['gamma'])
 
-            current_feature_count = self.feature_count(trajs, gamma=self.config['gamma'])
+            # add new feature count to list of feature counts
             self.feature_counts.append(current_feature_count)
+            # for SVM mode:
             self.labels.append(-1.)
 
+            # convert to numpy array:
             feature_counts = np.array(self.feature_counts)
             labels = np.array(self.labels)
 
+            # update reward coefficients based on mode specified in config:
             if self.config['mode'] == 'projection':
+                # projection mode:
                 if irl_iteration_counter == 1:
+                    # initialize feature_count_bar in first iteration
+                    # set to first non-expert feature count:
                     feature_count_bar = feature_counts[1]
                 else:
+                    # not first iteration.
+                    # calculate line through last feature_count_bar and
+                    # last non-expert feature count:
                     line = feature_counts[-1] - feature_count_bar
+                    # new feature_count_bar is orthogonal projection of
+                    # expert's feature count onto the line:
                     feature_count_bar += np.dot(
                         line, feature_counts[0] - feature_count_bar) / np.dot(
                             line, line) * line
                 reward_coefficients = feature_counts[0] - feature_count_bar
-                distance = np.linalg.norm(reward_coefficients)
+                # compute distance as L2 norm of reward coefficients (t^(i) in paper):
+                distance = np.linalg.norm(reward_coefficients, ord=2)
 
             elif self.config['mode'] == 'svm':
-                w = cvx.Variable(feature_counts.shape[1])
-                b = cvx.Variable()
-
-                objective = cvx.Minimize(cvx.norm(w, 2))
+                # svm mode:
+                # create quadratic programming problem definition:
+                weights = cvx.Variable(feature_counts.shape[1])
+                bias = cvx.Variable()
+                objective = cvx.Minimize(cvx.norm(weights, 2))
                 constraints = [
-                    cvx.multiply(labels, (feature_counts * w + b)) >= 1
+                    cvx.multiply(labels,
+                                 (feature_counts * weights + bias)) >= 1
                 ]
-
                 problem = cvx.Problem(objective, constraints)
+                # solve quadratic program:
                 problem.solve()
 
-                if w.value is None:
-                    # TODO: replace by logger warning
-                    print('NO MORE SVM SOLUTION!!')
-                    return
-
-                yResult = feature_counts.dot(w.value) + b.value
-                supportVectorRows = np.where(np.isclose(np.abs(yResult), 1))[0]
+                if weights.value is None:
+                    # TODO: we need to handle empty solution better.
+                    raise RuntimeError('Empty solution set for linearly separable SVM.')
 
                 if self.config['verbose']:
+                    # print support vectors
+                    # (which last iterations where relevant for current result?)
+                    svm_classifications = feature_counts.dot(
+                        weights.value) + bias.value
+                    support_vectors = np.where(
+                        np.isclose(np.abs(svm_classifications), 1))[0]
                     print('The support vectors are from iterations number ' +
-                          str(supportVectorRows))
+                          str(support_vectors))
 
-                reward_coefficients = w.value
+                reward_coefficients = weights.value
                 distance = 2 / problem.value
 
             else:
@@ -139,17 +177,23 @@ class ApprIRL(BaseIRLAlgorithm):
 
             self.distances.append(distance)
 
+            # create new reward function with current coefficient estimate
             reward_function = FeatureBasedRewardFunction(
                 self.env, reward_coefficients)
+            # update reward function
+            assert isinstance(self.env, RewardWrapper)
             self.env.update_reward_function(reward_function)
 
+            # check stopping criterion:
             if distance <= self.config['epsilon']:
                 if self.config['verbose']:
                     print("Feature counts matched within " +
                           str(self.config['epsilon']) + ".")
                 break
 
+            # create new RL-agent
             agent = self.rl_alg_factory(self.env)
+            # train agent (with new reward function)
             agent.train(no_rl_episodes_per_irl_iteration)
 
         return reward_function, agent

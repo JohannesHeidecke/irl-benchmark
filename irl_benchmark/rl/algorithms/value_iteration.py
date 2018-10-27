@@ -1,12 +1,12 @@
 """Module for value iteration RL algorithm."""
-from typing import Union
 
 import gym
 import numpy as np
 
 from irl_benchmark.config import RL_CONFIG_DOMAINS
 from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
-from irl_benchmark.utils.wrapper_utils import is_unwrappable_to, get_transition_matrix, get_reward_matrix
+from irl_benchmark.utils.wrapper_utils import is_unwrappable_to, \
+    get_transition_matrix, get_reward_matrix
 
 
 class ValueIteration(BaseRLAlgorithm):
@@ -36,6 +36,9 @@ class ValueIteration(BaseRLAlgorithm):
         # will be filled during training:
         self.state_values = None
         self.q_values = None
+        # whenever self._policy is None, it will be re-calculated
+        # based on current self.q_values when calling policy().
+        self._policy = None
 
     def train(self, no_episodes: int):
         """ Train the agent
@@ -77,6 +80,8 @@ class ValueIteration(BaseRLAlgorithm):
         # persist learned state values and Q-values:
         self.state_values = state_values
         self.q_values = q_values
+        # flag to tell other methods that policy needs to be updated based on new values:
+        self._policy = None
 
     def pick_action(self, state: int) -> int:
         """ Pick an action given a state.
@@ -114,14 +119,16 @@ class ValueIteration(BaseRLAlgorithm):
             Action probabilities given the state.
 
         """
+        assert self.q_values is not None, "Call train() before calling this method."
         assert np.isscalar(state)
-        assert isinstance(state, int) or isinstance(state, np.int64)
+        assert isinstance(state, (int, np.int64))
 
-        # TODO: don't recalculate policy if q_values haven't changed since last time
-        if self.config['temperature'] is None:
-            return self._argmax_policy(self.q_values)[state, :]
-        else:
-            return self._softmax_policy(self.q_values)[state, :]
+        if self._policy is None:
+            if self.config['temperature'] is None:
+                self._policy = self._argmax_policy(self.q_values)[state, :]
+            else:
+                self._policy = self._softmax_policy(self.q_values)[state, :]
+        return self._policy
 
     def _argmax_policy(self, q_values: np.ndarray) -> np.ndarray:
         """ Calculate an argmax policy.
@@ -167,6 +174,7 @@ class ValueIteration(BaseRLAlgorithm):
         raise NotImplementedError()
 
     def _argmax_state_values(self, q_values):
+        assert self.config['temperature'] is None
         return np.max(q_values, axis=1)
 
     def _softmax_state_values(self, q_values):
@@ -178,7 +186,7 @@ class ValueIteration(BaseRLAlgorithm):
         softmax_state_values = (softmax_policy * q_values).sum(axis=1)
         return softmax_state_values
 
-    def _mellowmax_state_values(selfself, q_values):
+    def _mellowmax_state_values(self, q_values):
         raise NotImplementedError()
 
 
