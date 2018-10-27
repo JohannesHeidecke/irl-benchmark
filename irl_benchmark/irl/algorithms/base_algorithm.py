@@ -16,7 +16,9 @@ from irl_benchmark.utils.wrapper_utils import is_unwrappable_to, unwrap_env
 class BaseIRLAlgorithm(ABC):
     """The abstract base class for all IRL algorithms."""
 
-    def __init__(self, env: gym.Env, expert_trajs: List[Dict[str, list]],
+    def __init__(self,
+                 env: gym.Env,
+                 expert_trajs: List[Dict[str, list]],
                  rl_alg_factory: Callable[[gym.Env], BaseRLAlgorithm],
                  config: Union[dict, None] = None):
         """

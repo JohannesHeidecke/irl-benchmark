@@ -153,7 +153,8 @@ class ApprIRL(BaseIRLAlgorithm):
 
                 if weights.value is None:
                     # TODO: we need to handle empty solution better.
-                    raise RuntimeError('Empty solution set for linearly separable SVM.')
+                    raise RuntimeError(
+                        'Empty solution set for linearly separable SVM.')
 
                 if self.config['verbose']:
                     # print support vectors

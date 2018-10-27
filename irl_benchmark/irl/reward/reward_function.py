@@ -36,7 +36,7 @@ class BaseRewardFunction(ABC):
 
     def __init__(self,
                  env: gym.Env,
-                 parameters: Union[None, np.ndarray] = None,
+                 parameters: Union[None, str, np.ndarray] = None,
                  action_in_domain: bool = False,
                  next_state_in_domain: bool = False):
         """ The abstract base class for reward functions
@@ -45,8 +45,9 @@ class BaseRewardFunction(ABC):
         ----------
         env: gym.Env
             A gym environment for which the reward function is defined.
-        parameters: Union[None, np.ndarray]
-            A numpy ndarray containing the parameters
+        parameters: Union[None, str, np.ndarray]
+            A numpy ndarray containing the parameters. If value is 'random',
+            initializes with random parameters (mean 0, standard deviation 1).
         action_in_domain: bool
             Indicates whether actions are in the domain, i.e. R(s, a) or R(s, a, s')
         next_state_in_domain: bool
@@ -141,8 +142,9 @@ class TabularRewardFunction(BaseRewardFunction):
         ----------
         env: gym.Env
             A gym environment for which the reward function is defined.
-        parameters: Union[None, np.ndarray]
+        parameters: Union[None, str, np.ndarray]
             A numpy ndarray containing the values for all elements in the reward table.
+            If value is 'random', initializes with random parameters (mean 0, standard deviation 1).
             The size of parameters must correspond to the size of the domain
             (one table value for each possible input)
         action_in_domain: bool
@@ -164,9 +166,8 @@ class TabularRewardFunction(BaseRewardFunction):
         if self.next_state_in_domain:
             self.domain_size *= self.env.observation_space.n
 
-        # TODO: add handling for when parameters are None
-        # maybe better: allow 'zeros', 'ones', 'random'?
-        # same for feature based!!
+        if parameters is 'random':
+            self.parameters = np.random.standard_normal(size=self.domain_size)
 
         assert len(parameters) == self.domain_size
         self.parameters = np.array(parameters)
@@ -273,11 +274,18 @@ class FeatureBasedRewardFunction(BaseRewardFunction):
         ----------
         env: gym.Env
             A gym environment. The environment has to be wrapped in a FeatureWrapper.
-        parameters: Union[None, np.ndarray]
+        parameters: Union[None, str, np.ndarray]
             The parameters of the reward function. One parameter for each feature.
+            If value is 'random', initializes with random parameters (mean 0, standard deviation 1).
         """
+
         assert utils.wrapper_utils.is_unwrappable_to(env, FeatureWrapper)
         super(FeatureBasedRewardFunction, self).__init__(env, parameters)
+
+        if parameters is 'random':
+            parameters_shape = utils.wrapper_utils.unwrap_env(
+                self.env, FeatureWrapper).feature_shape()
+            self.parameters = np.random.standard_normal(parameters_shape)
 
     def domain(self) -> np.ndarray:
         raise NotImplementedError()
