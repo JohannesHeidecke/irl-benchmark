@@ -1,12 +1,16 @@
 """This module is used to collect trajectories for inverse reinforcement learning"""
 
 import os
-import pickle
 from typing import Dict, List, Union
 
 import gym
+import msgpack
+import msgpack_numpy as m
 
 from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
+
+# set up MessagePack to be numpy compatible:
+m.patch()
 
 
 def collect_trajs(env: gym.Env,
@@ -104,9 +108,28 @@ def collect_trajs(env: gym.Env,
 
     # If requested, store trajetories to file:
     if store_to is not None:
-        if not os.path.exists(store_to):
-            os.makedirs(store_to)
-        with open(store_to + 'trajs.pkl', 'wb+') as file:
-            pickle.dump(trajectories, file)
+        store_trajs(trajectories, store_to)
 
     return trajectories
+
+
+def store_trajs(trajs, store_to):
+    """Store trajectories to store_to/trajs.data."""
+    if not os.path.exists(store_to):
+        os.makedirs(store_to)
+    file_path = os.path.join(store_to, 'trajs.data')
+    with open(file_path, 'wb') as file:
+        msgpack.pack(trajs, file)
+
+
+def load_stored_trajs(load_from):
+    """Return trajectories storead at load_from/trajs.data."""
+    file_path = os.path.join(load_from, 'trajs.data')
+    with open(file_path, 'rb') as file:
+        trajs = msgpack.unpack(file)
+    # convert byte keys back to string keys:
+    trajs = [{
+        key.decode('utf-8') if isinstance(key, bytes) else key: traj[key]
+        for key in traj.keys()
+    } for traj in trajs]
+    return trajs
