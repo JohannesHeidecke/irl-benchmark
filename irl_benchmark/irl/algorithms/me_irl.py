@@ -1,6 +1,6 @@
 import gym
 import numpy as np
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, List
 
 from irl_benchmark.config import IRL_CONFIG_DOMAINS
 from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
@@ -19,7 +19,7 @@ class MaxEntIRL(BaseIRLAlgorithm):
                                       config)
         self.transition_matrix = get_transition_matrix(self.env)
         self.n_states, self.n_actions, _ = self.transition_matrix.shape
-        self.feat_map = np.eye(self.n_states**2)
+        self.feat_map = np.eye(self.n_states)
 
     def expected_svf(self, policy):
         """Calculate the expected state visitation frequency for the trajectories
@@ -64,9 +64,13 @@ class MaxEntIRL(BaseIRLAlgorithm):
         agent = self.rl_alg_factory(self.env)
 
         # init parameters
-        theta = np.random.uniform(size=(self.feat_map.shape[1],))
+        # theta = np.random.uniform(size=(self.feat_map.shape[1],))
+
+        reward_function = FeatureBasedRewardFunction(self.env, 'random')
+        theta = reward_function.parameters
 
         irl_iteration_counter = 0
+
         while irl_iteration_counter < no_irl_iterations:
             irl_iteration_counter += 1
 
@@ -85,10 +89,11 @@ class MaxEntIRL(BaseIRLAlgorithm):
             svf = self.expected_svf(policy)
 
             # compute gradients
-            grad = -(feat_exp - self.feat_map.T.dot(svf))
+            grad = (feat_exp - self.feat_map.T.dot(svf))
 
             # update params
-            theta += self.config['lr'] * grad
+            theta += self.config['lr'] * grad[:-1]
+            print(theta)
 
         return theta
 
