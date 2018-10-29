@@ -6,6 +6,7 @@ from typing import Dict, List, Union
 import gym
 import msgpack
 import msgpack_numpy as m
+from tqdm import tqdm
 
 from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
 
@@ -17,7 +18,8 @@ def collect_trajs(env: gym.Env,
                   agent: BaseRLAlgorithm,
                   no_trajectories: int,
                   max_steps_per_episode: Union[int, None] = None,
-                  store_to: Union[str, None] = None) -> List[Dict[str, list]]:
+                  store_to: Union[str, None] = None,
+                  verbose: bool = False) -> List[Dict[str, list]]:
     """ Collect and return trajectories of an agent in an environment.
 
     Parameters
@@ -33,6 +35,8 @@ def collect_trajs(env: gym.Env,
         If not set, the environment's default is used.
     store_to: Union[str, None]
         If not None: a path of where trajectories should be persisted.
+    verbose: bool
+        Whether to use a tqdm progress bar while collecting.
 
     Returns
     -------
@@ -49,7 +53,7 @@ def collect_trajs(env: gym.Env,
     # list of trajectories to be returned:
     trajectories = []
 
-    for trajectory in range(no_trajectories):
+    for _ in (tqdm(range(no_trajectories)) if verbose else range(no_trajectories)):
         # start new episode by resetting environment:
         state = env.reset()
         done = False
