@@ -123,12 +123,26 @@ class ValueIteration(BaseRLAlgorithm):
         assert np.isscalar(state)
         assert isinstance(state, (int, np.int64))
 
+        return self.policy_array()[state, :]
+
+    def policy_array(self):
+        """Return action probabilities for all states as a numpy array.
+
+        Returns
+        -------
+        np.ndarray
+            Array containing probabilities for actions given a state.
+            Shape: (n_states, n_actions)
+        """
+        self._update_policy_if_necessary()
+        return self._policy
+
+    def _update_policy_if_necessary(self):
         if self._policy is None:
             if self.config['temperature'] is None:
-                self._policy = self._argmax_policy(self.q_values)[state, :]
+                self._policy = self._argmax_policy(self.q_values)
             else:
-                self._policy = self._softmax_policy(self.q_values)[state, :]
-        return self._policy
+                self._policy = self._softmax_policy(self.q_values)
 
     def _argmax_policy(self, q_values: np.ndarray) -> np.ndarray:
         """ Calculate an argmax policy.
