@@ -133,7 +133,7 @@ class TabularRewardFunction(BaseRewardFunction):
 
     def __init__(self,
                  env: gym.Env,
-                 parameters: Union[None, np.ndarray] = None,
+                 parameters: Union[None, str, np.ndarray] = None,
                  action_in_domain: bool = False,
                  next_state_in_domain: bool = False):
         """
@@ -267,7 +267,7 @@ class FeatureBasedRewardFunction(BaseRewardFunction):
 
     def __init__(self,
                  env: gym.Env,
-                 parameters: Union[None, np.ndarray] = None):
+                 parameters: Union[None, str, np.ndarray] = None):
         """
 
         Parameters

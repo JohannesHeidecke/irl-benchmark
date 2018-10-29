@@ -82,6 +82,11 @@ class FeatureWrapper(gym.Wrapper):
         """
         raise NotImplementedError()
 
+    @abstractmethod
+    def feature_array(self) -> np.ndarray:
+        # TODO: docstring
+        raise NotImplementedError()
+
 
 class FrozenLakeFeatureWrapper(FeatureWrapper):
     """Feature wrapper that was ad hoc written for the FrozenLake env.
@@ -107,6 +112,10 @@ class FrozenLakeFeatureWrapper(FeatureWrapper):
         ranges = np.zeros((2, self.feature_shape()[0]))
         ranges[1, :] = 1.0
         return ranges
+
+    def feature_array(self):
+        # TODO docstring and explanation
+        return np.eye(self.env.observation_space.n)
 
 
 # # # # # #
