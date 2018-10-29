@@ -1,8 +1,11 @@
 import gym
 import numpy as np
 from typing import Callable, Dict, List, Tuple
+
+from irl_benchmark.config import IRL_CONFIG_DOMAINS
 from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
+from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
 from irl_benchmark.utils.wrapper_utils import get_transition_matrix
 
 
@@ -61,7 +64,7 @@ class MaxEntIRL(BaseIRLAlgorithm):
         agent = self.rl_alg_factory(self.env)
 
         # init parameters
-        theta = np.random.uniform(size=(feat_map.shape[1],))
+        theta = np.random.uniform(size=(self.feat_map.shape[1],))
 
         irl_iteration_counter = 0
         while irl_iteration_counter < no_irl_iterations:
@@ -89,3 +92,29 @@ class MaxEntIRL(BaseIRLAlgorithm):
 
         return theta
 
+
+IRL_CONFIG_DOMAINS[MaxEntIRL] = {
+    'gamma': {
+        'type': float,
+        'min': 0.0,
+        'max': 1.0,
+        'default': 0.9,
+    },
+
+    'epsilon': {
+        'type': float,
+        'min': 0.0,
+        'max': float('inf'),
+        'default': 1e-6,
+    },
+    'verbose': {
+        'type': bool,
+        'default': True
+    },
+    'lr': {
+        'type': float,
+        'default': 0.02,
+        'min': 0.000001,
+        'max': 50
+    }
+}
