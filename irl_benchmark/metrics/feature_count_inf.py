@@ -17,7 +17,7 @@ class FeatureCountInfLoss(BaseMetric):
 
     def evaluate(self, evaluation_input: dict):
         assert 'irl_agent' in evaluation_input.keys()
-        irl_trajs = collect_trajs(self.env, evaluation_input['irl_agent'], 100)
+        irl_trajs = self.generate_traj_if_not_exists(evaluation_input)
         irl_feature_count = feature_count(self.env, irl_trajs, gamma=1.0)
         diff = self.expert_feature_count - irl_feature_count
         return np.linalg.norm(diff, ord=np.inf)

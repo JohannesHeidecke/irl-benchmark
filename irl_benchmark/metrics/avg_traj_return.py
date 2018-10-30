@@ -10,5 +10,5 @@ class AverageTrajectoryReturn(BaseMetric):
 
     def evaluate(self, evaluation_input: dict):
         assert 'irl_agent' in evaluation_input.keys()
-        irl_trajs = collect_trajs(self.env, evaluation_input['irl_agent'], 100)
+        irl_trajs = self.generate_traj_if_not_exists(evaluation_input)
         return true_reward_per_traj(irl_trajs)
