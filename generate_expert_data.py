@@ -7,9 +7,9 @@ from irl_benchmark.rl.algorithms.value_iteration import ValueIteration
 
 # FROZEN LAKE:
 # ~323 MB
-env = feature_wrapper.make('FrozenLake-v0')
+env = feature_wrapper.make('FrozenLake8x8-v0')
 def rl_alg_factory(env):
     return ValueIteration(env, {'gamma': 0.9})
 expert_agent = rl_alg_factory(env)
 expert_agent.train(None)
-expert_trajs = collect_trajs(env, expert_agent, 100000, None, 'data/frozen/expert/', verbose=True)
+expert_trajs = collect_trajs(env, expert_agent, 10000, None, 'data/frozen/expert/', verbose=True)

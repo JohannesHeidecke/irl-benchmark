@@ -103,9 +103,6 @@ class MaxCausalEntIRL(BaseIRLAlgorithm):
               ):
 
         """
-        Finds theta, a reward parametrization vector (r[s] = features[s]'.*theta)
-        that maximizes the log likelihood of the given expert trajectories,
-        modelling the expert as a Boltzmann rational agent with given temperature.
 
         """
 
@@ -113,14 +110,12 @@ class MaxCausalEntIRL(BaseIRLAlgorithm):
 
         # mean_s_visit_count = np.sum(sa_visit_count, 1) / len(self.expert_trajs)
 
-
         # calculate feature expectations
         expert_feature_count = self.feature_count(self.expert_trajs, gamma=1.0)
         print('EXPERT_FEATURE_COUNT:')
-        print(expert_feature_count.reshape((4, 4)))
+        print(expert_feature_count.reshape((8, 8)))
 
-
-        mean_feature_count = np.dot(self.feat_map.T, expert_feature_count )
+        # mean_feature_count = np.dot(self.feat_map.T, expert_feature_count )
 
         # initialize the parameters
         # theta = np.random.rand(self.feat_map.shape[1])
@@ -155,12 +150,12 @@ class MaxCausalEntIRL(BaseIRLAlgorithm):
             d = self.occupancy_measure(policy=policy, P0=P0)[:-1]
 
             # log-likeilihood gradient
-            dl_dtheta = -(expert_feature_count - np.dot(self.feat_map.T, d))
+            grad = -(expert_feature_count - np.dot(self.feat_map.T, d))
 
             # graduate descent
-            theta -= self.config['lr'] * dl_dtheta
+            theta -= self.config['lr'] * grad
 
-            print(theta.reshape((4, 4)).round(2))
+            print(theta.reshape((8, 8)).round(2))
 
             # print(theta)
         return theta
