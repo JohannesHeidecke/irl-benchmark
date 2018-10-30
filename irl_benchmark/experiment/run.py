@@ -12,12 +12,12 @@ from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.metrics.base_metric import BaseMetric
 
 
-class Run():
+class Run:
     """This class corresponds to a single run of an IRL algorithm experiment."""
 
-    def __init__(self, env_id: str, expert_trajs_path: str,
-                 irl_alg_factory: Callable[[gym.Env, List[Dict[str, list]]],
-                                           BaseIRLAlgorithm],
+    def __init__(self, env_id: str,
+                 expert_trajs_path: str,
+                 irl_alg_factory: Callable[[gym.Env, List[Dict[str, list]]],BaseIRLAlgorithm],
                  metrics: List[BaseMetric], run_config: dict):
         """
 
@@ -43,7 +43,6 @@ class Run():
             'no_irl_episodes_per_irl_iteration': int, how many episodes can be sampled
             for the IRL algorithm each iteration.
         """
-
         # create and wrap environment according to specified reward function
         if run_config['reward_function'] is FeatureBasedRewardFunction:
             # feature based reward functions need to be wrapped in a FeatureWrapper:
@@ -64,13 +63,24 @@ class Run():
 
         self.irl_alg_factory = irl_alg_factory
 
-        self.metrics = metrics
+        # Metrics are only passed as classes and need to be instantiated
+        instantiated_metrics = []
+        # collect all information relevant for certain metric __init__s:
+        metric_input = {
+            'env': self.env,
+            'expert_trajs': self.expert_trajs,
+        }
+        # instantiate metrics:
+        for metric in metrics:
+            instantiated_metrics.append(metric(metric_input))
+        self.metrics = instantiated_metrics
 
         self.run_config = run_config
 
     def start(self):
         """Start the run."""
-        irl_alg = self.irl_alg_factory(self.env, self.expert_trajs)
+        irl_alg = self.irl_alg_factory(self.env, self.expert_trajs,
+                                       self.metrics)
         irl_alg.train(self.run_config['no_irl_iterations'],
                       self.run_config['no_rl_episodes_per_irl_iteration'],
                       self.run_config['no_irl_episodes_per_irl_iteration'])

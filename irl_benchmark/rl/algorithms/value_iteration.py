@@ -5,7 +5,7 @@ import numpy as np
 
 from irl_benchmark.config import RL_CONFIG_DOMAINS
 from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
-from irl_benchmark.utils.wrapper_utils import is_unwrappable_to, \
+from irl_benchmark.utils.wrapper import is_unwrappable_to, \
     get_transition_matrix, get_reward_matrix
 
 

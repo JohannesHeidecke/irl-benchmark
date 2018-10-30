@@ -53,7 +53,8 @@ def collect_trajs(env: gym.Env,
     # list of trajectories to be returned:
     trajectories = []
 
-    for _ in (tqdm(range(no_trajectories)) if verbose else range(no_trajectories)):
+    for _ in (tqdm(range(no_trajectories))
+              if verbose else range(no_trajectories)):
         # start new episode by resetting environment:
         state = env.reset()
         done = False

@@ -279,11 +279,11 @@ class FeatureBasedRewardFunction(BaseRewardFunction):
             If value is 'random', initializes with random parameters (mean 0, standard deviation 1).
         """
 
-        assert utils.wrapper_utils.is_unwrappable_to(env, FeatureWrapper)
+        assert utils.wrapper.is_unwrappable_to(env, FeatureWrapper)
         super(FeatureBasedRewardFunction, self).__init__(env, parameters)
 
         if parameters is 'random':
-            parameters_shape = utils.wrapper_utils.unwrap_env(
+            parameters_shape = utils.wrapper.unwrap_env(
                 self.env, FeatureWrapper).feature_shape()
             self.parameters = np.random.standard_normal(parameters_shape)
 

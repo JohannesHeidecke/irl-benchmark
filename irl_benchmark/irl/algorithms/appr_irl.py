@@ -10,6 +10,7 @@ from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
 from irl_benchmark.irl.collect import collect_trajs
 from irl_benchmark.irl.reward.reward_function import BaseRewardFunction, FeatureBasedRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
+from irl_benchmark.metrics.base_metric import BaseMetric
 from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
 from irl_benchmark.rl.algorithms.random_agent import RandomAgent
 from irl_benchmark.utils.rl import true_reward_per_traj
@@ -25,7 +26,7 @@ class ApprIRL(BaseIRLAlgorithm):
 
     def __init__(self, env: gym.Env, expert_trajs: List[Dict[str, list]],
                  rl_alg_factory: Callable[[gym.Env], BaseRLAlgorithm],
-                 config: dict):
+                 metrics: List[BaseMetric], config: dict):
         """
 
         Parameters
@@ -49,7 +50,7 @@ class ApprIRL(BaseIRLAlgorithm):
             * 'mode': which variant of the algorithm to use, either 'svm' or 'projection'.
         """
         super(ApprIRL, self).__init__(env, expert_trajs, rl_alg_factory,
-                                      config)
+                                      metrics, config)
 
         # calculate the feature counts of expert trajectories:
         self.expert_feature_count = self.feature_count(self.expert_trajs,
@@ -101,9 +102,6 @@ class ApprIRL(BaseIRLAlgorithm):
                 self.env,
                 agent,
                 no_trajectories=no_irl_episodes_per_irl_iteration)
-            if self.config['verbose']:
-                print('Average true reward per episode: ' +
-                      str(true_reward_per_traj(trajs)))
             current_feature_count = self.feature_count(
                 trajs, gamma=self.config['gamma'])
 
@@ -173,7 +171,6 @@ class ApprIRL(BaseIRLAlgorithm):
                 raise NotImplementedError()
 
             if self.config['verbose']:
-                print('Reward coefficients: ' + str(reward_coefficients))
                 print('Distance: ' + str(distance))
 
             self.distances.append(distance)
@@ -185,6 +182,7 @@ class ApprIRL(BaseIRLAlgorithm):
             assert isinstance(self.env, RewardWrapper)
             self.env.update_reward_function(reward_function)
 
+            # TODO: see messages with max about order of training & deducing
             # check stopping criterion:
             if distance <= self.config['epsilon']:
                 if self.config['verbose']:
@@ -196,6 +194,12 @@ class ApprIRL(BaseIRLAlgorithm):
             agent = self.rl_alg_factory(self.env)
             # train agent (with new reward function)
             agent.train(no_rl_episodes_per_irl_iteration)
+
+            evaluation_input = {
+                'irl_agent': agent,
+                'reward_function_estimate': reward_function
+            }
+            self.evaluate_metrics(evaluation_input)
 
         return reward_function, agent
 

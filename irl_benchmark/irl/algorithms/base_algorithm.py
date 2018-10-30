@@ -9,8 +9,10 @@ from irl_benchmark.config import preprocess_config, IRL_CONFIG_DOMAINS
 from irl_benchmark.irl.feature.feature_wrapper import FeatureWrapper
 from irl_benchmark.irl.reward.reward_function import BaseRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
+from irl_benchmark.metrics.base_metric import BaseMetric
 from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
-from irl_benchmark.utils.wrapper_utils import is_unwrappable_to, unwrap_env
+from irl_benchmark.utils.wrapper import is_unwrappable_to, unwrap_env
+import irl_benchmark.utils.irl as irl_utils
 
 
 class BaseIRLAlgorithm(ABC):
@@ -20,6 +22,7 @@ class BaseIRLAlgorithm(ABC):
                  env: gym.Env,
                  expert_trajs: List[Dict[str, list]],
                  rl_alg_factory: Callable[[gym.Env], BaseRLAlgorithm],
+                 metrics: List[BaseMetric] = [],
                  config: Union[dict, None] = None):
         """
 
@@ -44,6 +47,8 @@ class BaseIRLAlgorithm(ABC):
         self.env = env
         self.expert_trajs = expert_trajs
         self.rl_alg_factory = rl_alg_factory
+        self.metrics = metrics
+        self.metric_results = [[]] * len(metrics)
         self.config = preprocess_config(self, IRL_CONFIG_DOMAINS, config)
 
     @abstractmethod
@@ -72,6 +77,12 @@ class BaseIRLAlgorithm(ABC):
         """
         raise NotImplementedError()
 
+    def evaluate_metrics(self, evaluation_input: dict):
+        for i, metric in enumerate(self.metrics):
+            result = metric.evaluate(evaluation_input)
+            self.metric_results.append(result)
+            print(type(metric).__name__ + ': \t' + str(result))
+
     def feature_count(self, trajs: List[Dict[str, list]],
                       gamma: float) -> np.ndarray:
         """Return empirical discounted feature counts of input trajectories.
@@ -94,21 +105,5 @@ class BaseIRLAlgorithm(ABC):
             is the same as the trajectories' feature shapes. One scalar
             feature count per feature.
         """
-        # Initialize feature count sum to zeros of correct shape:
-        feature_count_sum = np.zeros(
-            unwrap_env(self.env, FeatureWrapper).feature_shape())
-
-        for traj in trajs:
-
-            assert traj['features']  # empty lists are False in python
-
-            # gammas is a vector containing [gamma^0, gamma^1, gamma^2, ... gamma^l]
-            # where l is length of the trajectory:
-            gammas = gamma**np.arange(len(traj['features']))
-            traj_feature_count = np.sum(
-                gammas.reshape(-1, 1) * np.array(traj['features']), axis=0)
-            # add trajectory's feature count:
-            feature_count_sum += traj_feature_count
-        # divide feature_count_sum by number of trajectories to normalize:
-        feature_count = feature_count_sum / len(trajs)
-        return feature_count
+        # This was moved to utils:
+        return irl_utils.feature_count(self.env, trajs, gamma)

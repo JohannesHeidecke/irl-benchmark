@@ -10,8 +10,9 @@ from irl_benchmark.config import IRL_CONFIG_DOMAINS
 from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
 from irl_benchmark.irl.feature.feature_wrapper import FeatureWrapper
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
+from irl_benchmark.metrics.base_metric import BaseMetric
 from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
-from irl_benchmark.utils.wrapper_utils import get_transition_matrix, is_unwrappable_to, unwrap_env
+from irl_benchmark.utils.wrapper import get_transition_matrix, is_unwrappable_to, unwrap_env
 
 
 class MaxEntIRL(BaseIRLAlgorithm):
@@ -23,14 +24,14 @@ class MaxEntIRL(BaseIRLAlgorithm):
 
     def __init__(self, env: gym.Env, expert_trajs: List[Dict[str, list]],
                  rl_alg_factory: Callable[[gym.Env], BaseRLAlgorithm],
-                 config: dict):
+                 metrics: List[BaseMetric], config: dict):
         """See :class:`irl_benchmark.irl.algorithms.base_algorithm.BaseIRLAlgorithm`."""
 
         assert is_unwrappable_to(env, DiscreteEnv)
         assert is_unwrappable_to(env, FeatureWrapper)
 
         super(MaxEntIRL, self).__init__(env, expert_trajs, rl_alg_factory,
-                                      config)
+                                        metrics, config)
         # get transition matrix (with absorbing state)
         self.transition_matrix = get_transition_matrix(self.env)
         self.n_states, self.n_actions, _ = self.transition_matrix.shape
@@ -59,27 +60,30 @@ class MaxEntIRL(BaseIRLAlgorithm):
         for traj in self.expert_trajs:
             longest_traj_len = max(longest_traj_len, len(traj['states']))
 
-        # mu[s, t] is the prob of visiting state s at time t
-        mu = np.zeros((self.n_states, longest_traj_len))
+        # svf[state, time] is the frequency of visiting a state at some point of time
+        svf = np.zeros((self.n_states, longest_traj_len))
 
         for traj in self.expert_trajs:
-            mu[traj['states'][0], 0] += 1
-        mu[:, 0] = mu[:, 0] / len(self.expert_trajs)
+            svf[traj['states'][0], 0] += 1
+        svf[:, 0] = svf[:, 0] / len(self.expert_trajs)
 
-        for t in range(1, longest_traj_len):
-            for s in range(self.n_states):
-                tot = 0
-                for pre_s in range(self.n_states):
+        for time in range(1, longest_traj_len):
+            for state in range(self.n_states):
+                total = 0
+                for previous_state in range(self.n_states):
                     for action in range(self.n_actions):
-                        tot += mu[pre_s, t - 1] * self.transition_matrix[pre_s, action, s] * policy[pre_s, action]
-                mu[s, t] = tot
-        return np.sum(mu, axis=1)
+                        total += svf[
+                            previous_state, time - 1] * self.transition_matrix[
+                                previous_state, action, state] * policy[
+                                    previous_state, action]
+                svf[state, time] = total
+        # sum over all time steps and return SVF for each state:
+        return np.sum(svf, axis=1)
 
     def train(self, no_irl_iterations: int,
               no_rl_episodes_per_irl_iteration: int,
-              no_irl_episodes_per_irl_iteration: int
-              ):
-        #TODO: docstring
+              no_irl_episodes_per_irl_iteration: int):
+        """Train algorithm. See abstract base class for parameter types."""
 
         # calculate feature expectations
         expert_feature_count = self.feature_count(self.expert_trajs, gamma=1.0)
@@ -107,7 +111,6 @@ class MaxEntIRL(BaseIRLAlgorithm):
             # compute state visitation frequencies, discard absorbing state
             svf = self.expected_svf(policy)[:-1]
 
-
             # compute gradients
             grad = (expert_feature_count - self.feat_map.T.dot(svf))
 
@@ -116,7 +119,12 @@ class MaxEntIRL(BaseIRLAlgorithm):
 
             reward_function.update_parameters(theta)
 
-            print(theta.reshape((4, 4)).round(2))
+            evaluation_input = {
+                'irl_agent': agent,
+                'reward_function_estimate': reward_function
+            }
+            self.evaluate_metrics(evaluation_input)
+
 
         return theta
 
@@ -128,7 +136,6 @@ IRL_CONFIG_DOMAINS[MaxEntIRL] = {
         'max': 1.0,
         'default': 0.9,
     },
-
     'epsilon': {
         'type': float,
         'min': 0.0,

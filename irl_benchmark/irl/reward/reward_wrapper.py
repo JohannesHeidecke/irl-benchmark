@@ -109,3 +109,15 @@ class RewardWrapper(gym.Wrapper):
         Useful as IRL algorithms compute a new reward function
         in each iteration."""
         self.reward_function = reward_function
+
+    def get_reward_input_for(self, state, action, next_state):
+        # TODO: docstring
+        if self.reward_function.action_in_domain:
+            if self.reward_function.next_state_in_domain:
+                return StateActionState(state, action, next_state)
+            else:
+                return StateAction(state, action)
+        else:
+            if state is None and next_state is not None:
+                state = next_state
+            return State(state)
