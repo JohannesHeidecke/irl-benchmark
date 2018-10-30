@@ -2,11 +2,14 @@ import gym
 import numpy as np
 from typing import Callable, Dict, List
 
+from gym.envs.toy_text.discrete import DiscreteEnv
+
 from irl_benchmark.config import IRL_CONFIG_DOMAINS
 from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
+from irl_benchmark.irl.feature.feature_wrapper import FeatureWrapper
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
 from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
-from irl_benchmark.utils.wrapper_utils import get_transition_matrix
+from irl_benchmark.utils.wrapper_utils import get_transition_matrix, is_unwrappable_to, unwrap_env
 
 
 class MaxCausalEntIRL(BaseIRLAlgorithm):
@@ -17,9 +20,17 @@ class MaxCausalEntIRL(BaseIRLAlgorithm):
 
         super(MaxCausalEntIRL, self).__init__(env, expert_trajs, rl_alg_factory,
                                         config)
+
+        assert is_unwrappable_to(env, DiscreteEnv)
+        assert is_unwrappable_to(env, FeatureWrapper)
+
+        # get transition matrix (with absorbing state)
         self.transition_matrix = get_transition_matrix(self.env)
         self.n_states, self.n_actions, _ = self.transition_matrix.shape
-        self.feat_map = np.eye(self.n_states)
+
+        # get map of features for all states:
+        feature_wrapper = unwrap_env(env, FeatureWrapper)
+        self.feat_map = feature_wrapper.feature_array()
 
     def sa_visitations(self):
         """
@@ -100,9 +111,16 @@ class MaxCausalEntIRL(BaseIRLAlgorithm):
 
         sa_visit_count, P0 = self.sa_visitations()
 
-        mean_s_visit_count = np.sum(sa_visit_count, 1) / len(self.expert_trajs)
+        # mean_s_visit_count = np.sum(sa_visit_count, 1) / len(self.expert_trajs)
 
-        mean_feature_count = np.dot(self.feat_map.T, mean_s_visit_count)
+
+        # calculate feature expectations
+        expert_feature_count = self.feature_count(self.expert_trajs, gamma=1.0)
+        print('EXPERT_FEATURE_COUNT:')
+        print(expert_feature_count.reshape((4, 4)))
+
+
+        mean_feature_count = np.dot(self.feat_map.T, expert_feature_count )
 
         # initialize the parameters
         # theta = np.random.rand(self.feat_map.shape[1])
@@ -134,15 +152,17 @@ class MaxCausalEntIRL(BaseIRLAlgorithm):
             # l = np.sum(sa_visit_count * (q_values - state_values.T))  # check: broadcasting works as intended or not
 
             # occupancy measure
-            d = self.occupancy_measure(policy=policy, P0=P0)
+            d = self.occupancy_measure(policy=policy, P0=P0)[:-1]
 
             # log-likeilihood gradient
-            dl_dtheta = -(mean_feature_count - np.dot(self.feat_map.T, d))
+            dl_dtheta = -(expert_feature_count - np.dot(self.feat_map.T, d))
 
             # graduate descent
-            theta -= self.config['lr'] * dl_dtheta[:-1]
+            theta -= self.config['lr'] * dl_dtheta
 
-            print(theta)
+            print(theta.reshape((4, 4)).round(2))
+
+            # print(theta)
         return theta
 
 
