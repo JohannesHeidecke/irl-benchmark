@@ -17,7 +17,8 @@ metrics = [AverageTrajectoryReturn, FeatureCount2Loss, FeatureCountInfLoss]
 
 rl_config = {'gamma': 0.9}
 
-irl_config = {'gamma': 0.9}
+# irl_config = {'gamma': 0.9}
+irl_config = {}
 
 run_config = {
     'reward_function': FeatureBasedRewardFunction,
