@@ -20,6 +20,14 @@ irl\_benchmark.irl.reward.reward\_wrapper module
     :undoc-members:
     :show-inheritance:
 
+irl\_benchmark.irl.reward.truth module
+--------------------------------------
+
+.. automodule:: irl_benchmark.irl.reward.truth
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

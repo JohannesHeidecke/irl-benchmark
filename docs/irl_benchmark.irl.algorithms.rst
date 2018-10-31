@@ -20,6 +20,22 @@ irl\_benchmark.irl.algorithms.base\_algorithm module
     :undoc-members:
     :show-inheritance:
 
+irl\_benchmark.irl.algorithms.mce\_irl module
+---------------------------------------------
+
+.. automodule:: irl_benchmark.irl.algorithms.mce_irl
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+irl\_benchmark.irl.algorithms.me\_irl module
+--------------------------------------------
+
+.. automodule:: irl_benchmark.irl.algorithms.me_irl
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

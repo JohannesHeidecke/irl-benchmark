@@ -12,10 +12,26 @@ irl\_benchmark.utils.general module
     :undoc-members:
     :show-inheritance:
 
-irl\_benchmark.utils.wrapper\_utils module
-------------------------------------------
+irl\_benchmark.utils.irl module
+-------------------------------
 
-.. automodule:: irl_benchmark.utils.wrapper_utils
+.. automodule:: irl_benchmark.utils.irl
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+irl\_benchmark.utils.rl module
+------------------------------
+
+.. automodule:: irl_benchmark.utils.rl
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+irl\_benchmark.utils.wrapper module
+-----------------------------------
+
+.. automodule:: irl_benchmark.utils.wrapper
     :members:
     :undoc-members:
     :show-inheritance:

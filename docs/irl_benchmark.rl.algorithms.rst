@@ -12,6 +12,14 @@ irl\_benchmark.rl.algorithms.base\_algorithm module
     :undoc-members:
     :show-inheritance:
 
+irl\_benchmark.rl.algorithms.random\_agent module
+-------------------------------------------------
+
+.. automodule:: irl_benchmark.rl.algorithms.random_agent
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 irl\_benchmark.rl.algorithms.value\_iteration module
 ----------------------------------------------------
 
