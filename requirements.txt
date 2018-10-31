@@ -53,7 +53,7 @@ cvxpy == 1.0.10
 gym == 0.10.8
 
 # playground/baselines_changes/run.py: 117
-gym-retro == 0.6.0
+# gym-retro == 0.6.0
 
 # examples/aaa.py: 4,5,6,7,8,9
 # examples/frozen_relent.py: 14
