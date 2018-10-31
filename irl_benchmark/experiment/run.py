@@ -9,16 +9,18 @@ from irl_benchmark.irl.feature.feature_wrapper import make as feature_make
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction, \
     TabularRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
+from irl_benchmark.irl.reward import truth
 from irl_benchmark.metrics.base_metric import BaseMetric
 
 
 class Run:
     """This class corresponds to a single run of an IRL algorithm experiment."""
 
-    def __init__(self, env_id: str,
-                 expert_trajs_path: str,
-                 irl_alg_factory: Callable[[gym.Env, List[Dict[str, list]]],BaseIRLAlgorithm],
-                 metrics: List[BaseMetric], run_config: dict):
+    def __init__(self, env_id: str, expert_trajs_path: str,
+                 irl_alg_factory: Callable[[gym.Env, List[Dict[str, list]]],
+                                           BaseIRLAlgorithm],
+                 metrics: List[BaseMetric], rl_config: dict, irl_config: dict,
+                 run_config: dict):
         """
 
         Parameters
@@ -69,18 +71,23 @@ class Run:
         metric_input = {
             'env': self.env,
             'expert_trajs': self.expert_trajs,
+            'true_reward': truth.make(env_id),
         }
         # instantiate metrics:
         for metric in metrics:
             instantiated_metrics.append(metric(metric_input))
         self.metrics = instantiated_metrics
 
+        self.rl_config = rl_config
+        self.irl_config = irl_config
+
         self.run_config = run_config
 
     def start(self):
         """Start the run."""
         irl_alg = self.irl_alg_factory(self.env, self.expert_trajs,
-                                       self.metrics)
+                                       self.metrics, self.rl_config,
+                                       self.irl_config)
         irl_alg.train(self.run_config['no_irl_iterations'],
                       self.run_config['no_rl_episodes_per_irl_iteration'],
                       self.run_config['no_irl_episodes_per_irl_iteration'])

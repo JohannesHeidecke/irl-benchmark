@@ -1,3 +1,5 @@
+"""Util functions related to IRL."""
+
 from typing import Dict, List
 import numpy as np
 
@@ -46,5 +48,5 @@ def feature_count(env, trajs: List[Dict[str, list]],
         # add trajectory's feature count:
         feature_count_sum += traj_feature_count
     # divide feature_count_sum by number of trajectories to normalize:
-    feature_count = feature_count_sum / len(trajs)
-    return feature_count
+    result = feature_count_sum / len(trajs)
+    return result

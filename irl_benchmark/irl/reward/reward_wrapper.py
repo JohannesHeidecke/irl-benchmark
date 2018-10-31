@@ -110,8 +110,22 @@ class RewardWrapper(gym.Wrapper):
         in each iteration."""
         self.reward_function = reward_function
 
-    def get_reward_input_for(self, state, action, next_state):
-        # TODO: docstring
+    def get_reward_input_for(self, state: Union[np.ndarray, int, float],
+            action: Union[np.ndarray, int, float],
+            next_state: Union[np.ndarray, int, float]) -> Union[State, StateAction, StateActionState]:
+        """
+
+        Parameters
+        ----------
+        state: Union[np.ndarray, int, float
+        action: Union[np.ndarray, int, float]
+        next_state: Union[np.ndarray, int, float]
+
+        Returns
+        -------
+        Union[State, StateAction, StateActionState]
+            The input converted to an adequate namedtuple.
+        """
         if self.reward_function.action_in_domain:
             if self.reward_function.next_state_in_domain:
                 return StateActionState(state, action, next_state)

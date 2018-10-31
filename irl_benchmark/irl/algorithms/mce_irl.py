@@ -14,13 +14,12 @@ from irl_benchmark.utils.wrapper import get_transition_matrix, is_unwrappable_to
 
 
 class MaxCausalEntIRL(BaseIRLAlgorithm):
-
     def __init__(self, env: gym.Env, expert_trajs: List[Dict[str, list]],
                  rl_alg_factory: Callable[[gym.Env], BaseRLAlgorithm],
                  metrics: List[BaseMetric], config: dict):
 
-        super(MaxCausalEntIRL, self).__init__(env, expert_trajs, rl_alg_factory,
-                                        metrics, config)
+        super(MaxCausalEntIRL, self).__init__(env, expert_trajs,
+                                              rl_alg_factory, metrics, config)
 
         assert is_unwrappable_to(env, DiscreteEnv)
         assert is_unwrappable_to(env, FeatureWrapper)
@@ -60,7 +59,6 @@ class MaxCausalEntIRL(BaseIRLAlgorithm):
         return sa_visit_count, P0
 
     def occupancy_measure(self, policy, P0, t_max=None, threshold=1e-6):
-
         """
         Computes occupancy measure of a MDP under a given time-constrained policy
         -- the expected discounted number of times that policy π visits state s in
@@ -86,8 +84,10 @@ class MaxCausalEntIRL(BaseIRLAlgorithm):
 
                     for next_state in range(self.n_states):
                         # probabilty of reaching next_state by taking action
-                        prob = self.transition_matrix[state, action, next_state]
-                        d[next_state] += self.config['gamma'] * d_prev[state] * policy[state, action] * prob
+                        prob = self.transition_matrix[state, action,
+                                                      next_state]
+                        d[next_state] += self.config['gamma'] * d_prev[
+                            state] * policy[state, action] * prob
 
             diff = np.amax(abs(d_prev - d))  # maxima of the flattened array
             d_prev = np.copy(d)
@@ -100,9 +100,7 @@ class MaxCausalEntIRL(BaseIRLAlgorithm):
 
     def train(self, no_irl_iterations: int,
               no_rl_episodes_per_irl_iteration: int,
-              no_irl_episodes_per_irl_iteration: int
-              ):
-
+              no_irl_episodes_per_irl_iteration: int):
         """
 
         """
@@ -132,7 +130,8 @@ class MaxCausalEntIRL(BaseIRLAlgorithm):
             if self.config['verbose']:
                 print('IRL ITERATION ' + str(irl_iteration_counter))
 
-            reward_function_estimate = FeatureBasedRewardFunction(self.env, theta)
+            reward_function_estimate = FeatureBasedRewardFunction(
+                self.env, theta)
             self.env.update_reward_function(reward_function_estimate)
 
             # compute policy
@@ -156,7 +155,7 @@ class MaxCausalEntIRL(BaseIRLAlgorithm):
 
             evaluation_input = {
                 'irl_agent': agent,
-                'reward_function_estimate': reward_function
+                'irl_reward': reward_function
             }
             self.evaluate_metrics(evaluation_input)
 
@@ -170,7 +169,6 @@ IRL_CONFIG_DOMAINS[MaxCausalEntIRL] = {
         'max': 1.0,
         'default': 0.9,
     },
-
     'epsilon': {
         'type': float,
         'min': 0.0,

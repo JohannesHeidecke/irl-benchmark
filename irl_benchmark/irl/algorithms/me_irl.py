@@ -87,8 +87,6 @@ class MaxEntIRL(BaseIRLAlgorithm):
 
         # calculate feature expectations
         expert_feature_count = self.feature_count(self.expert_trajs, gamma=1.0)
-        print('EXPERT_FEATURE_COUNT:')
-        print(expert_feature_count.reshape((4, 4)))
 
         # start with an agent
         agent = self.rl_alg_factory(self.env)
@@ -121,10 +119,9 @@ class MaxEntIRL(BaseIRLAlgorithm):
 
             evaluation_input = {
                 'irl_agent': agent,
-                'reward_function_estimate': reward_function
+                'irl_reward': reward_function
             }
             self.evaluate_metrics(evaluation_input)
-
 
         return theta
 

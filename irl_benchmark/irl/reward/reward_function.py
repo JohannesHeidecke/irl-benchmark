@@ -299,7 +299,7 @@ class FeatureBasedRewardFunction(BaseRewardFunction):
         Parameters
         ----------
         domain_batch: np.ndarray
-            A array of features
+            An array of features
 
         Returns
         -------

@@ -1,6 +1,7 @@
 import numpy as np
 
 from irl_benchmark.irl.algorithms.appr_irl import ApprIRL
+from irl_benchmark.irl.algorithms.mce_irl import MaxCausalEntIRL
 from irl_benchmark.irl.algorithms.me_irl import MaxEntIRL
 from irl_benchmark.irl.feature import feature_wrapper
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
@@ -182,3 +183,7 @@ def test_appr_irl_runs():
 
 def test_me_irl_runs():
     quick_run_alg(MaxEntIRL)
+
+
+def test_mce_irl_runs():
+    quick_run_alg(MaxCausalEntIRL)

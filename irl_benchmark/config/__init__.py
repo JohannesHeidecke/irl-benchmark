@@ -1,4 +1,7 @@
 """This module contains configurations for IRL and RL algorithms."""
+
+from copy import copy
+
 # A dictionary containing allowed and default values for
 # the config of each IRL algorithm.
 # To be extended in each specific IRL algorithm implementation:
@@ -20,7 +23,7 @@ def preprocess_config(config_for: object, domains: dict, config: dict) -> dict:
     * If values are illegal (e.g. too high), raise an error.
     * If unknown fields are specified, raise an error.
 
-    Manipulates the passed config in-place (deep-copy it, if undesired).
+    Manipulates a copy of the passed config and returns it.
 
     Parameters
     ----------
@@ -36,6 +39,8 @@ def preprocess_config(config_for: object, domains: dict, config: dict) -> dict:
     # replace config by empty dictionary if None:
     if config is None:
         config = {}
+    else:
+        config = copy(config)
 
     # get config domain for the correct subclass calling this:
     config_domain: dict = domains[type(config_for)]

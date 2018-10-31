@@ -1,4 +1,5 @@
 """Module for feature wrappers providing features for different environments."""
+
 from abc import abstractmethod
 import functools
 from typing import Union, Tuple
@@ -84,7 +85,15 @@ class FeatureWrapper(gym.Wrapper):
 
     @abstractmethod
     def feature_array(self) -> np.ndarray:
-        # TODO: docstring
+        """ Get features for the entire domain as an array.
+        Has to be overwritten in each feature wrapper.
+
+        Returns
+        -------
+        np.ndarray
+            The features for the entire domain as an array.
+            Shape: (domain_size, feature_size).
+        """
         raise NotImplementedError()
 
 
@@ -114,7 +123,9 @@ class FrozenLakeFeatureWrapper(FeatureWrapper):
         return ranges
 
     def feature_array(self):
-        # TODO docstring and explanation
+        """Returns feature array for FrozenLake. Each state in the domain
+        corresponds to a one_hot vector. Features of all states together
+        are the identity matrix."""
         return np.eye(self.env.observation_space.n)
 
 

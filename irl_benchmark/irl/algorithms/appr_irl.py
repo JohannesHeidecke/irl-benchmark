@@ -197,7 +197,7 @@ class ApprIRL(BaseIRLAlgorithm):
 
             evaluation_input = {
                 'irl_agent': agent,
-                'reward_function_estimate': reward_function
+                'irl_reward': reward_function
             }
             self.evaluate_metrics(evaluation_input)
 
