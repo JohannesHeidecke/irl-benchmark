@@ -109,7 +109,7 @@ gym == 0.10.8
 # old/rl/algorithms/tabular_q.py: 6
 # old/rl/algorithms/value_iteration.py: 6
 # old/utils/utils.py: 8,9,10
-irl_benchmark == 0.1
+# irl_benchmark == 0.1
 
 # old/utils/utils.py: 4
 matplotlib == 3.0.1
