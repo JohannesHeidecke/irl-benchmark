@@ -4,9 +4,9 @@
 
 # Installation
 
-`conda create --name irl-benchmark python=3.6
-source activate irl-benchmark
-pip install -r requirements.txt`
+`conda create --name irl-benchmark python=3.6`
+`source activate irl-benchmark`
+`pip install -r requirements.txt`
 
 # Getting Started
 
