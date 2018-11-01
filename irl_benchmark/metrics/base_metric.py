@@ -23,12 +23,34 @@ class BaseMetric(ABC):
         assert 'true_reward' in metric_input.keys()
         self.metric_input = metric_input
 
-
     @abstractmethod
     def evaluate(self, evaluation_input: dict = None) -> float:
+        """Evaluate the metric given some input and return result.
+
+        Parameters
+        ----------
+        evaluation_input: dict
+
+        Returns
+        -------
+        float
+            The metric for the given input
+        """
         raise NotImplementedError()
 
     def generate_traj_if_not_exists(self, evaluation_input: dict):
+        """ Generate trajectories and store them in evaluation input.
+        If evaluation input already contains trajectories, do nothing.
+
+        Parameters
+        ----------
+        evaluation_input
+
+        Returns
+        -------
+        dict
+            evaluation_input
+        """
         assert 'irl_agent' in evaluation_input.keys()
         if not 'irl_trajs' in evaluation_input:
             print('generating new trajs for metrics')

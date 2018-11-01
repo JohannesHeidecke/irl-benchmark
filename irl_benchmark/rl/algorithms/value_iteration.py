@@ -1,4 +1,5 @@
 """Module for value iteration RL algorithm."""
+from typing import Union
 
 import gym
 import numpy as np
@@ -16,7 +17,7 @@ class ValueIteration(BaseRLAlgorithm):
     Currently only implemented for DiscreteEnv environments.
     """
 
-    def __init__(self, env: gym.Env, config: dict):
+    def __init__(self, env: gym.Env, config: Union[None, dict] = None):
         """
 
         Parameters

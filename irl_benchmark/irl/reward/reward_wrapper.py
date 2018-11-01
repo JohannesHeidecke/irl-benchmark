@@ -62,46 +62,20 @@ class RewardWrapper(gym.Wrapper):
 
         # generate input for reward function:
         if isinstance(self.reward_function, FeatureBasedRewardFunction):
-            # reward function is feature based
-            rew_input = info['features']
+            # reward function can be called based on features
+            reward = self.reward_function.reward_from_features(
+                info['features']).item()
         elif isinstance(self.reward_function, TabularRewardFunction):
-            rew_input = self.get_tabular_reward_input(self.current_state,
-                                                      action, next_state)
+            rew_input = self.get_reward_input_for(self.current_state, action,
+                                                  next_state)
+            reward = self.reward_function.reward(rew_input).item()
         else:
             raise NotImplementedError()
-
-        reward = self.reward_function.reward(rew_input).item()
 
         # remember which state we are in:
         self.current_state = next_state
 
         return next_state, reward, terminated, info
-
-    def get_tabular_reward_input(
-            self, state: Union[np.ndarray, int, float],
-            action: Union[np.ndarray, int, float],
-            next_state: Union[np.ndarray, int, float]
-    ) -> Union[State, StateAction, StateActionState]:
-        """ Return an adequate input batch for a tabular reward function.
-
-        Parameters
-        ----------
-        state: state: Union[np.ndarray, int, float]
-        action: Union[np.ndarray, int, float]
-        next_state: Union[np.ndarray, int, float]
-
-        Returns
-        -------
-        Union[State, StateAction, StateActionState]
-            A domain batch with one element.
-        """
-        if self.reward_function.action_in_domain:
-            if self.reward_function.next_state_in_domain:
-                return StateActionState(state, action, next_state)
-            return StateAction(state, action)
-        if state is None and next_state is not None:
-            state = next_state
-        return State(state)
 
     def update_reward_function(self, reward_function):
         """Update the used reward function.
@@ -111,8 +85,9 @@ class RewardWrapper(gym.Wrapper):
         self.reward_function = reward_function
 
     def get_reward_input_for(self, state: Union[np.ndarray, int, float],
-            action: Union[np.ndarray, int, float],
-            next_state: Union[np.ndarray, int, float]) -> Union[State, StateAction, StateActionState]:
+                             action: Union[np.ndarray, int, float],
+                             next_state: Union[np.ndarray, int, float]
+                             ) -> Union[State, StateAction, StateActionState]:
         """
 
         Parameters
@@ -132,6 +107,6 @@ class RewardWrapper(gym.Wrapper):
             else:
                 return StateAction(state, action)
         else:
-            if state is None and next_state is not None:
+            if not self.reward_function.action_in_domain and not self.reward_function.next_state_in_domain:
                 state = next_state
             return State(state)

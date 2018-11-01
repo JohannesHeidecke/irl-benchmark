@@ -169,25 +169,12 @@ def get_reward_matrix(env: gym.Env, with_absorbing_state: bool = True):
                         # not part of the wrapper's reward function)
                         outcome[2] = 0.0
                     else:
-                        if isinstance(reward_function,
-                                      rew_funcs.FeatureBasedRewardFunction):
-                            # reward function needs features as input
-                            reward_input = unwrap_env(
-                                env, feature_wrapper.FeatureWrapper).features(
-                                    None, None, next_state)
-                        elif isinstance(reward_function,
-                                        rew_funcs.TabularRewardFunction):
-                            # reward function needs domain batch as input
-                            assert reward_function.action_in_domain is False
-                            assert reward_function.next_state_in_domain is False
-                            reward_input = reward_wrapper.get_reward_input_for(
-                                None, None, next_state)
-                        else:
-                            raise ValueError(
-                                'The RewardWrapper\'s reward_function is' +
-                                'of not supported type ' +
-                                str(type(reward_function)))
                         # update the reward part of the outcome
+                        # reward function needs domain batch as input
+                        assert reward_function.action_in_domain is False
+                        assert reward_function.next_state_in_domain is False
+                        reward_input = reward_wrapper.get_reward_input_for(
+                            None, None, next_state)
                         outcome[2] = reward_function.reward(
                             reward_input).item()
                     outcomes.append(tuple(outcome))

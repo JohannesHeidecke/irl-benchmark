@@ -13,7 +13,6 @@ from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.metrics.base_metric import BaseMetric
 from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
 from irl_benchmark.rl.algorithms.random_agent import RandomAgent
-from irl_benchmark.utils.rl import true_reward_per_traj
 
 
 class ApprIRL(BaseIRLAlgorithm):

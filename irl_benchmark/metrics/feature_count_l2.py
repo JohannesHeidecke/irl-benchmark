@@ -1,6 +1,5 @@
 import numpy as np
 
-from irl_benchmark.irl.collect import collect_trajs
 from irl_benchmark.metrics.base_metric import BaseMetric
 from irl_benchmark.utils.irl import feature_count
 
@@ -15,7 +14,7 @@ class FeatureCount2Loss(BaseMetric):
         self.expert_feature_count = feature_count(
             self.env, expert_trajs, gamma=1.0)
 
-    def evaluate(self, evaluation_input: dict):
+    def evaluate(self, evaluation_input: dict) -> float:
         assert 'irl_agent' in evaluation_input.keys()
         irl_trajs = self.generate_traj_if_not_exists(evaluation_input)
         irl_feature_count = feature_count(self.env, irl_trajs, gamma=1.0)
