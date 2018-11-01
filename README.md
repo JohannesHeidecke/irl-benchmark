@@ -1,6 +1,6 @@
 # Introduction
 
-`irl-benchmark` is a modular library for evaluating various Inverse Reinforcement Learning algorithms. It provides an extensible platform for experimenting with different environments, algorithms and metrics. 
+`irl-benchmark` is a modular library for evaluating various **Inverse Reinforcement Learning** algorithms. It provides an extensible platform for experimenting with different environments, algorithms and metrics. 
 
 # Installation
 
@@ -42,3 +42,6 @@ Meanwhile, check the folder `docs`. You may find `docs/extending.rst` useful if 
 - [Maximum Causal Entropy IRL](https://www.cs.cmu.edu/~bziebart/publications/thesis-bziebart.pdf)
 
 # Metrics
+
+
+Copyright: Adria Garriga-Alonso, Anton Osika, Johannes Heidecke, Max Daniel, and Sayan Sarkar.
