@@ -175,4 +175,5 @@ class MaxCausalEnt(BaseIRLAlgorithm):
                 print('Epoch: {} log likelihood of all traj: {}'.format(i, l))
 
         estimated_rewards = np.dot(self.feat_mat, theta)
+        print(estimated_rewards)
         return estimated_rewards

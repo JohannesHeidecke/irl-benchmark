@@ -169,12 +169,6 @@ IRL_CONFIG_DOMAINS[MaxCausalEntIRL] = {
         'max': 1.0,
         'default': 0.9,
     },
-    'epsilon': {
-        'type': float,
-        'min': 0.0,
-        'max': float('inf'),
-        'default': 1e-6,
-    },
     'verbose': {
         'type': bool,
         'default': True
