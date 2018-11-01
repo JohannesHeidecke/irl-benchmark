@@ -1,8 +1,9 @@
-import gym
-import numpy as np
+"""Module for Maximum Causal Entropy IRL."""
 from typing import Callable, Dict, List
 
+import gym
 from gym.envs.toy_text.discrete import DiscreteEnv
+import numpy as np
 
 from irl_benchmark.config import IRL_CONFIG_DOMAINS
 from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
@@ -14,6 +15,11 @@ from irl_benchmark.utils.wrapper import get_transition_matrix, is_unwrappable_to
 
 
 class MaxCausalEntIRL(BaseIRLAlgorithm):
+    """Maximum Entropy IRL (Ziebart et al., 2008).
+
+    Not to be confused with Maximum Entropy Deep IRL (Wulfmeier et al., 2016)
+    or Maximum Causal Entropy IRL (Ziebart et al., 2010).
+    """
     def __init__(self, env: gym.Env, expert_trajs: List[Dict[str, list]],
                  rl_alg_factory: Callable[[gym.Env], BaseRLAlgorithm],
                  metrics: List[BaseMetric], config: dict):
@@ -34,7 +40,7 @@ class MaxCausalEntIRL(BaseIRLAlgorithm):
 
     def sa_visitations(self):
         """
-        Given a list of trajectories in an mdp, computes the state-action
+        Given a list of trajectories in an MDP, computes the state-action
         visitation counts and the probability of a trajectory starting in state s.
 
             Arrays of shape (n_states, n_actions) and (n_states).

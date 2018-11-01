@@ -7,10 +7,7 @@ import gym
 from gym.envs.toy_text.discrete import DiscreteEnv
 import numpy as np
 
-import irl_benchmark.irl.feature.feature_wrapper as feature_wrapper
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
-import irl_benchmark.irl.reward.reward_function as rew_funcs
-
 
 def unwrap_env(env: gym.Env,
                until_class: Union[None, gym.Env] = None) -> gym.Env:

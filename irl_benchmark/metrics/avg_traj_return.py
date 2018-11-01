@@ -9,9 +9,9 @@ class AverageTrajectoryReturn(BaseMetric):
 
     def __init__(self, metric_input: dict):
         assert 'env' in metric_input.keys()
-        self.env = metric_input['env']
+        super(AverageTrajectoryReturn, self).__init__(metric_input)
 
-    def evaluate(self, evaluation_input: dict):
+    def evaluate(self, evaluation_input: dict = None) -> float:
         """Evaluate the metric given some input and return result.
 
         Parameters
