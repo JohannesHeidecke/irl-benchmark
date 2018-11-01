@@ -4,21 +4,26 @@
 
 # Installation
 
-`conda create --name irl-benchmark python=3.6`
-`source activate irl-benchmark`
-`pip install -r requirements.txt`
+`conda create --name irl-benchmark python=3.6
+source activate irl-benchmark
+pip install -r requirements.txt`
 
 # Getting Started
 
 Start by generating expert data by
+
 `python generate_expert_data.py`
+
 Then run 
+
 `python main.py` 
+
 to get an overview of how all the components of `irl-benchmark` work together.
 
 # Documentation
 
 Webpage coming soon...
+
 Meanwhile, check the folder `docs`. You may find `docs/extending.rst` useful if you are planning to author new algorithms.
 
 # Environemts
