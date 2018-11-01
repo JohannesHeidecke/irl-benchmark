@@ -5,7 +5,7 @@ from irl_benchmark.irl.collect import collect_trajs
 from irl_benchmark.irl.feature.feature_wrapper import make as feature_make
 from irl_benchmark.irl.reward.reward_function import TabularRewardFunction, FeatureBasedRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
-from irl_benchmark.irl.reward.truth import make as truth_make
+from irl_benchmark.irl.reward.truth import make_true_reward
 from irl_benchmark.rl.algorithms.value_iteration import ValueIteration
 
 
@@ -44,7 +44,7 @@ def test_tab_featb_functions():
     rf = FeatureBasedRewardFunction(env, params)
     domain = rf.domain()
     rf2 = TabularRewardFunction(env, params)
-    rf_true = truth_make('FrozenLake8x8-v0')
+    rf_true = make_true_reward('FrozenLake8x8-v0')
     rew1 = rf.reward(domain)
     rew2 = rf2.reward(domain)
     rew_true = rf_true.reward(domain)

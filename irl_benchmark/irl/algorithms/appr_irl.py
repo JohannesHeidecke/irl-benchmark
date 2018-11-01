@@ -181,7 +181,6 @@ class ApprIRL(BaseIRLAlgorithm):
             assert isinstance(self.env, RewardWrapper)
             self.env.update_reward_function(reward_function)
 
-            # TODO: see messages with max about order of training & deducing
             # check stopping criterion:
             if distance <= self.config['epsilon']:
                 if self.config['verbose']:

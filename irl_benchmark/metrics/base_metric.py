@@ -22,6 +22,7 @@ class BaseMetric(ABC):
         assert 'expert_trajs' in metric_input.keys()
         assert 'true_reward' in metric_input.keys()
         self.metric_input = metric_input
+        self.env = metric_input['env']
 
     @abstractmethod
     def evaluate(self, evaluation_input: dict = None) -> float:

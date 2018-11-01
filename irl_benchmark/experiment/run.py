@@ -71,7 +71,7 @@ class Run:
         metric_input = {
             'env': self.env,
             'expert_trajs': self.expert_trajs,
-            'true_reward': truth.make(env_id),
+            'true_reward': truth.make_true_reward(env_id),
         }
         # instantiate metrics:
         for metric in metrics:

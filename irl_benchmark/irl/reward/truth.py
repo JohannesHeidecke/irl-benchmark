@@ -1,3 +1,5 @@
+"""Module containing true reward functions for different environments."""
+
 import functools
 import gym
 import numpy as np
@@ -7,7 +9,8 @@ from irl_benchmark.irl.reward.reward_function import TabularRewardFunction
 _true_reward_functions = {}
 
 
-def make(key):
+def make_true_reward(key: str):
+    """Make a true reward function."""
     return _true_reward_functions[key]()
 
 
