@@ -1,154 +1,228 @@
+"""Module for value iteration RL algorithm."""
+from typing import Union
+
+import gym
 import numpy as np
-import pickle
-from time import time
 
-from irl_benchmark.rl.algorithms import RLAlgorithm
-from irl_benchmark.utils.utils import get_transition_matrix, get_reward_matrix
+from irl_benchmark.config import RL_CONFIG_DOMAINS
+from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
+from irl_benchmark.utils.wrapper import is_unwrappable_to, \
+    get_transition_matrix, get_reward_matrix
 
 
-class ValueIteration(RLAlgorithm):
-    '''
-    Solves an MDP optimally with value iteration.
-    '''
+class ValueIteration(BaseRLAlgorithm):
+    """Value iteration algorithm.
 
-    def __init__(
-            self,
-            env,
-            gamma=0.8,
-            error=1e-6,
-            temperature=None,
-    ):
-        self.env = env
-        self.gamma = gamma
-        self.error = error
-        self.temperature = temperature
+    Solves an MDP given exact knowledge of transition dynamics and rewards.
+    Currently only implemented for DiscreteEnv environments.
+    """
 
-        self.n_actions = env.action_space.n
-        self.P = get_transition_matrix(env)
+    def __init__(self, env: gym.Env, config: Union[None, dict] = None):
+        """
+
+        Parameters
+        ----------
+        env: gym.Env
+            A DiscreteEnv environment
+        config: dict
+            Configuration of hyperparameters.
+        """
+        assert is_unwrappable_to(env, gym.envs.toy_text.discrete.DiscreteEnv)
+        super(ValueIteration, self).__init__(env, config)
+        self.no_states = env.observation_space.n + 1  # + 1 for absorbing state
+        self.no_actions = env.action_space.n
+        self.transitions = get_transition_matrix(env)
+        # will be filled in beginning of training:
         self.rewards = None
+        # will be filled during training:
+        self.state_values = None
+        self.q_values = None
+        # whenever self._policy is None, it will be re-calculated
+        # based on current self.q_values when calling policy().
+        self._policy = None
 
-    def softmax(self, q):
-        '''∀ s: V_s = temperature * log(\sum_a exp(Q_sa/temperature))'''
+    def train(self, no_episodes: int):
+        """ Train the agent
 
-        # We can rewrite as:
-        # t*log(sum_a exp((q_a - qmax)/t)*exp(qmax/t))
-        # subtracting q_max for robustness
-        # qmax goes straight through below softmax function: t*log(exp(qmax/t)) = qmax
-
-        q_max = q.max(axis=1, keepdims=True)
-        scaled = (q - q_max) / self.temperature
-        exp_sum = np.exp(scaled).sum(axis=1)
-
-        values = self.temperature * np.log(exp_sum) + q_max.reshape([-1])
-        return values
-
-    def mellowmax(self, q):
-        '''
-        The below paper reports mellowmax has desirable properties that
-        softmax doesn't.
-
-        https://arxiv.org/pdf/1612.05628.pdf
-        :param values: 2-D numpy array
-        :param temperature: the softmax temperature
-        '''
-
-        softmax = self.softmax(q)
-        return softmax - np.log(q.shape[1]) * self.temperature
-
-    def _boltzmann_vi(self, time_limit, metrics_listener=None):
-        t0 = time()
-
-        n_states, n_actions, _ = np.shape(self.P)
-
-        values = np.zeros([n_states])
-        q = np.zeros([n_states, n_actions])
-
-        err = float('inf')
-
-        # estimate values
-        while err > self.error:
-            values_old = values.copy()
-
-            q = self.gamma * self.P.dot(values) + self.rewards
-            values = self.mellowmax(q)
-
-            err = np.max(np.abs(values - values_old))
-
-            if time() > t0 + time_limit:
-                print('Value iteration exceeded time limit with max err = {}'.
-                      format(err))
-                break
-
-        # Compute stochastic policy:
-
-        # Broadcast values to shape of q
-        self.pi = np.exp((q - values.reshape([-1, 1])) / self.temperature)
-
-        # Mellowmax correction:
-        self.pi = self.pi / q.shape[1]
-
-        # Normalize:
-        self.pi = self.pi / self.pi.sum(axis=1, keepdims=True)
-
-        self.V = values
-        self.Q = q
-
-    def train(self, time_limit, metrics_listener=None, reward_function=None):
+        Parameters
+        ----------
+        no_episodes: int
+            Not used in this algorithm (since it assumes known transition dynamics)
+        """
+        assert is_unwrappable_to(self.env,
+                                 gym.envs.toy_text.discrete.DiscreteEnv)
+        # extract reward function from env (using wrapped reward function if available):
         self.rewards = get_reward_matrix(self.env)
 
-        if self.temperature is not None:
-            return self._boltzmann_vi(time_limit, metrics_listener)
-        t0 = time()
+        # initialize state values:
+        state_values = np.zeros([self.no_states])
 
-        n_states, n_actions, _ = np.shape(self.P)
+        while True:  # stops when state values converge
+            # remember old values for error computation
+            old_state_values = state_values.copy()
+            # calculate Q-values:
+            q_values = self.rewards + \
+                       self.config['gamma'] * self.transitions.dot(state_values)
+            # calculate state values either with maximum or mellow maximum:
+            if self.config['temperature'] is None:
+                # using default maximum operator:
+                state_values = self._argmax_state_values(q_values)
+            else:
+                # using softmax:
+                state_values = self._softmax_state_values(q_values)
 
-        values = np.zeros([n_states])
-        q = np.zeros([n_states, n_actions])
-
-        err = float('inf')
-
-        # estimate values
-        while err > self.error:
-            values_old = values.copy()
-
-            q = self.gamma * self.P.dot(values) + self.rewards
-            values = q.max(axis=1)
-
-            err = np.max(np.abs(values - values_old))
-
-            if time() > t0 + time_limit:
-                print('Value iteration exceeded time limit with max err = {}'.
-                      format(err))
+            # stopping condition:
+            # check if state values converged (almost no change since last iteration:
+            if np.allclose(
+                    state_values, old_state_values,
+                    atol=self.config['epsilon']):
                 break
 
-        # generate policy
-        policy = np.zeros([n_states, n_actions])
+        # persist learned state values and Q-values:
+        self.state_values = state_values
+        self.q_values = q_values
+        # flag to tell other methods that policy needs to be updated based on new values:
+        self._policy = None
 
-        for s in range(n_states):
-            best_actions = q[s] == np.max(q[s])
-            n_best = best_actions.sum()
+    def pick_action(self, state: int) -> int:
+        """ Pick an action given a state.
 
-            policy[s, best_actions] = 1.0 / n_best
+        The way of picking is either uniformly random between all best options (argmax)
+        or according to mellowmax distribution, if 'temperature' is not None in config.
+        See :meth:`.policy`.
 
-        self.V = values
-        self.Q = q
-        self.pi = policy
+        Parameters
+        ----------
+        state: int
+            An integer corresponding to a state of a DiscreteEnv.
 
-    def policy(self, s):
-        return self.pi[s]
+        Returns
+        -------
+        int
+            An action for a DiscreteEnv.
+        """
+        return np.random.choice(self.no_actions, p=self.policy(state))
 
-    def pick_action(self, s):
-        '''Sample an action from policy.'''
-        return np.random.choice(range(self.n_actions), p=self.policy(s))
+    def policy(self, state: int) -> np.ndarray:
+        """ Return the probabilities of picking all possible actions given a state.
 
-    def save(self, path):
-        '''Save agent parameters to path.'''
-        with open(path, 'wb') as f:
-            pickle.dump(self, f)
+        The probabilities are either uniformly random between all best options (argmax)
+        or according to mellowmax distribution, if 'temperature' is not None in config.
 
-    def load(self, path):
-        '''Load in instance of self and copy attributes.'''
-        with open(path, 'rb') as f:
-            parsed = pickle.load(f)
-        for k, v in parsed.__dict__.items():
-            setattr(self, k, v)
+        Parameters
+        ----------
+        state: int
+            An integer corresponding to a state of a DiscreteEnv.
+
+        Returns
+        -------
+        np.ndarray
+            Action probabilities given the state.
+
+        """
+        assert self.q_values is not None, "Call train() before calling this method."
+        assert np.isscalar(state)
+        assert isinstance(state, (int, np.int64))
+
+        return self.policy_array()[state, :]
+
+    def policy_array(self):
+        """Return action probabilities for all states as a numpy array.
+
+        Returns
+        -------
+        np.ndarray
+            Array containing probabilities for actions given a state.
+            Shape: (n_states, n_actions)
+        """
+        self._update_policy_if_necessary()
+        return self._policy
+
+    def _update_policy_if_necessary(self):
+        if self._policy is None:
+            if self.config['temperature'] is None:
+                self._policy = self._argmax_policy(self.q_values)
+            else:
+                self._policy = self._softmax_policy(self.q_values)
+
+    def _argmax_policy(self, q_values: np.ndarray) -> np.ndarray:
+        """ Calculate an argmax policy.
+
+        Only picks actions with maximal Q-value given a state. If several actions
+        are maxima, they are equally likely to be picked.
+
+        Parameters
+        ----------
+        q_values:
+            Q-values for all state-action pairs. Shape (n_states, n_actions)
+        Returns
+        -------
+        np.ndarray
+            Probabilities for actions given a state. Shape (n_states, n_actions)
+        """
+        # Find best actions:
+        best_actions = np.isclose(q_values,
+                                  np.max(q_values, axis=1).reshape((-1, 1)))
+        # Initialize probabilities to be zero
+        policy = np.zeros((self.no_states, self.no_actions))
+        # Assign probability max to all best actions:
+        policy[best_actions] = 1
+        # Normalize values so their sum is 1. for each state:
+        policy /= np.sum(policy, axis=1, keepdims=True)
+        return policy
+
+    def _softmax_policy(self, q_values):
+        assert self.config['temperature'] is not None
+        temperature = self.config['temperature']
+        # for numerical stability (avoiding under- or overflow of exponent),
+        # re-scale exponent without changing results of softmax,
+        # using softmax(x) = softmax(x + c) for any constant c
+        q_max = q_values.max(axis=1, keepdims=True)
+        q_scaled = (q_values - q_max) / temperature
+        # calculate softmax policy:
+        policy = np.exp(q_scaled)
+        # normalize values so their sum is 1. for each state:
+        policy /= np.sum(policy, axis=1, keepdims=True)
+        return policy
+
+    def _mellowmax_policy(self, q_values):
+        raise NotImplementedError()
+
+    def _argmax_state_values(self, q_values):
+        assert self.config['temperature'] is None
+        return np.max(q_values, axis=1)
+
+    def _softmax_state_values(self, q_values):
+        assert self.config['temperature'] is not None
+        # obtain probabilities of picking each (s, a):
+        softmax_policy = self._softmax_policy(q_values)
+        # multiply q_values by probability of picking them
+        # then sum over actions to get state values:
+        softmax_state_values = (softmax_policy * q_values).sum(axis=1)
+        return softmax_state_values
+
+    def _mellowmax_state_values(self, q_values):
+        raise NotImplementedError()
+
+
+RL_CONFIG_DOMAINS[ValueIteration] = {
+    'gamma': {
+        'type': float,
+        'min': 0.0,
+        'max': 1.0,
+        'default': 0.9,
+    },
+    'epsilon': {
+        'type': float,
+        'min': 0.0,
+        'max': float('inf'),
+        'default': 1e-6,
+    },
+    'temperature': {
+        'type': float,
+        'optional': True,  # allows value to be None
+        'min': 1e-10,
+        'max': float('inf'),
+        'default': None
+    }
+}

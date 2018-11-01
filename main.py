@@ -1,58 +1,48 @@
-from itertools import product
-import pandas as pd
-import time
-import os
-import pickle
-
-from experiment import run
-
-
-def main():
-
-    env_ids = ['FrozenLake-v0', 'FrozenLake8x8-v0']
-    agent_ids = [
-        'ApprIRL-SVM', 'ApprIRL-Proj', 'MaxEntIRL', 'RelEntIRL', 'MaxCausIRL'
-    ]
-    no_expert_trajss = [10, 100, 1000, 10000]
-
-    time_id = time.strftime('%Y-%m-%d_%H:%M:%S')
-    dir_name = 'data/' + time_id
-    if not os.path.exists(dir_name):
-        os.makedirs(dir_name)
-
-    data = {}
-    N = 5
-    for i in range(N):
-        for env_id, agent_id, no_expert_trajs in product(
-                env_ids, agent_ids, no_expert_trajss):
-
-            print('= ' * 20)
-            print('running ' + str(env_id) + ', ' + str(agent_id) + ' ' + str(no_expert_trajs))
-
-            res = run(env_id, agent_id, no_expert_trajs)
-            print(res)
-
-            # Pickle the entire run result
-            path = 'data/{}/{}_{}_{}_{}.pickle'.format(
-                time_id, env_id, agent_id, no_expert_trajs, i)
-            with open(path, 'wb') as f:
-                pickle.dump(res, f)
-
-            data.setdefault('env_id', []).append(env_id)
-            data.setdefault('agent_id', []).append(agent_id)
-            data.setdefault('no_expert_trajs', []).append(no_expert_trajs)
-
-            data.setdefault('ile', []).append(res['ile'])
-            data.setdefault('l2_loss', []).append(res['l2_loss'])
-            data.setdefault('avg_return', []).append(res['avg_return'])
-
-            data.setdefault('time_id', []).append(time_id)
-            data.setdefault('run_number', []).append(i)
-
-    df = pd.DataFrame(data)
-    path = 'data/{}.csv'.format(time_id)
-    df.to_csv(path)
+from irl_benchmark.experiment.run import Run
+from irl_benchmark.irl.algorithms.appr_irl import ApprIRL
+from irl_benchmark.irl.algorithms.mce_irl import MaxCausalEntIRL
+from irl_benchmark.irl.algorithms.me_irl import MaxEntIRL
+from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
+from irl_benchmark.metrics.avg_traj_return import AverageTrajectoryReturn
+from irl_benchmark.metrics.feature_count_l2 import FeatureCount2Loss
+from irl_benchmark.metrics.feature_count_inf import FeatureCountInfLoss
+from irl_benchmark.rl.algorithms import ValueIteration
 
 
-if __name__ == '__main__':
-    main()
+env_id = 'FrozenLake8x8-v0'
+
+expert_trajs_path = 'data/frozen8/expert'
+
+metrics = [AverageTrajectoryReturn, FeatureCount2Loss, FeatureCountInfLoss]
+
+rl_config = {'gamma': 0.9}
+
+# irl_config = {'gamma': 0.9}
+irl_config = {}
+
+run_config = {
+    'reward_function': FeatureBasedRewardFunction,
+    'no_expert_trajs': 10000,
+    'no_irl_iterations': 2,
+    'no_rl_episodes_per_irl_iteration': 1000,
+    'no_irl_episodes_per_irl_iteration': 5000,
+}
+
+irl_algs = [MaxCausalEntIRL, MaxEntIRL, ApprIRL]
+
+for irl_alg in irl_algs:
+
+    print('RUNNING: ' + str(irl_alg))
+
+    # factory creating new IRL algorithms:
+    def irl_alg_factory(env, expert_trajs, metrics, rl_config, irl_config):
+        # factory defining which RL algorithm is used:
+        def rl_alg_factory(env):
+            return ValueIteration(env, rl_config)
+
+        return irl_alg(env, expert_trajs, rl_alg_factory, metrics, irl_config)
+
+    run = Run(env_id, expert_trajs_path, irl_alg_factory, metrics,
+              rl_config, irl_config, run_config)
+
+    run.start()

@@ -1,3 +1,4 @@
-from .base_algorithm import RLAlgorithm, SLMAlgorithm, RandomAgent
-from .ppo import PPO
-from .tabular_q import TabularQ
+"""Module containing all reinforcement learning algorithms."""
+
+from .value_iteration import ValueIteration
+from .random_agent import RandomAgent
