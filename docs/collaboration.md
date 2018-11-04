@@ -1,4 +1,0 @@
-# Collaboration guide
-
-
-
