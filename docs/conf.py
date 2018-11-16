@@ -16,6 +16,8 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../irl_benchmark'))
 
+autodoc_mock_imports = ["numpy", "torch", "gym", "cvxpy", "msgpack_python", "msgpack_numpy", "tqdm", "comet_ml"]
+
 
 # -- Project information -----------------------------------------------------
 
