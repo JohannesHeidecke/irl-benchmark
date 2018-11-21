@@ -1,20 +1,24 @@
 import gym
 import numpy as np
 
+from irl_benchmark.envs import make_wrapped_env
 from irl_benchmark.irl.collect import collect_trajs
 from irl_benchmark.irl.feature.feature_wrapper import make as feature_make
 from irl_benchmark.irl.reward.reward_function import TabularRewardFunction, FeatureBasedRewardFunction
-from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.irl.reward.truth import make_true_reward
 from irl_benchmark.rl.algorithms.value_iteration import ValueIteration
 
 
 def test_tabular_function():
-    env = gym.make('FrozenLake8x8-v0')
-    params = np.zeros(64)
-    params[-1] = 1.
-    rf = TabularRewardFunction(env, params)
-    env = RewardWrapper(env, rf)
+    def reward_function_factory(env):
+        params = np.zeros(64)
+        params[-1] = 1.
+        return TabularRewardFunction(env, params)
+
+    env = make_wrapped_env(
+        'FrozenLake8x8-v0',
+        reward_function_factory=reward_function_factory,
+        with_model_wrapper=True)
     agent = ValueIteration(env)
     agent.train(1)
     trajs = collect_trajs(env, agent, 10)
@@ -24,11 +28,16 @@ def test_tabular_function():
 
 
 def test_featb_function():
-    env = feature_make('FrozenLake8x8-v0')
-    params = np.zeros(64)
-    params[-1] = 1.
-    rf = FeatureBasedRewardFunction(env, params)
-    env = RewardWrapper(env, rf)
+    def reward_function_factory(env):
+        params = np.zeros(64)
+        params[-1] = 1.
+        return FeatureBasedRewardFunction(env, params)
+
+    env = make_wrapped_env(
+        'FrozenLake8x8-v0',
+        with_feature_wrapper=True,
+        reward_function_factory=reward_function_factory,
+        with_model_wrapper=True)
     agent = ValueIteration(env)
     agent.train(1)
     trajs = collect_trajs(env, agent, 10)

@@ -21,8 +21,10 @@ class BaseMetric(ABC):
         assert 'env' in metric_input.keys()
         assert 'expert_trajs' in metric_input.keys()
         assert 'true_reward' in metric_input.keys()
+        assert 'no_trajs_for_metrics' in metric_input.keys()
         self.metric_input = metric_input
         self.env = metric_input['env']
+        self.no_trajs = metric_input['no_trajs_for_metrics']
 
     @abstractmethod
     def evaluate(self, evaluation_input: dict = None) -> float:
@@ -56,7 +58,7 @@ class BaseMetric(ABC):
         if not 'irl_trajs' in evaluation_input:
             print('generating new trajs for metrics')
             evaluation_input['irl_trajs'] = collect_trajs(
-                self.env, evaluation_input['irl_agent'], 100)
+                self.env, evaluation_input['irl_agent'], self.no_trajs)
         else:
             print('reuse generated trajs for metric')
         return evaluation_input['irl_trajs']

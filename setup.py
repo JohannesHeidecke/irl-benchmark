@@ -2,11 +2,11 @@ from setuptools import setup
 
 setup(
     name='irl-benchmark',
-    version='0.1.0',
+    version='0.1.1dev',
     packages=['irl_benchmark', 'irl_benchmark.rl', 'irl_benchmark.rl.algorithms', 'irl_benchmark.irl',
               'irl_benchmark.irl.reward', 'irl_benchmark.irl.collect', 'irl_benchmark.irl.feature',
               'irl_benchmark.irl.algorithms', 'irl_benchmark.utils', 'irl_benchmark.config', 'irl_benchmark.metrics',
-              'irl_benchmark.experiment'],
+              'irl_benchmark.experiment', 'irl_benchmark.envs'],
     url='https://github.com/JohannesHeidecke/irl-benchmark',
     license='LICENSE',
     author='Anton Osika, Adria Garriga-Alonso, Johannes Heidecke, Max Daniel, Sayan Sarkar',
@@ -23,6 +23,8 @@ setup(
         'msgpack_numpy>=0.4.4.1',
         'torch>=0.4.0',
         'tqdm>=4.28.1',
+        'sparse>=0.5.0',
+        'pathfinding>=0.0.2',
     ],
     test_suite='nose.collector',
     tests_require=['nose'],

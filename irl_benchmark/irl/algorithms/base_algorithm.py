@@ -5,11 +5,13 @@ from typing import Callable, Dict, List, Tuple, Union
 import gym
 import numpy as np
 
-from irl_benchmark.config import preprocess_config, IRL_CONFIG_DOMAINS
+from irl_benchmark.config import preprocess_config, IRL_CONFIG_DOMAINS, IRL_ALG_REQUIREMENTS
+from irl_benchmark.irl.feature.feature_wrapper import FeatureWrapper
 from irl_benchmark.irl.reward.reward_function import BaseRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.metrics.base_metric import BaseMetric
 from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
+from irl_benchmark.rl.model.model_wrapper import BaseWorldModelWrapper
 from irl_benchmark.utils.wrapper import is_unwrappable_to
 import irl_benchmark.utils.irl as irl_utils
 
@@ -43,6 +45,12 @@ class BaseIRLAlgorithm(ABC):
         """
 
         assert is_unwrappable_to(env, RewardWrapper)
+
+        if IRL_ALG_REQUIREMENTS[type(self)]['requires_features']:
+            assert is_unwrappable_to(env, FeatureWrapper)
+        if IRL_ALG_REQUIREMENTS[type(self)]['requires_transitions']:
+            assert is_unwrappable_to(env, BaseWorldModelWrapper)
+
         self.env = env
         self.expert_trajs = expert_trajs
         self.rl_alg_factory = rl_alg_factory
@@ -79,6 +87,13 @@ class BaseIRLAlgorithm(ABC):
         raise NotImplementedError()
 
     def evaluate_metrics(self, evaluation_input: dict):
+        """ Evaluate all metrics in self.metrics. To be called at the end
+        of each IRL iteration.
+
+        Parameters
+        ----------
+        evaluation_input: specific metric input.
+        """
         for metric in self.metrics:
             result = metric.evaluate(evaluation_input)
             self.metric_results.append(result)
