@@ -44,6 +44,7 @@ def frozen_lake_8_8(env):
 
 @_register_reward_function('MazeWorld0-v0')
 def maze_world_0(env):
-    parameters = np.array([REWARD_MOVE, REWARD_SMALL, REWARD_MEDIUM, REWARD_LARGE])
+    parameters = np.array(
+        [REWARD_MOVE, REWARD_SMALL, REWARD_MEDIUM, REWARD_LARGE])
     print('Create env for true reward function')
     return FeatureBasedRewardFunction(env, parameters, action_in_domain=True)

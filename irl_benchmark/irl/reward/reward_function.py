@@ -236,6 +236,22 @@ class TabularRewardFunction(BaseRewardFunction):
         indices = self.domain_to_index(domain_batch)
         return self.parameters[indices]
 
+    def domain_sample(self, batch_size: int
+                      ) -> Union[State, StateAction, StateActionState]:
+        """Return a batch sampled from the domain of size batch_size.
+
+        Parameters
+        ----------
+        batch_size: int
+            The size of the batch.
+
+        Returns
+        -------
+        Union[State, StateAction, StateActionState]
+            A batch sampled from the domain of the reward function.
+        """
+        raise NotImplementedError()
+
 
 class FeatureBasedRewardFunction(BaseRewardFunction):
     """A reward function which is linear in some provided features.
@@ -350,13 +366,32 @@ class FeatureBasedRewardFunction(BaseRewardFunction):
         for i in range(n_inputs):
 
             if state is not None:
-                feat_in_state = state[i] if len(state.shape) == 1 else state[i, :]
+                feat_in_state = state[i] if len(
+                    state.shape) == 1 else state[i, :]
             else:
                 feat_in_state = None
             feat_in_action = action[i] if action is not None else None
-            feat_in_next_state = next_state[i] if next_state is not None else None
+            feat_in_next_state = next_state[
+                i] if next_state is not None else None
 
-            features = feature_wrapper.features(feat_in_state, feat_in_action, feat_in_next_state)
-                
+            features = feature_wrapper.features(feat_in_state, feat_in_action,
+                                                feat_in_next_state)
+
             feature_array.append(features.reshape(-1))
-        return np.array(feature_array)  #np.concatenate(feature_array, axis=0)
+        return np.array(feature_array)
+
+    def domain_sample(self, batch_size: int
+                      ) -> Union[State, StateAction, StateActionState]:
+        """Return a batch sampled from the domain of size batch_size.
+
+        Parameters
+        ----------
+        batch_size: int
+            The size of the batch.
+
+        Returns
+        -------
+        Union[State, StateAction, StateActionState]
+            A batch sampled from the domain of the reward function.
+        """
+        raise NotImplementedError()

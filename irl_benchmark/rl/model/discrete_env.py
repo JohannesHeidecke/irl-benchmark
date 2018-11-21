@@ -18,6 +18,10 @@ class DiscreteEnvModelWrapper(BaseWorldModelWrapper):
         assert np.isscalar(state)
         return state
 
+    def index_to_state(self, index):
+        assert np.isscalar(index)
+        return index
+
     def get_transition_array(self):
         env = unwrap_env(self.env, DiscreteEnv)
 

@@ -8,12 +8,11 @@ import numpy as np
 from irl_benchmark.config import IRL_CONFIG_DOMAINS, IRL_ALG_REQUIREMENTS
 from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
 from irl_benchmark.irl.feature.feature_wrapper import FeatureWrapper
-from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.metrics.base_metric import BaseMetric
 from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
 from irl_benchmark.rl.model.model_wrapper import BaseWorldModelWrapper
-from irl_benchmark.utils.wrapper import is_unwrappable_to, unwrap_env
+from irl_benchmark.utils.wrapper import unwrap_env
 
 
 class MaxEntIRL(BaseIRLAlgorithm):

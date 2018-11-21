@@ -28,7 +28,7 @@ class FeatureWrapper(gym.Wrapper):
         super(FeatureWrapper, self).__init__(env)
         self.current_state = None
 
-    def reset(self):  # pylint: disable=E0202, R0801
+    def reset(self, **kwargs):  # pylint: disable=method-hidden, R0801
         """ Reset environment and return initial state.
         No changes to base class reset function."""
         self.current_state = self.env.reset()
@@ -92,14 +92,11 @@ class FeatureWrapper(gym.Wrapper):
             The features in a numpy array of shape (1, d), where d is the
             dimensionality of the feature space (see :meth:`.feature_dimensionality`).
         """
-        # TODO: should each implementation check if dimensionality and range is not violated?
         raise NotImplementedError()
 
     @abstractmethod
     def feature_dimensionality(self) -> tuple:
         """Get the dimensionality of the feature space."""
-        # TODO: docstring: why tuple and not int?
-        # TODO: write tests to see if returned features are of this shape.
         raise NotImplementedError()
 
     @abstractmethod
@@ -137,29 +134,41 @@ class FrozenLakeFeatureWrapper(FeatureWrapper):
     such that feature-based IRL algorithms can be used in a tabular setting.
     """
 
-    def features(self, current_state, action, next_state):
-        # TODO docstring with types
+    def features(self, current_state: None, action: None,
+                 next_state: int) -> np.ndarray:
+        """Return features to be saved in step method's info dictionary.
+        One-hot encoding the next state.
+
+        Parameters
+        ----------
+        current_state: None
+        action: None
+        next_state: int
+            The next state.
+
+        Returns
+        -------
+        np.ndarray
+            The features in a numpy array.
+        """
         assert next_state is not None
         if isinstance(next_state, (int, np.int64)):
-            return to_one_hot(next_state,
-                              self.env.observation_space.n).reshape((1, -1))
+            return to_one_hot(next_state, self.env.observation_space.n)
         elif isinstance(next_state, np.ndarray):
             return to_one_hot(next_state, self.env.observation_space.n)
         else:
             raise NotImplementedError()
 
-    def feature_dimensionality(self):
-        '''Return dimension of the one-hot vectors used as features.'''
-        # TODO docstring with types
+    def feature_dimensionality(self) -> Tuple:
+        """Return dimension of the one-hot vectors used as features."""
         return (self.env.observation_space.n, )
 
     def feature_range(self):
-        # TODO: change docstring, use feature_dimensionality / dims
-        '''Get maximum and minimum values of all k features.
+        """Get maximum and minimum values of all k features.
 
         Returns:
         `np.ndarray` of shape (2, k) w/ max in 1st and min in 2nd row.
-        '''
+        """
         ranges = np.zeros((2, self.feature_dimensionality()[0]))
         ranges[1, :] = 1.0
         return ranges
@@ -172,13 +181,15 @@ class FrozenLakeFeatureWrapper(FeatureWrapper):
 
 
 class MazeWorldFeatureWrapper(FeatureWrapper):
-    def features(self, current_state: Union[np.ndarray, int, float],
-                 action: Union[np.ndarray, int, float],
-                 next_state: Union[np.ndarray, int, float]) -> np.ndarray:
-        """Return features to be saved in step method's info dictionary."""
 
-        # TODO: describe features to be returned.
-        # TODO: update types in signature (no ints, floats)
+    def features(self, current_state: np.ndarray, action: int,
+                 next_state: None) -> np.ndarray:
+        """Return features to be saved in step method's info dictionary.
+
+        There are four feature variables: expected walking distance,
+        probability of reaching a small reward field, probability of reaching
+        a medium reward field, probability of reaching a large reward field.
+        Only one of the last three values will be non-zero."""
 
         maze_env = unwrap_env(self.env, MazeWorld)
 
@@ -203,7 +214,8 @@ class MazeWorldFeatureWrapper(FeatureWrapper):
         else:
             # calculate expected walking distance feature:
             possible_distances = np.arange(1, path_len)
-            prob_getting_to_distance = (1 - RANDOM_QUIT_CHANCE) **possible_distances
+            prob_getting_to_distance = (
+                1 - RANDOM_QUIT_CHANCE)**possible_distances
             prob_stopping_at_distance = np.ones_like(
                 possible_distances, dtype=np.float32)
             prob_stopping_at_distance[:-1] = RANDOM_QUIT_CHANCE
@@ -216,17 +228,47 @@ class MazeWorldFeatureWrapper(FeatureWrapper):
         rew_value = maze_env.get_rew_value(current_state, action)
         if rew_value != 0.:
             assert rew_value in [REWARD_SMALL, REWARD_MEDIUM, REWARD_LARGE]
-            rew_value_index = [REWARD_SMALL, REWARD_MEDIUM, REWARD_LARGE].index(rew_value)
+            rew_value_index = [REWARD_SMALL, REWARD_MEDIUM,
+                               REWARD_LARGE].index(rew_value)
             if path_len == 1:
                 ccps[rew_value_index] = (1 - RANDOM_QUIT_CHANCE)
             else:
-                ccps[rew_value_index] = (1 - RANDOM_QUIT_CHANCE) **(path_len - 1)
+                ccps[rew_value_index] = (1 - RANDOM_QUIT_CHANCE)**(
+                    path_len - 1)
 
         return np.concatenate((np.array([expected_walking_distance]), ccps))
 
     def feature_dimensionality(self):
-        '''Return dimension of the one-hot vectors used as features.'''
+        """Return dimension of the one-hot vectors used as features."""
         return (4, )
+
+    def feature_range(self):
+        """Return minimum and maximum values of features.
+        Max is set to an arbitrary high value."""
+        return np.array([[0, 0, 0, 0], [1e3] * 4])
+
+    def feature_array(self) -> np.ndarray:
+        """ Get features for the entire domain as an array.
+        Has to be overwritten in each feature wrapper.
+        Wrappers for large environments will not implement this method.
+
+        Returns
+        -------
+        np.ndarray
+            The features for the entire domain as an array.
+            Shape: (domain_size, d).
+        """
+        maze_world = unwrap_env(self.env, MazeWorld)
+        num_rewards = maze_world.num_rewards
+        n_states = num_rewards * 2 ** num_rewards
+        feature_array = np.zeros((n_states, num_rewards, 4))
+        for s in range(n_states):
+            for a in range(num_rewards):
+                state = maze_world.index_to_state(s)
+                feature = self.features(state, a, None)
+                feature_array[s, a, :] = feature
+        return feature_array
+
 
 
 # # # # # #
@@ -302,7 +344,8 @@ def maze_world_0(env: gym.Env):
     """Register MazeWorld0 (10 rewards) feature wrapper."""
     return MazeWorldFeatureWrapper(env)
 
+
 @_register_feature_wrapper('MazeWorld1-v0')
-def maze_world_0(env: gym.Env):
+def maze_world_1(env: gym.Env):
     """Register MazeWorld1 (10 rewards) feature wrapper."""
     return MazeWorldFeatureWrapper(env)

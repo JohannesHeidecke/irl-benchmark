@@ -57,13 +57,13 @@ MAP1 = [
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 
-def get_maps(MAP: List[str]) -> (np.ndarray, np.ndarray):
-    """Transform an ASCII-map into matrices of walls and rewards
+def get_maps(ascii_map: List[str]) -> (np.ndarray, np.ndarray):
+    """Transform an ASCII-ascii_map into matrices of walls and rewards
 
     Parameters
     ----------
-    MAP: : List[str]
-        A list of strings where each entry describes one row of the map.
+    ascii_map: : List[str]
+        A list of strings where each entry describes one row of the ascii_map.
 
     Returns
     -------
@@ -72,9 +72,9 @@ def get_maps(MAP: List[str]) -> (np.ndarray, np.ndarray):
         Walls will be indicated by the value 1.0 in the first returned array.
         Rewards will be indicated by non-zero values according to their value.
     """
-    map_walls = np.zeros((len(MAP), len(MAP[0])))
-    map_rewards = np.zeros((len(MAP), len(MAP[0])))
-    for r, row in enumerate(MAP):
+    map_walls = np.zeros((len(ascii_map), len(ascii_map[0])))
+    map_rewards = np.zeros((len(ascii_map), len(ascii_map[0])))
+    for r, row in enumerate(ascii_map):
         for c, char in enumerate(row):
             if char == CHAR_WALL:
                 map_walls[r, c] = 1.0
@@ -144,18 +144,18 @@ class MazeWorld(gym.Env):
     short distances and collecting big rewards as early as possible.
     """
 
-    def __init__(self, map: int = 0):
+    def __init__(self, map_id: int = 0):
         """
 
         Parameters
         ----------
-        map: int
+        map_id: int
             Which version of the game to play. Legal values are 0 and 1. Default is 0.
             Corresponds to the hard-coded maps MAP0 and MAP1 defined in the same module.
         """
-        if map == 0:
+        if map_id == 0:
             used_map = MAP0
-        elif map == 1:
+        elif map_id == 1:
             used_map = MAP1
         # if adding more values here, also adapt docstring above.
         else:
@@ -166,7 +166,7 @@ class MazeWorld(gym.Env):
         self.rews_where = np.where(self.map_rewards > 0)
         # get list of coordinates for reward fields:
         self.rew_coords = get_rew_coords(self.map_rewards)
-        # get number of rewards in map:
+        # get number of rewards in map_id:
         self.num_rewards = len(self.rews_where[0])
 
         # calculate all possible paths, using the 'pathfinding' library.
@@ -327,6 +327,6 @@ class MazeWorld(gym.Env):
         index = pos_index * (2**num_rewards) + rew_dec
         return int(index)
 
-    def render(self):
+    def render(self, mode='human'):
         """Not implemented for MazeWorld."""
         raise NotImplementedError()

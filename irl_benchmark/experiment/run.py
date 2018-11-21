@@ -46,8 +46,13 @@ class Run:
 
         action_in_domain = env_id in ENV_IDS_ACTION_IN_DOMAIN
         next_state_in_domain = env_id in ENV_IDS_NEXT_STATE_IN_DOMAIN
+
         def reward_function_factory(env):
-            return run_config['reward_function'](env, parameters='random', action_in_domain=action_in_domain, next_state_in_domain=next_state_in_domain)
+            return run_config['reward_function'](
+                env,
+                parameters='random',
+                action_in_domain=action_in_domain,
+                next_state_in_domain=next_state_in_domain)
 
         print('Making run environment.')
         self.env = make_wrapped_env(

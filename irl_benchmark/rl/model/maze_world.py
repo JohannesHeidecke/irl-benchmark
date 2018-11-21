@@ -100,8 +100,10 @@ class MazeModelWrapper(BaseWorldModelWrapper):
                 state = self.index_to_state(s)
 
                 if return_rewards and reward_wrapper is not None:
-                    rew_input = reward_wrapper.get_reward_input_for(state, a, None)
-                    wrapped_reward = reward_wrapper.reward_function.reward(rew_input).item()
+                    rew_input = reward_wrapper.get_reward_input_for(
+                        state, a, None)
+                    wrapped_reward = reward_wrapper.reward_function.reward(
+                        rew_input).item()
 
                 if np.sum(state[num_rewards:]) == 0:
                     if return_transitions:
@@ -126,9 +128,9 @@ class MazeModelWrapper(BaseWorldModelWrapper):
                             rewards[s, a] = REWARD_MOVE
                             if state[num_rewards + a] != 0:
                                 rews_where = self.maze_env.rews_where
-                                rewards[s, a] += float(self.maze_env.
-                                        map_rewards[rews_where[0][a], rews_where[1][a]]) \
-                                        * (1 - RANDOM_QUIT_CHANCE)
+                                rewards[s, a] += float(
+                                    self.maze_env.map_rewards[rews_where[0][a], \
+                                    rews_where[1][a]]) * (1 - RANDOM_QUIT_CHANCE)
                         else:
                             if reward_wrapper is None:
                                 rewards[s, a] = 0
@@ -150,12 +152,12 @@ class MazeModelWrapper(BaseWorldModelWrapper):
                             rew_value = 0
                         else:
                             rews_where = self.maze_env.rews_where
-                            rew_value = float(
-                                self.maze_env.
-                                map_rewards[rews_where[0][a], rews_where[1][a]])
+                            rew_value = float(self.maze_env.map_rewards[
+                                rews_where[0][a], rews_where[1][a]])
 
                         possible_distances = np.arange(1, len(path))
-                        prob_getting_to_distance = (1 - RANDOM_QUIT_CHANCE) ** possible_distances
+                        prob_getting_to_distance = (
+                            1 - RANDOM_QUIT_CHANCE)**possible_distances
                         prob_stopping_at_distance = np.ones_like(
                             possible_distances, dtype=np.float32)
                         prob_stopping_at_distance[:-1] = RANDOM_QUIT_CHANCE
@@ -172,7 +174,7 @@ class MazeModelWrapper(BaseWorldModelWrapper):
             if return_transitions:
                 add_transition(absorbing_s, a, absorbing_s, 1.)
             if return_rewards:
-                rewards[s, a] = 0
+                rewards[absorbing_s, a] = 0
 
         if return_transitions:
             coords = np.array([

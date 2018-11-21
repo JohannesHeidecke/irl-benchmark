@@ -30,11 +30,13 @@ class RewardWrapper(gym.Wrapper):
         self.reward_function = reward_function
         self.current_state = None
 
-    def reset(self):
+    # pylint: disable=method-hidden
+    def reset(self, **kwargs): 
         """Call base class reset method and return initial state."""
         self.current_state = self.env.reset()
         return self.current_state
 
+    # pylint: disable=method-hidden
     def step(self, action: Union[np.ndarray, int, float]
              ) -> Tuple[Union[np.ndarray, float, int], float, bool, dict]:
         """Call base class step method but replace reward with reward output by reward function.
@@ -103,7 +105,8 @@ class RewardWrapper(gym.Wrapper):
         if self.reward_function.action_in_domain:
             if self.reward_function.next_state_in_domain:
                 return StateActionState(
-                    np.array([state]), np.array([action]), np.array([next_state]))
+                    np.array([state]), np.array([action]),
+                    np.array([next_state]))
             else:
                 return StateAction(np.array([state]), np.array([action]))
         else:

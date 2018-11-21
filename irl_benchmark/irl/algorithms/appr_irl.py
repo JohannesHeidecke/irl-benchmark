@@ -8,7 +8,7 @@ import numpy as np
 from irl_benchmark.config import IRL_CONFIG_DOMAINS, IRL_ALG_REQUIREMENTS
 from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
 from irl_benchmark.irl.collect import collect_trajs
-from irl_benchmark.irl.reward.reward_function import BaseRewardFunction, FeatureBasedRewardFunction
+from irl_benchmark.irl.reward.reward_function import BaseRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.metrics.base_metric import BaseMetric
 from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
@@ -184,7 +184,6 @@ class ApprIRL(BaseIRLAlgorithm):
             print(reward_coefficients)
             # update reward function
             reward_wrapper = unwrap_env(self.env, RewardWrapper)
-            # TODO: tests for update reward parameters.
             reward_wrapper.update_reward_parameters(reward_coefficients)
 
             # check stopping criterion:
