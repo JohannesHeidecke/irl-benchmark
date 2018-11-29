@@ -1,4 +1,20 @@
+import os
+import sys
+
 from setuptools import setup
+from setuptools.command.test import test as TestCommand
+
+class PyTest(TestCommand):
+    user_options = [('pytest-args=', 'a', 'Arguments to pass to py.test')]
+
+    def initialize_options(self):
+        TestCommand.initialize_options(self)
+        self.pytest_args = ['--cov=irl_benchmark', '--cov-report=html', '--cov-report=term', '--cov-report=xml']
+
+    def run_tests(self):
+        import pytest
+        errno = pytest.main(self.pytest_args)
+        sys.exit(errno)
 
 setup(
     name='irl-benchmark',
@@ -26,7 +42,7 @@ setup(
         'sparse>=0.5.0',
         'pathfinding>=0.0.2',
     ],
-    test_suite='nose.collector',
-    tests_require=['nose'],
+    test_suite='test',
+    cmdclass={'test': PyTest},
     include_package_data=True
 )
