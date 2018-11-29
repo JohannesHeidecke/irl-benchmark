@@ -366,8 +366,7 @@ class FeatureBasedRewardFunction(BaseRewardFunction):
         for i in range(n_inputs):
 
             if state is not None:
-                feat_in_state = state[i] if len(
-                    state.shape) == 1 else state[i, :]
+                feat_in_state = state[i]
             else:
                 feat_in_state = None
             feat_in_action = action[i] if action is not None else None

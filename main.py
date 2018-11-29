@@ -10,17 +10,15 @@ from irl_benchmark.metrics.feature_count_l2 import FeatureCount2Loss
 from irl_benchmark.metrics.feature_count_inf import FeatureCountInfLoss
 from irl_benchmark.rl.algorithms import ValueIteration
 
-
 env_id = 'MazeWorld0-v0'
 # env_id = 'FrozenLake-v0'
 
 expert_trajs_path = 'data/maze0/expert_argmax'
 # expert_trajs_path = 'data/frozen/expert'
 
-
 metrics = [AverageTrajectoryReturn, FeatureCount2Loss, FeatureCountInfLoss]
 
-rl_config = {'gamma': 1.0} #, 'temperature': .5}
+rl_config = {'gamma': 1.0}  #, 'temperature': .5}
 
 irl_config = {'gamma': 1.0}
 
@@ -33,7 +31,7 @@ run_config = {
     'no_metric_episodes_per_irl_iteration': 10000,
 }
 
-irl_algs = [ApprIRL] #[MaxCausalEntIRL, MaxEntIRL, ApprIRL]
+irl_algs = [ApprIRL]  #[MaxCausalEntIRL, MaxEntIRL, ApprIRL]
 
 rl_alg = ValueIteration
 
@@ -42,7 +40,6 @@ for irl_alg in irl_algs:
         assert env_id in envs_feature_based()
     if IRL_ALG_REQUIREMENTS[irl_alg]['requires_transitions']:
         assert env_id in envs_known_transitions()
-
 
 for irl_alg in irl_algs:
 
@@ -54,12 +51,15 @@ for irl_alg in irl_algs:
 
         return irl_alg(env, expert_trajs, rl_alg_factory, metrics, irl_config)
 
-    run_config['requires_features'] = IRL_ALG_REQUIREMENTS[irl_alg]['requires_features']
-    run_config['requires_transitions'] = IRL_ALG_REQUIREMENTS[irl_alg]['requires_transitions'] or RL_ALG_REQUIREMENTS[rl_alg]['requires_transitions']
+    run_config['requires_features'] = IRL_ALG_REQUIREMENTS[irl_alg][
+        'requires_features']
+    run_config['requires_transitions'] = IRL_ALG_REQUIREMENTS[irl_alg][
+        'requires_transitions'] or RL_ALG_REQUIREMENTS[rl_alg][
+            'requires_transitions']
 
     print('RUNNING: ' + str(irl_alg))
 
-    run = Run(env_id, expert_trajs_path, irl_alg_factory, metrics,
-              rl_config, irl_config, run_config)
+    run = Run(env_id, expert_trajs_path, irl_alg_factory, metrics, rl_config,
+              irl_config, run_config)
 
     run.start()
