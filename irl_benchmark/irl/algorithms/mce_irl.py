@@ -117,16 +117,10 @@ class MaxCausalEntIRL(BaseIRLAlgorithm):
 
         sa_visit_count, P0 = self.sa_visitations()
 
-        # mean_s_visit_count = np.sum(sa_visit_count, 1) / len(self.expert_trajs)
-
         # calculate feature expectations
         expert_feature_count = self.feature_count(self.expert_trajs, gamma=1.0)
 
-        # mean_feature_count = np.dot(self.feat_map.T, expert_feature_count )
-
         # initialize the parameters
-        # theta = np.random.rand(self.feat_map.shape[1])
-
         reward_function = FeatureBasedRewardFunction(self.env, 'random')
         theta = reward_function.parameters
 
@@ -149,9 +143,6 @@ class MaxCausalEntIRL(BaseIRLAlgorithm):
             policy = agent.policy_array()
             state_values = agent.state_values
             q_values = agent.q_values
-
-            # Log-Likelihood
-            # l = np.sum(sa_visit_count * (q_values - state_values.T))  # check: broadcasting works as intended or not
 
             # occupancy measure
             d = self.occupancy_measure(

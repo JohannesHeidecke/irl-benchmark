@@ -11,10 +11,8 @@ from irl_benchmark.metrics.feature_count_inf import FeatureCountInfLoss
 from irl_benchmark.rl.algorithms import ValueIteration
 
 env_id = 'MazeWorld0-v0'
-# env_id = 'FrozenLake-v0'
 
-expert_trajs_path = 'data/maze0/expert_argmax'
-# expert_trajs_path = 'data/frozen/expert'
+expert_trajs_path = 'data/maze0/expert_human'
 
 metrics = [AverageTrajectoryReturn, FeatureCount2Loss, FeatureCountInfLoss]
 
@@ -24,7 +22,7 @@ irl_config = {'gamma': 1.0}
 
 run_config = {
     'reward_function': FeatureBasedRewardFunction,
-    'no_expert_trajs': 100000,
+    'no_expert_trajs': 425,
     'no_irl_iterations': 200,
     'no_rl_episodes_per_irl_iteration': 1000,
     'no_irl_episodes_per_irl_iteration': 10000,

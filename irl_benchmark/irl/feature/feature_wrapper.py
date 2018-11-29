@@ -179,7 +179,6 @@ class FrozenLakeFeatureWrapper(FeatureWrapper):
 
 
 class MazeWorldFeatureWrapper(FeatureWrapper):
-
     def features(self, current_state: np.ndarray, action: int,
                  next_state: None) -> np.ndarray:
         """Return features to be saved in step method's info dictionary.
@@ -258,7 +257,7 @@ class MazeWorldFeatureWrapper(FeatureWrapper):
         """
         maze_world = unwrap_env(self.env, MazeWorld)
         num_rewards = maze_world.num_rewards
-        n_states = num_rewards * 2 ** num_rewards
+        n_states = num_rewards * 2**num_rewards
         feature_array = np.zeros((n_states, num_rewards, 4))
         for s in range(n_states):
             for a in range(num_rewards):

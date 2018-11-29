@@ -110,7 +110,8 @@ class RewardWrapper(gym.Wrapper):
             else:
                 return StateAction(np.array([state]), np.array([action]))
         else:
-            if not self.reward_function.action_in_domain and not self.reward_function.next_state_in_domain:
-                if next_state is not None:
-                    state = next_state
+            if not self.reward_function.action_in_domain \
+                    and not self.reward_function.next_state_in_domain \
+                    and next_state is not None:
+                state = next_state
             return State(np.array([state]))
