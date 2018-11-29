@@ -152,9 +152,7 @@ class FrozenLakeFeatureWrapper(FeatureWrapper):
             The features in a numpy array.
         """
         assert next_state is not None
-        if isinstance(next_state, (int, np.int64)):
-            return to_one_hot(next_state, self.env.observation_space.n)
-        elif isinstance(next_state, np.ndarray):
+        if isinstance(next_state, (int, np.int64, np.ndarray)):
             return to_one_hot(next_state, self.env.observation_space.n)
         else:
             raise NotImplementedError()
@@ -268,7 +266,6 @@ class MazeWorldFeatureWrapper(FeatureWrapper):
                 feature = self.features(state, a, None)
                 feature_array[s, a, :] = feature
         return feature_array
-
 
 
 # # # # # #

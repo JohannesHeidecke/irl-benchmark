@@ -132,10 +132,7 @@ class MazeModelWrapper(BaseWorldModelWrapper):
                                     self.maze_env.map_rewards[rews_where[0][a], \
                                     rews_where[1][a]]) * (1 - RANDOM_QUIT_CHANCE)
                         else:
-                            if reward_wrapper is None:
-                                rewards[s, a] = 0
-                            else:
-                                rewards[s, a] = wrapped_reward
+                            rewards[s, a] = wrapped_reward
                     continue
 
                 success_prob = (1 - RANDOM_QUIT_CHANCE)**(len(path) - 1)

@@ -5,17 +5,18 @@ import gym
 import numpy as np
 import sparse
 
+
 class BaseWorldModelWrapper(gym.Wrapper):
     """The base class for all world model wrappers. A world model wrapper
     provides information about an MDP which are required for model-based
     reinforcement learning methods, such as a matrix of transitions and
     their probabilities."""
 
-    def step(self, action): #pylint: disable=method-hidden
+    def step(self, action):  #pylint: disable=method-hidden
         """No change to step method, use wrapped environment's method."""
         return self.env.step(action)
 
-    def reset(self, **kwargs): #pylint: disable=method-hidden
+    def reset(self, **kwargs):  #pylint: disable=method-hidden
         """No change to reset method, use wrapped environment's method."""
         return self.env.reset(**kwargs)
 

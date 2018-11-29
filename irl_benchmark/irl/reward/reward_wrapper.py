@@ -31,7 +31,7 @@ class RewardWrapper(gym.Wrapper):
         self.current_state = None
 
     # pylint: disable=method-hidden
-    def reset(self, **kwargs): 
+    def reset(self, **kwargs):
         """Call base class reset method and return initial state."""
         self.current_state = self.env.reset()
         return self.current_state
