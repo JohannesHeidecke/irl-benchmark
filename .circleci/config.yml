@@ -32,7 +32,11 @@ jobs:
           command: |
             python3 -m venv venv
             . venv/bin/activate
+            pip install --upgrade pip
+            pip install numpy
             pip install -r requirements.txt
+            pip install -e .
+            pip install pytest
 
       - save_cache:
           paths:
