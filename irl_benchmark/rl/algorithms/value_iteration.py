@@ -4,10 +4,11 @@ from typing import Union
 import gym
 import numpy as np
 
-from irl_benchmark.config import RL_CONFIG_DOMAINS
+from irl_benchmark.envs.maze_world import MazeWorld
+from irl_benchmark.config import RL_CONFIG_DOMAINS, RL_ALG_REQUIREMENTS
 from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
-from irl_benchmark.utils.wrapper import is_unwrappable_to, \
-    get_transition_matrix, get_reward_matrix
+from irl_benchmark.rl.model.model_wrapper import BaseWorldModelWrapper
+from irl_benchmark.utils.wrapper import is_unwrappable_to, unwrap_env
 
 
 class ValueIteration(BaseRLAlgorithm):
@@ -27,11 +28,15 @@ class ValueIteration(BaseRLAlgorithm):
         config: dict
             Configuration of hyperparameters.
         """
-        assert is_unwrappable_to(env, gym.envs.toy_text.discrete.DiscreteEnv)
+        assert is_unwrappable_to(env, BaseWorldModelWrapper)
         super(ValueIteration, self).__init__(env, config)
-        self.no_states = env.observation_space.n + 1  # + 1 for absorbing state
+
+        self.model_wrapper = unwrap_env(env, BaseWorldModelWrapper)
+
+        # +1 for absorbing state
+        self.no_states = self.model_wrapper.n_states() + 1
         self.no_actions = env.action_space.n
-        self.transitions = get_transition_matrix(env)
+        self.transitions = self.model_wrapper.get_transition_array()
         # will be filled in beginning of training:
         self.rewards = None
         # will be filled during training:
@@ -49,10 +54,12 @@ class ValueIteration(BaseRLAlgorithm):
         no_episodes: int
             Not used in this algorithm (since it assumes known transition dynamics)
         """
-        assert is_unwrappable_to(self.env,
-                                 gym.envs.toy_text.discrete.DiscreteEnv)
+        assert is_unwrappable_to(
+            self.env,
+            gym.envs.toy_text.discrete.DiscreteEnv) or is_unwrappable_to(
+                self.env, MazeWorld)
         # extract reward function from env (using wrapped reward function if available):
-        self.rewards = get_reward_matrix(self.env)
+        self.rewards = self.model_wrapper.get_reward_array()
 
         # initialize state values:
         state_values = np.zeros([self.no_states])
@@ -120,6 +127,8 @@ class ValueIteration(BaseRLAlgorithm):
             Action probabilities given the state.
 
         """
+        # convert state to integer using model wrapper:
+        state = self.model_wrapper.state_to_index(state)
         assert self.q_values is not None, "Call train() before calling this method."
         assert np.isscalar(state)
         assert isinstance(state, (int, np.int64))
@@ -225,4 +234,9 @@ RL_CONFIG_DOMAINS[ValueIteration] = {
         'max': float('inf'),
         'default': None
     }
+}
+
+RL_ALG_REQUIREMENTS[ValueIteration] = {
+    'requires_features': True,
+    'requires_transitions': True,
 }

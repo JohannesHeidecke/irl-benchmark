@@ -3,16 +3,16 @@
 from typing import Callable, Dict, List
 
 import gym
-from gym.envs.toy_text.discrete import DiscreteEnv
 import numpy as np
 
-from irl_benchmark.config import IRL_CONFIG_DOMAINS
+from irl_benchmark.config import IRL_CONFIG_DOMAINS, IRL_ALG_REQUIREMENTS
 from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
 from irl_benchmark.irl.feature.feature_wrapper import FeatureWrapper
-from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
+from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.metrics.base_metric import BaseMetric
 from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
-from irl_benchmark.utils.wrapper import get_transition_matrix, is_unwrappable_to, unwrap_env
+from irl_benchmark.rl.model.model_wrapper import BaseWorldModelWrapper
+from irl_benchmark.utils.wrapper import unwrap_env
 
 
 class MaxEntIRL(BaseIRLAlgorithm):
@@ -27,13 +27,11 @@ class MaxEntIRL(BaseIRLAlgorithm):
                  metrics: List[BaseMetric], config: dict):
         """See :class:`irl_benchmark.irl.algorithms.base_algorithm.BaseIRLAlgorithm`."""
 
-        assert is_unwrappable_to(env, DiscreteEnv)
-        assert is_unwrappable_to(env, FeatureWrapper)
-
         super(MaxEntIRL, self).__init__(env, expert_trajs, rl_alg_factory,
                                         metrics, config)
         # get transition matrix (with absorbing state)
-        self.transition_matrix = get_transition_matrix(self.env)
+        self.transition_matrix = unwrap_env(
+            env, BaseWorldModelWrapper).get_transition_array()
         self.n_states, self.n_actions, _ = self.transition_matrix.shape
 
         # get map of features for all states:
@@ -91,9 +89,8 @@ class MaxEntIRL(BaseIRLAlgorithm):
         # start with an agent
         agent = self.rl_alg_factory(self.env)
 
-        reward_function = FeatureBasedRewardFunction(self.env, 'random')
-        self.env.update_reward_function(reward_function)
-        theta = reward_function.parameters
+        reward_wrapper = unwrap_env(self.env, RewardWrapper)
+        theta = reward_wrapper.reward_function.parameters
 
         irl_iteration_counter = 0
         while irl_iteration_counter < no_irl_iterations:
@@ -115,11 +112,11 @@ class MaxEntIRL(BaseIRLAlgorithm):
             # update params
             theta += self.config['lr'] * grad
 
-            reward_function.update_parameters(theta)
+            reward_wrapper.update_reward_parameters(theta)
 
             evaluation_input = {
                 'irl_agent': agent,
-                'irl_reward': reward_function
+                'irl_reward': reward_wrapper.reward_function
             }
             self.evaluate_metrics(evaluation_input)
 
@@ -137,4 +134,9 @@ IRL_CONFIG_DOMAINS[MaxEntIRL] = {
         'min': 0.000001,
         'max': 50
     }
+}
+
+IRL_ALG_REQUIREMENTS[MaxEntIRL] = {
+    'requires_features': True,
+    'requires_transitions': True,
 }

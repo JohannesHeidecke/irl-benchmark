@@ -1,3 +1,7 @@
+
+
+[![CircleCI](https://circleci.com/gh/JohannesHeidecke/irl-benchmark.svg?style=svg)](https://circleci.com/gh/JohannesHeidecke/irl-benchmark)[![Maintainability](https://api.codeclimate.com/v1/badges/f929f0f865714080daf6/maintainability)](https://codeclimate.com/github/JohannesHeidecke/irl-benchmark/maintainability)[![Test Coverage](https://api.codeclimate.com/v1/badges/f929f0f865714080daf6/test_coverage)](https://codeclimate.com/github/JohannesHeidecke/irl-benchmark/test_coverage)
+
 # Introduction
 
 `irl-benchmark` is a modular library for evaluating various **Inverse Reinforcement Learning** algorithms. It provides an extensible platform for experimenting with different environments, algorithms and metrics. 

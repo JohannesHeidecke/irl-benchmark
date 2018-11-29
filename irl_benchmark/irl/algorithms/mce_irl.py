@@ -2,16 +2,17 @@
 from typing import Callable, Dict, List
 
 import gym
-from gym.envs.toy_text.discrete import DiscreteEnv
 import numpy as np
 
-from irl_benchmark.config import IRL_CONFIG_DOMAINS
+from irl_benchmark.config import IRL_CONFIG_DOMAINS, IRL_ALG_REQUIREMENTS
 from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
 from irl_benchmark.irl.feature.feature_wrapper import FeatureWrapper
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
+from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.metrics.base_metric import BaseMetric
 from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
-from irl_benchmark.utils.wrapper import get_transition_matrix, is_unwrappable_to, unwrap_env
+from irl_benchmark.rl.model.model_wrapper import BaseWorldModelWrapper
+from irl_benchmark.utils.wrapper import unwrap_env
 
 
 class MaxCausalEntIRL(BaseIRLAlgorithm):
@@ -20,6 +21,7 @@ class MaxCausalEntIRL(BaseIRLAlgorithm):
     Not to be confused with Maximum Entropy Deep IRL (Wulfmeier et al., 2016)
     or Maximum Causal Entropy IRL (Ziebart et al., 2010).
     """
+
     def __init__(self, env: gym.Env, expert_trajs: List[Dict[str, list]],
                  rl_alg_factory: Callable[[gym.Env], BaseRLAlgorithm],
                  metrics: List[BaseMetric], config: dict):
@@ -27,11 +29,9 @@ class MaxCausalEntIRL(BaseIRLAlgorithm):
         super(MaxCausalEntIRL, self).__init__(env, expert_trajs,
                                               rl_alg_factory, metrics, config)
 
-        assert is_unwrappable_to(env, DiscreteEnv)
-        assert is_unwrappable_to(env, FeatureWrapper)
-
         # get transition matrix (with absorbing state)
-        self.transition_matrix = get_transition_matrix(self.env)
+        self.transition_matrix = unwrap_env(
+            env, BaseWorldModelWrapper).get_transition_array()
         self.n_states, self.n_actions, _ = self.transition_matrix.shape
 
         # get map of features for all states:
@@ -64,7 +64,11 @@ class MaxCausalEntIRL(BaseIRLAlgorithm):
 
         return sa_visit_count, P0
 
-    def occupancy_measure(self, policy, P0, t_max=None, threshold=1e-6):
+    def occupancy_measure(self,
+                          policy,
+                          initial_state_dist,
+                          t_max=None,
+                          threshold=1e-6):
         """
         Computes occupancy measure of a MDP under a given time-constrained policy
         -- the expected discounted number of times that policy π visits state s in
@@ -72,9 +76,9 @@ class MaxCausalEntIRL(BaseIRLAlgorithm):
         http://www.cs.cmu.edu/~bziebart/publications/thesis-bziebart.pdf.
         """
 
-        if P0 is None:
-            P0 = np.ones(self.n_states) / self.n_states
-        d_prev = np.zeros_like(P0)
+        if initial_state_dist is None:
+            initial_state_dist = np.ones(self.n_states) / self.n_states
+        d_prev = np.zeros_like(initial_state_dist)
 
         t = 0
 
@@ -82,7 +86,7 @@ class MaxCausalEntIRL(BaseIRLAlgorithm):
 
         while diff > threshold:
 
-            d = np.copy(P0)
+            d = np.copy(initial_state_dist)
 
             for state in range(self.n_states):
                 for action in range(self.n_actions):
@@ -113,16 +117,10 @@ class MaxCausalEntIRL(BaseIRLAlgorithm):
 
         sa_visit_count, P0 = self.sa_visitations()
 
-        # mean_s_visit_count = np.sum(sa_visit_count, 1) / len(self.expert_trajs)
-
         # calculate feature expectations
         expert_feature_count = self.feature_count(self.expert_trajs, gamma=1.0)
 
-        # mean_feature_count = np.dot(self.feat_map.T, expert_feature_count )
-
         # initialize the parameters
-        # theta = np.random.rand(self.feat_map.shape[1])
-
         reward_function = FeatureBasedRewardFunction(self.env, 'random')
         theta = reward_function.parameters
 
@@ -136,9 +134,8 @@ class MaxCausalEntIRL(BaseIRLAlgorithm):
             if self.config['verbose']:
                 print('IRL ITERATION ' + str(irl_iteration_counter))
 
-            reward_function_estimate = FeatureBasedRewardFunction(
-                self.env, theta)
-            self.env.update_reward_function(reward_function_estimate)
+            reward_wrapper = unwrap_env(self.env, RewardWrapper)
+            reward_wrapper.update_reward_parameters(theta)
 
             # compute policy
             agent.train(no_rl_episodes_per_irl_iteration)
@@ -147,11 +144,9 @@ class MaxCausalEntIRL(BaseIRLAlgorithm):
             state_values = agent.state_values
             q_values = agent.q_values
 
-            # Log-Likelihood
-            # l = np.sum(sa_visit_count * (q_values - state_values.T))  # check: broadcasting works as intended or not
-
             # occupancy measure
-            d = self.occupancy_measure(policy=policy, P0=P0)[:-1]
+            d = self.occupancy_measure(
+                policy=policy, initial_state_dist=P0)[:-1]
 
             # log-likeilihood gradient
             grad = -(expert_feature_count - np.dot(self.feat_map.T, d))
@@ -185,4 +180,9 @@ IRL_CONFIG_DOMAINS[MaxCausalEntIRL] = {
         'min': 0.000001,
         'max': 50
     }
+}
+
+IRL_ALG_REQUIREMENTS[MaxCausalEntIRL] = {
+    'requires_features': True,
+    'requires_transitions': True,
 }

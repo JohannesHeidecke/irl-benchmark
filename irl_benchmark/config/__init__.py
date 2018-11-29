@@ -12,6 +12,17 @@ IRL_CONFIG_DOMAINS = {}
 # To be extended in each specific RL algorithm implementation:
 RL_CONFIG_DOMAINS = {}
 
+# A dictionary containing IRL-algorithm specific requirements.
+# requires_features: True / False
+# requires_transitions: True / False
+# To be extended in each specific RL algorithm implementation.
+IRL_ALG_REQUIREMENTS = {}
+
+# A dictionary containing RL-algorithm specific requirements.
+# requires_transitions: True / False
+# To be extended in each specific RL algorithm implementation.
+RL_ALG_REQUIREMENTS = {}
+
 
 def preprocess_config(config_for: object, domains: dict, config: dict) -> dict:
     """ Pre-processes a config dictionary.

@@ -34,8 +34,12 @@ def feature_count(env, trajs: List[Dict[str, list]],
     assert is_unwrappable_to(env, FeatureWrapper)
 
     # Initialize feature count sum to zeros of correct shape:
-    feature_count_sum = np.zeros(
-        unwrap_env(env, FeatureWrapper).feature_shape())
+    feature_dim = unwrap_env(env, FeatureWrapper).feature_dimensionality()
+    # feature_dim is a 1-tuple,
+    # extract the feature dimensionality as integer:
+    assert len(feature_dim) == 1
+    feature_dim = feature_dim[0]
+    feature_count_sum = np.zeros(feature_dim)
 
     for traj in trajs:
         assert traj['features']  # empty lists are False in python
@@ -44,7 +48,9 @@ def feature_count(env, trajs: List[Dict[str, list]],
         # where l is length of the trajectory:
         gammas = gamma**np.arange(len(traj['features']))
         traj_feature_count = np.sum(
-            gammas.reshape(-1, 1) * np.array(traj['features']), axis=0)
+            gammas.reshape(-1, 1) * np.array(traj['features']).reshape(
+                (-1, feature_dim)),
+            axis=0)
         # add trajectory's feature count:
         feature_count_sum += traj_feature_count
     # divide feature_count_sum by number of trajectories to normalize:

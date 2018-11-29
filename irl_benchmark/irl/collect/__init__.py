@@ -14,6 +14,8 @@ from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
 m.patch()
 
 
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-locals
 def collect_trajs(env: gym.Env,
                   agent: BaseRLAlgorithm,
                   no_trajectories: int,
@@ -70,7 +72,7 @@ def collect_trajs(env: gym.Env,
 
         # if no max steps are specified,
         # check if there is a default provided by the environment:
-        if env.spec.max_episode_steps is not None:
+        if env.spec is not None and env.spec.max_episode_steps is not None:
             assert isinstance(env.spec.max_episode_steps, int)
             if max_steps_per_episode is None:
                 max_steps_per_episode = env.spec.max_episode_steps

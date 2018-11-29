@@ -12,7 +12,9 @@ from irl_benchmark.irl.reward.reward_function import BaseRewardFunction, \
 
 
 class RewardWrapper(gym.Wrapper):
-    """Use a given reward function instead of the true reward provided by the environment"""
+    """Use a given reward function instead of the true reward provided by the environment.
+    This is similar to gym.RewardWrapper, but in addition the true reward is stored to the
+    info dictionary (fourth return value of step method) with key 'true_reward'."""
 
     def __init__(self, env: gym.Env, reward_function: BaseRewardFunction):
         """
@@ -28,12 +30,13 @@ class RewardWrapper(gym.Wrapper):
         self.reward_function = reward_function
         self.current_state = None
 
+    # pylint: disable=method-hidden
     def reset(self, **kwargs):
         """Call base class reset method and return initial state."""
-        # pylint: disable=E0202
         self.current_state = self.env.reset()
         return self.current_state
 
+    # pylint: disable=method-hidden
     def step(self, action: Union[np.ndarray, int, float]
              ) -> Tuple[Union[np.ndarray, float, int], float, bool, dict]:
         """Call base class step method but replace reward with reward output by reward function.
@@ -52,8 +55,6 @@ class RewardWrapper(gym.Wrapper):
             added as a field to the dictionary in the last element of the tuple
             with key 'true_reward'.
         """
-        # pylint: disable=E0202
-
         # execute action:
         next_state, reward, terminated, info = self.env.step(action)
 
@@ -77,12 +78,12 @@ class RewardWrapper(gym.Wrapper):
 
         return next_state, reward, terminated, info
 
-    def update_reward_function(self, reward_function):
+    def update_reward_parameters(self, reward_parameters):
         """Update the used reward function.
 
         Useful as IRL algorithms compute a new reward function
         in each iteration."""
-        self.reward_function = reward_function
+        self.reward_function.update_parameters(reward_parameters)
 
     def get_reward_input_for(self, state: Union[np.ndarray, int, float],
                              action: Union[np.ndarray, int, float],
@@ -103,10 +104,14 @@ class RewardWrapper(gym.Wrapper):
         """
         if self.reward_function.action_in_domain:
             if self.reward_function.next_state_in_domain:
-                return StateActionState(state, action, next_state)
+                return StateActionState(
+                    np.array([state]), np.array([action]),
+                    np.array([next_state]))
             else:
-                return StateAction(state, action)
+                return StateAction(np.array([state]), np.array([action]))
         else:
-            if not self.reward_function.action_in_domain and not self.reward_function.next_state_in_domain:
+            if not self.reward_function.action_in_domain \
+                    and not self.reward_function.next_state_in_domain \
+                    and next_state is not None:
                 state = next_state
-            return State(state)
+            return State(np.array([state]))

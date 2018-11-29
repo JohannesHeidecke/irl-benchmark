@@ -1,6 +1,7 @@
 import gym
 import numpy as np
 
+from irl_benchmark.envs import make_wrapped_env
 from irl_benchmark.irl.feature import feature_wrapper
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
@@ -9,7 +10,7 @@ from irl_benchmark.rl.algorithms import ValueIteration
 
 def test_value_iteration():
     # gamma = 1.0
-    env = gym.make('FrozenLake-v0')
+    env = make_wrapped_env('FrozenLake-v0', with_model_wrapper=True)
     agent = ValueIteration(env, {'gamma': 1.0})
     agent.train(10)
     state_values = agent.state_values
@@ -22,7 +23,7 @@ def test_value_iteration():
     assert state_values[15] == 0
 
     # gamma = 0.9
-    env = gym.make('FrozenLake-v0')
+    env = make_wrapped_env('FrozenLake-v0', with_model_wrapper=True)
     agent = ValueIteration(env, {'gamma': 0.9})
     agent.train(10)
     state_values = agent.state_values
@@ -73,9 +74,14 @@ def test_value_iteration():
         assert np.all(agent.policy(i) == policy_array[i, :])
 
     # check if true reward isn't leaked:
-    env = feature_wrapper.make('FrozenLake-v0')
-    reward_function = FeatureBasedRewardFunction(env, np.zeros(16))
-    env = RewardWrapper(env, reward_function)
+    def reward_function_factory(env):
+        return FeatureBasedRewardFunction(env, np.zeros(16))
+
+    env = make_wrapped_env(
+        'FrozenLake-v0',
+        with_feature_wrapper=True,
+        reward_function_factory=reward_function_factory,
+        with_model_wrapper=True)
     agent = ValueIteration(env, {})
     agent.train(10)
     assert np.sum(agent.state_values == 0)

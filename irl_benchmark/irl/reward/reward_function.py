@@ -4,9 +4,11 @@ from copy import copy
 from typing import NamedTuple, Union
 
 import gym
+from gym.envs.toy_text.discrete import DiscreteEnv
 from gym.spaces.discrete import Discrete as DiscreteSpace
 import numpy as np
 
+from irl_benchmark.envs.maze_world import MazeWorld
 from irl_benchmark.irl.feature.feature_wrapper import FeatureWrapper
 import irl_benchmark.utils as utils
 
@@ -68,21 +70,31 @@ class BaseRewardFunction(ABC):
         Union[State, StateAction, StateActionState]
             The domain of the reward function.
         """
-        # domain always contains states:
-        states = np.arange(self.env.observation_space.n)
+        if utils.wrapper.is_unwrappable_to(self.env, DiscreteEnv):
+            n_states = self.env.observation_space.n
+            n_actions = self.env.action_space.n
+            states = np.arange(n_states)
+        elif utils.wrapper.is_unwrappable_to(self.env, MazeWorld):
+            maze_env = utils.wrapper.unwrap_env(self.env, MazeWorld)
+            num_rewards = maze_env.num_rewards
+            n_states = num_rewards * 2**num_rewards
+            n_actions = num_rewards
+            states = np.array(
+                [maze_env.index_to_state(i) for i in range(n_states)])
+        else:
+            raise NotImplementedError()
+
         if self.action_in_domain:
             # if domain contains actions: extend domain
-            states = np.repeat(states, self.env.action_space.n)
-            actions = np.arange(self.env.action_space.n)
-            actions = np.tile(actions, self.env.observation_space.n)
+            states = np.repeat(states, n_actions, axis=0)
+            actions = np.arange(n_actions)
+            actions = np.tile(actions, n_states)
             if self.next_state_in_domain:
                 # if domain contains next states: extend domain
-                states = np.repeat(states, self.env.observation_space.n)
-                actions = np.repeat(actions, self.env.observation_space.n)
-                next_states = np.arange(self.env.observation_space.n)
-                next_states = np.tile(
-                    next_states,
-                    self.env.observation_space.n * self.env.action_space.n)
+                states = np.repeat(states, n_states)
+                actions = np.repeat(actions, n_states)
+                next_states = np.arange(n_states)
+                next_states = np.tile(next_states, n_states * n_actions)
                 # return the adequate namedtuple:
                 return StateActionState(states, actions, next_states)
             return StateAction(states, actions)
@@ -176,7 +188,7 @@ class TabularRewardFunction(BaseRewardFunction):
         if self.next_state_in_domain:
             self.domain_size *= self.env.observation_space.n
 
-        if parameters is 'random':
+        if parameters == 'random':
             self.parameters = np.random.standard_normal(size=self.domain_size)
         else:
             self.parameters = np.array(parameters)
@@ -197,6 +209,7 @@ class TabularRewardFunction(BaseRewardFunction):
         np.ndarray
             A numpy array of corresponding reward table indices.
         """
+        assert utils.wrapper.is_unwrappable_to(self.env, DiscreteEnv)
         index = copy(domain_batch.state)
         if self.action_in_domain:
             index *= self.env.action_space.n
@@ -223,6 +236,22 @@ class TabularRewardFunction(BaseRewardFunction):
         indices = self.domain_to_index(domain_batch)
         return self.parameters[indices]
 
+    def domain_sample(self, batch_size: int
+                      ) -> Union[State, StateAction, StateActionState]:
+        """Return a batch sampled from the domain of size batch_size.
+
+        Parameters
+        ----------
+        batch_size: int
+            The size of the batch.
+
+        Returns
+        -------
+        Union[State, StateAction, StateActionState]
+            A batch sampled from the domain of the reward function.
+        """
+        raise NotImplementedError()
+
 
 class FeatureBasedRewardFunction(BaseRewardFunction):
     """A reward function which is linear in some provided features.
@@ -233,7 +262,9 @@ class FeatureBasedRewardFunction(BaseRewardFunction):
 
     def __init__(self,
                  env: gym.Env,
-                 parameters: Union[None, str, np.ndarray] = None):
+                 parameters: Union[None, str, np.ndarray] = None,
+                 action_in_domain: bool = False,
+                 next_state_in_domain: bool = False):
         """
 
         Parameters
@@ -246,11 +277,12 @@ class FeatureBasedRewardFunction(BaseRewardFunction):
         """
 
         assert utils.wrapper.is_unwrappable_to(env, FeatureWrapper)
-        super(FeatureBasedRewardFunction, self).__init__(env, parameters)
+        super(FeatureBasedRewardFunction, self).__init__(
+            env, parameters, action_in_domain, next_state_in_domain)
 
-        if parameters is 'random':
+        if parameters == 'random':
             parameters_shape = utils.wrapper.unwrap_env(
-                self.env, FeatureWrapper).feature_shape()
+                self.env, FeatureWrapper).feature_dimensionality()
             self.parameters = np.random.standard_normal(parameters_shape)
 
     def reward_from_features(self, feature_batch: np.ndarray) -> np.ndarray:
@@ -266,9 +298,7 @@ class FeatureBasedRewardFunction(BaseRewardFunction):
         np.ndarray
             The rewards for given features.
         """
-        reward = np.dot(
-            self.parameters.reshape(1, -1),
-            feature_batch.reshape(len(self.parameters), -1)).reshape((-1))
+        reward = np.dot(self.parameters.reshape(1, -1), feature_batch.T)
         return reward
 
     def reward(self, domain_batch: Union[State, StateAction, StateActionState]
@@ -289,7 +319,7 @@ class FeatureBasedRewardFunction(BaseRewardFunction):
             The rewards are of shape (batch_size,)
         """
         features = self._domain_to_features(domain_batch)
-        return self.reward_from_features(features)
+        return self.reward_from_features(features).reshape((-1))
 
     def _domain_to_features(
             self, domain_batch: Union[State, StateAction, StateActionState]
@@ -307,37 +337,60 @@ class FeatureBasedRewardFunction(BaseRewardFunction):
             A numpy array containing features.
 
         """
+        # Get the feature wrapper for the environment:
         feature_wrapper = utils.wrapper.unwrap_env(self.env, FeatureWrapper)
-        feature_batch = []
-        if isinstance(domain_batch.state, list):
-            for i in range(len(domain_batch.state)):
-                state = domain_batch.state[i]
-                if self.action_in_domain:
-                    action = domain_batch.action[i]
-                else:
-                    action = None
-                if self.next_state_in_domain:
-                    next_state = domain_batch.next_state[i]
-                else:
-                    next_state = None
-                if not self.action_in_domain and not self.next_state_in_domain:
-                    next_state = state
-                    state = None
-                features = feature_wrapper.features(state, action, next_state)
-                feature_batch.append(features)
+
+        assert isinstance(domain_batch.state, (np.ndarray, tuple, float, int))
+
+        state = domain_batch.state
+        if self.action_in_domain:
+            action = domain_batch.action
         else:
-            state = domain_batch.state
-            if self.action_in_domain:
-                action = domain_batch.action
+            action = None
+        if self.next_state_in_domain:
+            next_state = domain_batch.next_state
+        else:
+            next_state = None
+        if not self.action_in_domain and not self.next_state_in_domain:
+            next_state = state
+            state = None
+
+        if isinstance(domain_batch.state, (np.ndarray, tuple)) \
+                and len(domain_batch.state.shape) > 0:
+            n_inputs = domain_batch.state.shape[0]
+        else:
+            return feature_wrapper.features(state, action, next_state)
+
+        feature_array = []
+
+        for i in range(n_inputs):
+
+            if state is not None:
+                feat_in_state = state[i]
             else:
-                action = None
-            if self.next_state_in_domain:
-                next_state = domain_batch.next_state
-            else:
-                next_state = None
-            if not self.action_in_domain and not self.next_state_in_domain:
-                next_state = state
-                state = None
-            features = feature_wrapper.features(state, action, next_state)
-            feature_batch.append(features)
-        return np.array(feature_batch)
+                feat_in_state = None
+            feat_in_action = action[i] if action is not None else None
+            feat_in_next_state = next_state[
+                i] if next_state is not None else None
+
+            features = feature_wrapper.features(feat_in_state, feat_in_action,
+                                                feat_in_next_state)
+
+            feature_array.append(features.reshape(-1))
+        return np.array(feature_array)
+
+    def domain_sample(self, batch_size: int
+                      ) -> Union[State, StateAction, StateActionState]:
+        """Return a batch sampled from the domain of size batch_size.
+
+        Parameters
+        ----------
+        batch_size: int
+            The size of the batch.
+
+        Returns
+        -------
+        Union[State, StateAction, StateActionState]
+            A batch sampled from the domain of the reward function.
+        """
+        raise NotImplementedError()

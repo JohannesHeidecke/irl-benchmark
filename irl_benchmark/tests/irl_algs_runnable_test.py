@@ -1,18 +1,22 @@
 import numpy as np
 
+from irl_benchmark.envs import make_wrapped_env
 from irl_benchmark.irl.algorithms.appr_irl import ApprIRL
 from irl_benchmark.irl.algorithms.mce_irl import MaxCausalEntIRL
 from irl_benchmark.irl.algorithms.me_irl import MaxEntIRL
-from irl_benchmark.irl.feature import feature_wrapper
 from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction
-from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.rl.algorithms import ValueIteration
 
 
 def quick_run_alg(alg_class, config={}):
-    env = feature_wrapper.make('FrozenLake-v0')
-    reward_function = FeatureBasedRewardFunction(env, 'random')
-    env = RewardWrapper(env, reward_function)
+    def reward_function_factory(env):
+        return FeatureBasedRewardFunction(env, 'random')
+
+    env = make_wrapped_env(
+        'FrozenLake-v0',
+        with_feature_wrapper=True,
+        reward_function_factory=reward_function_factory,
+        with_model_wrapper=True)
 
     def rl_alg_factory(env):
         return ValueIteration(env, {})

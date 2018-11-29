@@ -5,14 +5,15 @@ import cvxpy as cvx
 import gym
 import numpy as np
 
-from irl_benchmark.config import IRL_CONFIG_DOMAINS
+from irl_benchmark.config import IRL_CONFIG_DOMAINS, IRL_ALG_REQUIREMENTS
 from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
 from irl_benchmark.irl.collect import collect_trajs
-from irl_benchmark.irl.reward.reward_function import BaseRewardFunction, FeatureBasedRewardFunction
+from irl_benchmark.irl.reward.reward_function import BaseRewardFunction
 from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
 from irl_benchmark.metrics.base_metric import BaseMetric
 from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
 from irl_benchmark.rl.algorithms.random_agent import RandomAgent
+from irl_benchmark.utils.wrapper import unwrap_env
 
 
 class ApprIRL(BaseIRLAlgorithm):
@@ -54,6 +55,9 @@ class ApprIRL(BaseIRLAlgorithm):
         # calculate the feature counts of expert trajectories:
         self.expert_feature_count = self.feature_count(self.expert_trajs,
                                                        self.config['gamma'])
+
+        print('EXPERT FEATURE COUNT:')
+        print(self.expert_feature_count)
 
         # create list of feature counts:
         self.feature_counts = [self.expert_feature_count]
@@ -103,6 +107,9 @@ class ApprIRL(BaseIRLAlgorithm):
                 no_trajectories=no_irl_episodes_per_irl_iteration)
             current_feature_count = self.feature_count(
                 trajs, gamma=self.config['gamma'])
+
+            print('CURRENT FEATURE COUNT:')
+            print(current_feature_count)
 
             # add new feature count to list of feature counts
             self.feature_counts.append(current_feature_count)
@@ -174,12 +181,10 @@ class ApprIRL(BaseIRLAlgorithm):
 
             self.distances.append(distance)
 
-            # create new reward function with current coefficient estimate
-            reward_function = FeatureBasedRewardFunction(
-                self.env, reward_coefficients)
+            print(reward_coefficients)
             # update reward function
-            assert isinstance(self.env, RewardWrapper)
-            self.env.update_reward_function(reward_function)
+            reward_wrapper = unwrap_env(self.env, RewardWrapper)
+            reward_wrapper.update_reward_parameters(reward_coefficients)
 
             # check stopping criterion:
             if distance <= self.config['epsilon']:
@@ -195,11 +200,11 @@ class ApprIRL(BaseIRLAlgorithm):
 
             evaluation_input = {
                 'irl_agent': agent,
-                'irl_reward': reward_function
+                'irl_reward': reward_wrapper.reward_function
             }
             self.evaluate_metrics(evaluation_input)
 
-        return reward_function, agent
+        return reward_wrapper.reward_function, agent
 
 
 IRL_CONFIG_DOMAINS[ApprIRL] = {
@@ -224,4 +229,9 @@ IRL_CONFIG_DOMAINS[ApprIRL] = {
         'type': bool,
         'default': True
     }
+}
+
+IRL_ALG_REQUIREMENTS[ApprIRL] = {
+    'requires_features': True,
+    'requires_transitions': False,
 }
