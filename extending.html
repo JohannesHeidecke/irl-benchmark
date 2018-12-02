@@ -1,0 +1,341 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Extending the benchmark &mdash; IRL Benchmark  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Collaboration guide" href="collaboration.html" />
+    <link rel="prev" title="Quickstart" href="quickstart.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> IRL Benchmark
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Extending the benchmark</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#environments">Environments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#irl-algorithms">IRL algorithms</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#initializing">Initializing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#training">Training</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#useful-methods">Useful methods</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#rl-algorithms">RL algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#metrics">Metrics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="collaboration.html">Collaboration guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">irl_benchmark</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">IRL Benchmark</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Extending the benchmark</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/extending.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="extending-the-benchmark">
+<h1>Extending the benchmark<a class="headerlink" href="#extending-the-benchmark" title="Permalink to this headline">¶</a></h1>
+<p>This guide provides information on how to extend the benchmark, e.g. to add a new IRL algorithm. We cover four possible extension: adding new environments, adding new IRL algorithms, adding new RL algorithms, and adding new metrics.</p>
+<p>We are happy to add new extensions to the main benchmark. If you are interested in collaborating, please see our <a class="reference internal" href="collaboration.html"><span class="doc">collaboration guide</span></a>.</p>
+<div class="section" id="environments">
+<h2>Environments<a class="headerlink" href="#environments" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">TODO</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">TODO</span></code>: also talk here about collecting expert trajectories. The expert trajectories need to contain features, potentially artificially wrapped added with FeatureWrapper?</p>
+</div>
+<div class="section" id="irl-algorithms">
+<h2>IRL algorithms<a class="headerlink" href="#irl-algorithms" title="Permalink to this headline">¶</a></h2>
+<p>All IRL algorithms have to extend the abstract base class <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseIRLAlgorithm</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">irl_baselines.irl.algorithms.base_algorithm</span> <span class="kn">import</span> <span class="n">BaseIRLAlgorithm</span>
+
+<span class="k">class</span> <span class="nc">ExampleIRL</span><span class="p">(</span><span class="n">BaseIRLAlgorithm</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An example IRL algorithm&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<div class="section" id="initializing">
+<h3>Initializing<a class="headerlink" href="#initializing" title="Permalink to this headline">¶</a></h3>
+<p>If your algorithm class implements it’s own <code class="docutils literal notranslate"><span class="pre">__init__</span></code> method, make sure that the base class <code class="docutils literal notranslate"><span class="pre">__init__</span></code> is called as well. This is necessary since in this way the passed config is preprocessed correctly. Please use the same parameters for the new <code class="docutils literal notranslate"><span class="pre">__init__</span></code> and don’t add additional ones. Any additional parameters required by your algorithm should go into the config dictionary.</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">,</span> <span class="n">expert_trajs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]],</span>
+             <span class="n">rl_alg_factory</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">],</span> <span class="n">BaseRLAlgorithm</span><span class="p">],</span>
+             <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; docstring ... &quot;&quot;&quot;</span>
+<span class="hll">    <span class="nb">super</span><span class="p">(</span><span class="n">ExampleIRL</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">expert_trajs</span><span class="p">,</span> <span class="n">rl_alg_factory</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</div></blockquote>
+<p>Let’s go over the four parameters that are always passed to an IRL algorithm when it is created:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">env</span></code> is an openAI gym environment, at least wrapped in a <code class="xref py py-class docutils literal notranslate"><span class="pre">RewardWrapper</span></code>. The reward wrapper will make sure that the environment’s true reward function is not accidentally leaked to the IRL algorithm. If required, the true reward can still be read from the info dictionary returned by the environments <code class="docutils literal notranslate"><span class="pre">step</span></code> function as follows:</li>
+</ul>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">state</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">done</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+<span class="hll"><span class="k">print</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;true_reward&#39;</span><span class="p">])</span>
+</span></pre></div>
+</div>
+</div></blockquote>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">expert_trajs</span></code> is a list of trajectories collected from the expert. Each trajectory is a dictionary with keys <code class="docutils literal notranslate"><span class="pre">['states',</span> <span class="pre">'actions',</span> <span class="pre">'rewards',</span> <span class="pre">'true_rewards',</span> <span class="pre">'features']</span></code>. Each value in the dictionary is a list, containing e.g. all states ordered by time. The states list will have one more element than the others, since it contains both the initial and final state. In the case of expert trajectories, <code class="docutils literal notranslate"><span class="pre">true_rewards</span></code> will be an empty list. See <code class="xref py py-func docutils literal notranslate"><span class="pre">collect_trajs</span></code> which defines how trajectories are generated.</li>
+<li><code class="docutils literal notranslate"><span class="pre">rl_alg_factory</span></code> is a function which takes an environment and returns a newly initialized reinforcement learning algorithm. This is used to keep the IRL algorithms flexible about which concrete RL algorithm they can be used with. If your IRL algorithm requires a specific RL algorithm (such as in guided cost learning), simply overwrite <code class="docutils literal notranslate"><span class="pre">self.rl_alg_factory</span></code> in your <code class="docutils literal notranslate"><span class="pre">__init__</span></code> after calling the base class <code class="docutils literal notranslate"><span class="pre">__init__</span></code>.</li>
+</ul>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">,</span> <span class="n">expert_trajs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]],</span>
+             <span class="n">rl_alg_factory</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">],</span> <span class="n">BaseRLAlgorithm</span><span class="p">],</span>
+             <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; docstring ... &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">ExampleIRL</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">expert_trajs</span><span class="p">,</span> <span class="n">rl_alg_factory</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+<span class="hll">    <span class="c1"># enforce use of specific RL algorithm:</span>
+</span><span class="hll">    <span class="k">def</span> <span class="nf">specific_rl_alg_factory</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">):</span>
+</span><span class="hll">        <span class="k">return</span> <span class="n">SpecificRlAlg</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;hyperparam&#39;</span><span class="p">:</span> <span class="mi">42</span><span class="p">})</span>
+</span><span class="hll">    <span class="bp">self</span><span class="o">.</span><span class="n">rl_alg_factory</span> <span class="o">=</span> <span class="n">specific_rl_alg_factory</span>
+</span></pre></div>
+</div>
+</div></blockquote>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">config</span></code> is a dictionary containing algorithm-specific hyperparameters. To make sure we can call IRL algorithms in a unified way, you have to specify which hyperparameters your algorithm can take, as well as legal ranges and defaults. This is done as follows:</li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">irl_benchmark.config</span> <span class="kn">import</span> <span class="n">IRL_CONFIG_DOMAINS</span>
+<span class="kn">from</span> <span class="nn">irl_baselines.irl.algorithms.base_algorithm</span> <span class="kn">import</span> <span class="n">BaseIRLAlgorithm</span>
+
+<span class="k">class</span> <span class="nc">ExampleIRL</span><span class="p">(</span><span class="n">BaseIRLAlgorithm</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An example IRL algorithm&quot;&quot;&quot;</span>
+    <span class="c1"># implementation here</span>
+    <span class="c1"># ...</span>
+    <span class="c1"># ...</span>
+
+<span class="hll"><span class="n">IRL_CONFIG_DOMAINS</span><span class="p">[</span><span class="n">ExampleIRL</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class="hll">    <span class="s1">&#39;gamma&#39;</span><span class="p">:</span> <span class="p">{</span>
+</span><span class="hll">        <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+</span><span class="hll">        <span class="s1">&#39;min&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+</span><span class="hll">        <span class="s1">&#39;max&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+</span><span class="hll">        <span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">,</span>
+</span><span class="hll">    <span class="p">},</span>
+</span><span class="hll">    <span class="s1">&#39;hyperparam1&#39;</span><span class="p">:</span> <span class="p">{</span>
+</span><span class="hll">        <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;categorical&#39;</span><span class="p">,</span>
+</span><span class="hll">        <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">],</span>
+</span><span class="hll">        <span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span>
+</span><span class="hll">    <span class="p">},</span>
+</span><span class="hll">    <span class="s1">&#39;temperature&#39;</span><span class="p">:</span> <span class="p">{</span>
+</span><span class="hll">        <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+</span><span class="hll">        <span class="s1">&#39;optional&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>  <span class="c1"># allows value to be None</span>
+</span><span class="hll">        <span class="s1">&#39;min&#39;</span><span class="p">:</span> <span class="mf">1e-10</span><span class="p">,</span>
+</span><span class="hll">        <span class="s1">&#39;max&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">),</span>
+</span><span class="hll">        <span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="bp">None</span>
+</span><span class="hll">    <span class="p">}</span>
+</span><span class="hll"><span class="p">}</span>
+</span></pre></div>
+</div>
+</div>
+<div class="section" id="training">
+<h3>Training<a class="headerlink" href="#training" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseIRLAlgorithm</span></code>: class provides the abstract method <code class="xref py py-meth docutils literal notranslate"><span class="pre">train</span></code> as an interface of how IRL algorithms are run. You have to overwrite this method in your own implementation. The required parameters are:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">no_irl_iterations</span></code>: an integer specifying for how many iterations the algorithm should be run.</li>
+<li><code class="docutils literal notranslate"><span class="pre">no_rl_episodes_per_irl_iteration</span></code>: an integer specifying how many episodes the RL agent is allowed to run in each iteration.</li>
+<li><code class="docutils literal notranslate"><span class="pre">no_irl_episodes_per_irl_iteration</span></code>: an integer specifying how many episodes the IRL algorithm is allowed to run in addition to the RL episodes in each iteration. This can be used to collect empirical information with the trained agent, e.g. feature counts from the currently optimal policy.</li>
+</ul>
+<p>The train method returns a tuple containing the current reward function estimate on first position, and the trained agent on second position.</p>
+<p><code class="docutils literal notranslate"><span class="pre">TODO</span></code>: link here to description of the interface provided by the RL algorithm. Show code example</p>
+</div>
+<div class="section" id="useful-methods">
+<h3>Useful methods<a class="headerlink" href="#useful-methods" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseIRLAlgorithm</span></code>: class comes with some useful methods that can be used in different subclasses.</p>
+<ul class="simple">
+<li>There is a method to calculate discounted feature counts: <code class="xref py py-meth docutils literal notranslate"><span class="pre">feature_count</span></code></li>
+</ul>
+</div>
+</div>
+<div class="section" id="rl-algorithms">
+<h2>RL algorithms<a class="headerlink" href="#rl-algorithms" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="metrics">
+<h2>Metrics<a class="headerlink" href="#metrics" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="collaboration.html" class="btn btn-neutral float-right" title="Collaboration guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="quickstart.html" class="btn btn-neutral" title="Quickstart" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Adria, Anton, Johannes, Max, Sayan
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
