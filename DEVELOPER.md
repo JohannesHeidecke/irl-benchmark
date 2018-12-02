@@ -23,9 +23,13 @@ Recommended workflow:
 Documentation is compiled from `.rst` files in `docs` and the python inline docstrings, and
 then served with github pages.
 
-To deploy any changes just run the deploy script in the `docs`:
+To deploy any changes just make sure `ghp-import` is installed and run the deploy script in the `docs` folder:
 
-`bash deploy.sh`
+```
+bash deploy.sh
+```
 
-However, please wait for someone to approve your pull request with the changes
-before you deploy the changes in documentation.
+(or an equivalent windows script)
+
+Note that before deploying you should wait for someone to approve the pull request with your changes
+to the documentation.
