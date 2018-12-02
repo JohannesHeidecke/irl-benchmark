@@ -28,9 +28,9 @@ to get an overview of how all the components of `irl-benchmark` work together.
 
 # Documentation
 
-Webpage coming soon...
+Documentation is available _as work in progress_ at: [https://johannesheidecke.github.io/irl-benchmark](https://johannesheidecke.github.io/irl-benchmark).
 
-Meanwhile, check the folder `docs`. You may find `docs/extending.rst` useful if you are planning to author new algorithms.
+You may find the [extending](https://johannesheidecke.github.io/irl-benchmark) part useful if you are planning to author new algorithms.
 
 # Environemts
 
