@@ -41,6 +41,7 @@ setup(
         'tqdm>=4.28.1',
         'sparse>=0.5.0',
         'pathfinding>=0.0.2',
+        'ghp-import',
     ],
     test_suite='test',
     cmdclass={'test': PyTest},
