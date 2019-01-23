@@ -4,6 +4,7 @@ from irl_benchmark.envs import make_wrapped_env
 from irl_benchmark.irl.collect import collect_trajs
 from irl_benchmark.irl.feature import feature_wrapper
 from irl_benchmark.rl.algorithms.value_iteration import ValueIteration
+from irl_benchmark.rl.model.discrete_env import DiscreteEnvModelWrapper
 from irl_benchmark.rl.model.maze_world import MazeModelWrapper
 from irl_benchmark.utils.wrapper import unwrap_env
 
@@ -11,6 +12,7 @@ from irl_benchmark.utils.wrapper import unwrap_env
 
 # FROZEN LAKE:
 env = feature_wrapper.make('FrozenLake-v0')
+env = DiscreteEnvModelWrapper(env)
 
 
 def rl_alg_factory(env):

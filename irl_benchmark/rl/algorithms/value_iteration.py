@@ -9,7 +9,7 @@ from irl_benchmark.config import RL_CONFIG_DOMAINS, RL_ALG_REQUIREMENTS
 from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
 from irl_benchmark.rl.model.model_wrapper import BaseWorldModelWrapper
 from irl_benchmark.utils.wrapper import is_unwrappable_to, unwrap_env
-
+from irl_benchmark.rl.model.discrete_env import DiscreteEnvModelWrapper
 
 class ValueIteration(BaseRLAlgorithm):
     """Value iteration algorithm.
@@ -28,6 +28,7 @@ class ValueIteration(BaseRLAlgorithm):
         config: dict
             Configuration of hyperparameters.
         """
+        env = DiscreteEnvModelWrapper(env)
         assert is_unwrappable_to(env, BaseWorldModelWrapper)
         super(ValueIteration, self).__init__(env, config)
 
