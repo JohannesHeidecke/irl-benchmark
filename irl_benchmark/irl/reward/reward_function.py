@@ -4,13 +4,13 @@ from copy import copy
 from typing import NamedTuple, Union
 
 import gym
+import numpy as np
 from gym.envs.toy_text.discrete import DiscreteEnv
 from gym.spaces.discrete import Discrete as DiscreteSpace
-import numpy as np
 
-from irl_benchmark.envs.maze_world import MazeWorld
-from irl_benchmark.irl.feature.feature_wrapper import FeatureWrapper
 import irl_benchmark.utils as utils
+# from irl_benchmark.envs.maze_world import MazeWorld
+from irl_benchmark.irl.feature.feature_wrapper import FeatureWrapper
 
 
 # Define some custom named tuples for easier handling

@@ -1,17 +1,17 @@
-import numpy as np
-import gym
-from typing import Callable, Dict, List, Tuple
-from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
-from irl_benchmark.metrics.base_metric import BaseMetric
-from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction, State, BaseRewardFunction
 from itertools import accumulate
+from typing import Callable, Dict, List, Tuple
+
+import gym
+import numpy as np
+from scipy.optimize import linprog
+
 from irl_benchmark.config import IRL_CONFIG_DOMAINS, IRL_ALG_REQUIREMENTS
-from irl_benchmark.rl.algorithms.value_iteration import ValueIteration
+from irl_benchmark.irl.algorithms.base_algorithm import BaseIRLAlgorithm
+from irl_benchmark.irl.reward.reward_function import FeatureBasedRewardFunction, State, BaseRewardFunction
+from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
+from irl_benchmark.metrics.base_metric import BaseMetric
 from irl_benchmark.rl.algorithms.base_algorithm import BaseRLAlgorithm
 from irl_benchmark.utils.wrapper import unwrap_env
-from irl_benchmark.irl.reward.reward_wrapper import RewardWrapper
-
-from cvxopt import solvers
 
 
 class LinProgIRL(BaseIRLAlgorithm):
@@ -72,20 +72,22 @@ class LinProgIRL(BaseIRLAlgorithm):
             coeffs_diff_list.append(coeffs - expert_coeffs)
 
             # breakpoint()
-            c = np.sum(coeffs_diff_list, axis=0)
+            c = np.sum(coeffs_diff_list, axis=0).T
+            # c = matrix(c)
 
             A = np.eye(16)
             b = np.ones(16)
 
-            sol = solvers.lp(c, A, b)
+            # sol = solvers.lp(c, A, b)
+            sol = linprog(c, A, b)
 
             alphas = sol["x"]
 
             reward_wrapper.update_reward_parameters(alphas)
-            agent.train(no_rl_episodes_per_irl_iteration=1000)
+            agent.train(no_episodes=1000)
             next_policy = agent.policy_array()
 
-            policies.append(policy)
+            policies.append(next_policy)
 
         return alphas
 
@@ -98,7 +100,7 @@ def trajs_to_value_coeffs(trajs):
     for traj in trajs:
         # traj is list of states visited
         for idx, state in enumerate(traj):
-            coeffs[state] += .9** idx # TODO: remove hardcoded gamma value
+            coeffs[state] += .9 ** idx  # TODO: remove hardcoded gamma value
 
     coeffs /= len(trajs)
 

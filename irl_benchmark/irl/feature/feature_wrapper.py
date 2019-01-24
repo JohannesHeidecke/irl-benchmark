@@ -1,13 +1,13 @@
 """Module for feature wrappers providing features for different environments."""
 
-from abc import abstractmethod
 import functools
+from abc import abstractmethod
 from typing import Union, Tuple
 
 import gym
 import numpy as np
 
-from irl_benchmark.envs.maze_world import MazeWorld, RANDOM_QUIT_CHANCE, REWARD_SMALL, REWARD_MEDIUM, REWARD_LARGE
+# from irl_benchmark.envs.maze_world import MazeWorld, RANDOM_QUIT_CHANCE, REWARD_SMALL, REWARD_MEDIUM, REWARD_LARGE
 from irl_benchmark.utils.general import to_one_hot
 from irl_benchmark.utils.wrapper import unwrap_env
 
